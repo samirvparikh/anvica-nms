@@ -48,7 +48,7 @@
                     data-headers="{{ strtolower($headersText) }}"
                 >
                     <td style="font-weight: 700; text-align: center;">
-                        {{ ($logs->currentPage() - 1) * $logs->perPage() + $index + 1 }}
+                        {{ $log->id }}
                     </td>
                     <td>
                         <span class="method-badge {{ strtolower($log->method) }}">

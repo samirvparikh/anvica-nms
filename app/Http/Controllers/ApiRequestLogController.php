@@ -13,7 +13,7 @@ class ApiRequestLogController extends Controller
     public function index(): View
     {
         $logs = ApiRequestLog::query()
-            ->orderBy('created_at', 'desc')
+            ->orderBy('id', 'desc')
             ->paginate(50);
 
         return view('api_request_logs.index', compact('logs'));
