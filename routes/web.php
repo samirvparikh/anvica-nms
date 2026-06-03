@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\MapController;
+use App\Http\Controllers\ApiRequestLogController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -29,4 +30,7 @@ Route::middleware('auth')->group(function () {
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
+
+    // API Request Logs
+    Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
 });
