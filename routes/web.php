@@ -33,4 +33,5 @@ Route::middleware('auth')->group(function () {
 
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
+    Route::get('/api-request-logs/{apiRequestLog}', [ApiRequestLogController::class, 'show'])->name('api-request-logs.show');
 });

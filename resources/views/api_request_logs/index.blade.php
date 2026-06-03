@@ -2,211 +2,133 @@
 
 @section('content')
 <div class="page-header">
-    <div class="page-header-content">
+    <div class="page-title">
         <h1>API Request Logs</h1>
-        <p style="color: #64748b; margin-top: 0.5rem;">Monitor and track all API requests</p>
+        <p>Monitor and track all API requests.</p>
     </div>
 </div>
 
-<style>
-    .table-container {
-        background-color: var(--bg-content);
-        border-radius: 8px;
-        overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    }
-
-    .api-logs-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.85rem;
-    }
-
-    .api-logs-table thead {
-        background-color: var(--bg-header);
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .api-logs-table th {
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: var(--text-secondary);
-    }
-
-    .api-logs-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .api-logs-table tbody tr:hover {
-        background-color: rgba(148, 163, 184, 0.05);
-    }
-
-    .method-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-weight: 600;
-        font-size: 0.75rem;
-    }
-
-    .method-get {
-        background-color: rgba(59, 130, 246, 0.1);
-        color: #2563eb;
-    }
-
-    .method-post {
-        background-color: rgba(34, 197, 94, 0.1);
-        color: #16a34a;
-    }
-
-    .method-put {
-        background-color: rgba(168, 85, 247, 0.1);
-        color: #a855f7;
-    }
-
-    .method-delete {
-        background-color: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-    }
-
-    .method-patch {
-        background-color: rgba(249, 115, 22, 0.1);
-        color: #f97316;
-    }
-
-    .url-cell {
-        font-family: 'Courier New', monospace;
-        font-size: 0.8rem;
-        max-width: 300px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .ip-cell {
-        font-family: 'Courier New', monospace;
-        color: #64748b;
-    }
-
-    .timestamp {
-        color: #64748b;
-        white-space: nowrap;
-    }
-
-    .no-data {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #64748b;
-    }
-
-    .pagination-container {
-        padding: 1.5rem;
-        border-top: 1px solid var(--border-color);
-    }
-
-    .pagination {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    .pagination a,
-    .pagination span {
-        padding: 0.5rem 0.75rem;
-        border-radius: 4px;
-        border: 1px solid var(--border-color);
-        text-decoration: none;
-        color: var(--text-primary);
-        font-size: 0.85rem;
-    }
-
-    .pagination a:hover {
-        background-color: var(--bg-header);
-    }
-
-    .pagination .active span {
-        background-color: #3b82f6;
-        color: white;
-        border-color: #3b82f6;
-    }
-
-    .pagination .disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .data-display {
-        background-color: #f9fafb;
-        padding: 0.75rem;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.8rem;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        word-break: break-word;
-        line-height: 1.4;
-    }
-</style>
-
-<div class="table-container">
-    @if($logs->count() > 0)
-        <table class="api-logs-table">
-            <thead>
-                <tr>
-                    <th>Method</th>
-                    <!-- <th>URL</th> -->
-                    <th>IP Address</th>
-                    <th>User Agent</th>
-                    <th>Request Data</th>
-                    <th>Headers</th>
-                    <th>Timestamp</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($logs as $log)
-                    <tr>
-                        <td>
-                            <span class="method-badge method-{{ strtolower($log->method) }}">
-                                {{ $log->method }}
-                            </span>
-                        </td>
-                        <!-- <td>
-                            <div class="url-cell" title="{{ $log->url }}">
-                                {{ $log->url }}
-                            </div>
-                        </td> -->
-                        <td>
-                            <span class="ip-cell">{{ $log->ip_address }}</span>
-                        </td>
-                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $log->user_agent }}">
-                            {{ $log->user_agent }}
-                        </td>
-                        <td>
-                            <div class="data-display">{{ json_encode($log->request_data, JSON_PRETTY_PRINT) }}</div>
-                        </td>
-                        <td>
-                            <div class="data-display">{{ json_encode($log->headers, JSON_PRETTY_PRINT) }}</div>
-                        </td>
-                        <td>
-                            <span class="timestamp">{{ $log->created_at->format('M d, Y H:i:s') }}</span>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        @if($logs->hasPages())
-            <div class="pagination-container">
-                {{ $logs->links() }}
-            </div>
-        @endif
-    @else
-        <div class="no-data">
-            <p>No API requests logged yet.</p>
+<div class="card-table-container">
+    <div class="table-toolbar">
+        <div class="table-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="apiLogSearchInput" placeholder="Search API logs...">
         </div>
-    @endif
+    </div>
+
+    <div class="table-scroll">
+    <table class="data-table" id="apiLogsTable">
+        <thead>
+            <tr>
+                <th style="width: 60px;">Sr. No.</th>
+                <th>Method</th>
+                <th>IP Address</th>
+                <th>User Agent</th>
+                <th>Request Data</th>
+                <th>Headers</th>
+                <th>Timestamp</th>
+                <th style="text-align: right; width: 80px;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($logs as $index => $log)
+                @php
+                    $requestDataText = json_encode($log->request_data);
+                    $headersText = json_encode($log->headers);
+                @endphp
+                <tr
+                    class="api-log-row"
+                    data-method="{{ strtolower($log->method) }}"
+                    data-ip="{{ strtolower($log->ip_address) }}"
+                    data-agent="{{ strtolower($log->user_agent) }}"
+                    data-request="{{ strtolower($requestDataText) }}"
+                    data-headers="{{ strtolower($headersText) }}"
+                >
+                    <td style="font-weight: 700; text-align: center;">
+                        {{ ($logs->currentPage() - 1) * $logs->perPage() + $index + 1 }}
+                    </td>
+                    <td>
+                        <span class="method-badge {{ strtolower($log->method) }}">
+                            {{ $log->method }}
+                        </span>
+                    </td>
+                    <td class="cell-mono">{{ $log->ip_address }}</td>
+                    <td>
+                        <div class="cell-truncate" title="{{ $log->user_agent }}">
+                            {{ $log->user_agent }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-truncate cell-mono" title="{{ $requestDataText }}">
+                            {{ Str::limit($requestDataText, 80) }}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="cell-truncate cell-mono" title="{{ $headersText }}">
+                            {{ Str::limit($headersText, 80) }}
+                        </div>
+                    </td>
+                    <td style="color: var(--text-muted); white-space: nowrap;">
+                        {{ $log->created_at->format('M d, Y H:i:s') }}
+                    </td>
+                    <td style="text-align: right;">
+                        <a href="{{ route('api-request-logs.show', $log) }}" class="btn-action view-btn" title="View log details">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </a>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                        No API requests logged yet.
+                    </td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+    </div>
+
+    {{ $logs->links('pagination.api-logs') }}
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('apiLogSearchInput');
+        const tableRows = document.querySelectorAll('.api-log-row');
+
+        if (!searchInput || !tableRows.length) {
+            return;
+        }
+
+        searchInput.addEventListener('keyup', function (e) {
+            const query = e.target.value.toLowerCase().trim();
+
+            tableRows.forEach(function (row) {
+                const method = row.getAttribute('data-method') || '';
+                const ip = row.getAttribute('data-ip') || '';
+                const agent = row.getAttribute('data-agent') || '';
+                const request = row.getAttribute('data-request') || '';
+                const headers = row.getAttribute('data-headers') || '';
+
+                if (
+                    method.includes(query) ||
+                    ip.includes(query) ||
+                    agent.includes(query) ||
+                    request.includes(query) ||
+                    headers.includes(query)
+                ) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 @endsection

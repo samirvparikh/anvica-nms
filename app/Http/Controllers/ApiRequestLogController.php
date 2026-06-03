@@ -18,4 +18,12 @@ class ApiRequestLogController extends Controller
 
         return view('api_request_logs.index', compact('logs'));
     }
+
+    /**
+     * Display the specified API request log.
+     */
+    public function show(ApiRequestLog $apiRequestLog): View
+    {
+        return view('api_request_logs.show', ['log' => $apiRequestLog]);
+    }
 }
