@@ -1142,6 +1142,8 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
     z-index: 100;
     opacity: 0;
     pointer-events: none;
@@ -1158,10 +1160,22 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 12px;
     width: 100%;
     max-width: 500px;
+    max-height: calc(100vh - 3rem);
+    display: flex;
+    flex-direction: column;
     box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
     border: 1px solid var(--border-color);
     transform: scale(0.95);
     transition: transform 0.25s ease;
+    margin: auto;
+    flex-shrink: 0;
+}
+
+.modal-card > form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .modal-overlay.open .modal-card {
@@ -1174,6 +1188,7 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .modal-header h3 {
@@ -1191,7 +1206,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .modal-body {
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.modal-body .form-group {
+    margin-bottom: 1rem;
+}
+
+.modal-body .form-group:last-child {
+    margin-bottom: 0;
 }
 
 .modal-footer {
@@ -1200,6 +1226,9 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
+    flex-shrink: 0;
+    background-color: white;
+    border-radius: 0 0 12px 12px;
 }
 
 .btn-secondary {
@@ -2046,8 +2075,14 @@ a.api-logs-pagination__btn:hover {
         overflow-x: auto;
     }
 
+    .modal-overlay {
+        padding: 0.75rem;
+        align-items: flex-start;
+    }
+
     .modal-card {
-        margin: 1rem;
-        max-width: calc(100% - 2rem);
+        margin: 0.75rem auto;
+        max-width: calc(100% - 0.5rem);
+        max-height: calc(100vh - 1.5rem);
     }
 }

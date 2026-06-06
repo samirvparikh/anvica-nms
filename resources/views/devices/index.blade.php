@@ -151,7 +151,7 @@
                     <select id="add_vendor_id" name="vendor_id" class="form-control">
                         <option value="">Select Vendor</option>
                         @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}">{{ $vendor->name }} ({{ $vendor->service->name }})</option>
+                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}">{{ $vendor->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -228,7 +228,7 @@
                     <select id="edit_vendor_id" name="vendor_id" class="form-control">
                         <option value="">Select Vendor</option>
                         @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id }}">{{ $vendor->name }} ({{ $vendor->service->name }})</option>
+                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}">{{ $vendor->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -285,11 +285,22 @@
             });
         });
 
-        // Add Modal Open/Close
         const addModal = document.getElementById('addDeviceModal');
         const openAddBtn = document.getElementById('openAddModalBtn');
         const closeAddBtn = document.getElementById('closeAddModalBtn');
         const cancelAddBtn = document.getElementById('cancelAddModalBtn');
+        const editModal = document.getElementById('editDeviceModal');
+        const closeEditBtn = document.getElementById('closeEditModalBtn');
+        const cancelEditBtn = document.getElementById('cancelEditModalBtn');
+        const editForm = document.getElementById('editDeviceForm');
+
+        const serviceTypeMap = @json($services->pluck('name', 'id'));
+        const addService = document.getElementById('add_service_id');
+        const addType = document.getElementById('add_type');
+        const addVendor = document.getElementById('add_vendor_id');
+        const editService = document.getElementById('edit_service_id');
+        const editType = document.getElementById('edit_type');
+        const editVendor = document.getElementById('edit_vendor_id');
 
         function toggleAddModal(open) {
             if (open) {
@@ -299,30 +310,52 @@
             }
         }
 
-        if (openAddBtn) {
-            openAddBtn.addEventListener('click', () => toggleAddModal(true));
-        }
-        if (closeAddBtn) closeAddBtn.addEventListener('click', () => toggleAddModal(false));
-        if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => toggleAddModal(false));
-
-        // Edit Modal Open/Close & Setup values
-        const editModal = document.getElementById('editDeviceModal');
-        const closeEditBtn = document.getElementById('closeEditModalBtn');
-        const cancelEditBtn = document.getElementById('cancelEditModalBtn');
-        const editForm = document.getElementById('editDeviceForm');
-
-        const serviceTypeMap = @json($services->pluck('name', 'id'));
-        const addService = document.getElementById('add_service_id');
-        const addType = document.getElementById('add_type');
-        const editService = document.getElementById('edit_service_id');
-        const editType = document.getElementById('edit_type');
-
         function syncType(select, typeInput) {
             typeInput.value = serviceTypeMap[select.value] || '';
         }
 
-        addService?.addEventListener('change', () => syncType(addService, addType));
-        editService?.addEventListener('change', () => syncType(editService, editType));
+        function filterVendors(serviceSelect, vendorSelect, preserveValue) {
+            if (!serviceSelect || !vendorSelect) return;
+
+            const serviceId = serviceSelect.value;
+            const currentValue = preserveValue ? vendorSelect.value : '';
+
+            Array.from(vendorSelect.options).forEach((option, index) => {
+                if (index === 0) {
+                    option.hidden = false;
+                    option.disabled = false;
+                    return;
+                }
+
+                const matches = serviceId && option.dataset.service === serviceId;
+                option.hidden = !matches;
+                option.disabled = !matches;
+            });
+
+            const selectedOption = vendorSelect.querySelector('option[value="' + currentValue + '"]');
+            if (selectedOption && !selectedOption.disabled) {
+                vendorSelect.value = currentValue;
+            } else {
+                vendorSelect.value = '';
+            }
+        }
+
+        function onServiceChange(serviceSelect, typeInput, vendorSelect) {
+            syncType(serviceSelect, typeInput);
+            filterVendors(serviceSelect, vendorSelect, false);
+        }
+
+        addService?.addEventListener('change', () => onServiceChange(addService, addType, addVendor));
+        editService?.addEventListener('change', () => onServiceChange(editService, editType, editVendor));
+
+        if (openAddBtn) {
+            openAddBtn.addEventListener('click', () => {
+                toggleAddModal(true);
+                filterVendors(addService, addVendor, false);
+            });
+        }
+        if (closeAddBtn) closeAddBtn.addEventListener('click', () => toggleAddModal(false));
+        if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => toggleAddModal(false));
 
         document.querySelectorAll('.editDeviceBtn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -331,6 +364,7 @@
                 const editUserId = document.getElementById('edit_user_id');
                 if (editUserId) editUserId.value = this.getAttribute('data-user-id') || '';
                 document.getElementById('edit_service_id').value = this.getAttribute('data-service-id') || '';
+                filterVendors(editService, editVendor, false);
                 document.getElementById('edit_vendor_id').value = this.getAttribute('data-vendor-id') || '';
                 document.getElementById('edit_hostname').value = this.getAttribute('data-hostname') || '';
                 document.getElementById('edit_type').value = this.getAttribute('data-type');
