@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
-    protected $fillable = ['name'];
+    public const STATUS_ACTIVE = 'Active';
+
+    public const STATUS_INACTIVE = 'Inactive';
+
+    protected $fillable = ['name', 'status'];
 
     public function points(): HasMany
     {

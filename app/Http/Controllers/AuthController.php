@@ -40,7 +40,7 @@ class AuthController extends Controller
         if (! $user->isActive()) {
             Auth::logout();
             throw ValidationException::withMessages([
-                'email' => 'Your account has expired. Please contact administrator.',
+                'email' => 'Your account is inactive or has expired. Please contact administrator.',
             ]);
         }
 

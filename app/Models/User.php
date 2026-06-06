@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'mobile', 'password', 'role', 'device_limit', 'start_date', 'expire_date', 'created_by'])]
+#[Fillable(['name', 'email', 'mobile', 'password', 'role', 'is_admin', 'status', 'device_limit', 'start_date', 'expire_date', 'created_by'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -23,6 +23,10 @@ class User extends Authenticatable
     public const ROLE_ADMIN = 'admin';
 
     public const ROLE_USER = 'user';
+
+    public const STATUS_ACTIVE = 'Active';
+
+    public const STATUS_INACTIVE = 'Inactive';
 
     /**
      * Get the attributes that should be cast.
@@ -34,6 +38,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
             'start_date' => 'date',
             'expire_date' => 'date',
         ];
@@ -41,11 +46,15 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->is_admin || $this->role === self::ROLE_ADMIN;
     }
 
     public function isActive(): bool
     {
+        if ($this->status === self::STATUS_INACTIVE) {
+            return false;
+        }
+
         if ($this->isAdmin()) {
             return true;
         }

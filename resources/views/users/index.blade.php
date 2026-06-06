@@ -9,14 +9,14 @@
 <div class="page-header">
     <div class="page-title">
         <h1>Users</h1>
-        <p>Manage application users, device limits, and service access.</p>
+        <p>Manage admin and user accounts, device limits, and service access.</p>
     </div>
     <button class="btn-add" id="openAddUserModalBtn">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"/>
             <line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Add User
+        Add User / Admin
     </button>
 </div>
 
@@ -36,6 +36,8 @@
             <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
                 <th>Mobile</th>
                 <th>Device Limit</th>
                 <th>Start Date</th>
@@ -52,18 +54,38 @@
                 data-mobile="{{ strtolower($user->mobile ?? '') }}">
                 <td style="font-weight: 700;">{{ $user->name }}</td>
                 <td>{{ $user->email }}</td>
-                <td>{{ $user->mobile ?? '—' }}</td>
-                <td>{{ $user->deviceCount() }} / {{ $user->device_limit }}</td>
-                <td>{{ $user->start_date?->format('d M Y') ?? '—' }}</td>
                 <td>
-                    @if($user->expire_date && $user->expire_date->isPast())
+                    <span class="status-badge {{ $user->isAdmin() ? 'active' : 'inactive' }}">
+                        {{ $user->isAdmin() ? 'Admin' : 'User' }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge {{ strtolower($user->status ?? 'Active') }}">
+                        {{ $user->status ?? 'Active' }}
+                    </span>
+                </td>
+                <td>{{ $user->mobile ?? '—' }}</td>
+                <td>
+                    @if($user->isAdmin())
+                        —
+                    @else
+                        {{ $user->deviceCount() }} / {{ $user->device_limit }}
+                    @endif
+                </td>
+                <td>{{ $user->isAdmin() ? '—' : ($user->start_date?->format('d M Y') ?? '—') }}</td>
+                <td>
+                    @if($user->isAdmin())
+                        —
+                    @elseif($user->expire_date && $user->expire_date->isPast())
                         <span class="status-badge down">{{ $user->expire_date->format('d M Y') }}</span>
                     @else
                         {{ $user->expire_date?->format('d M Y') ?? '—' }}
                     @endif
                 </td>
                 <td>
-                    @if($user->services->isEmpty())
+                    @if($user->isAdmin())
+                        —
+                    @elseif($user->services->isEmpty())
                         <span style="color: var(--text-muted);">None</span>
                     @else
                         {{ $user->services->pluck('name')->join(', ') }}
@@ -75,6 +97,8 @@
                             data-name="{{ $user->name }}"
                             data-email="{{ $user->email }}"
                             data-mobile="{{ $user->mobile }}"
+                            data-role="{{ $user->role }}"
+                            data-status="{{ $user->status ?? 'Active' }}"
                             data-device-limit="{{ $user->device_limit }}"
                             data-start-date="{{ $user->start_date?->format('Y-m-d') }}"
                             data-expire-date="{{ $user->expire_date?->format('Y-m-d') }}"
@@ -84,7 +108,8 @@
                             <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                     </button>
-                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                    @if($user->id !== auth()->id())
+                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this account?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn-action delete-btn">
@@ -96,11 +121,12 @@
                             </svg>
                         </button>
                     </form>
+                    @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No users found.</td>
+                <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No users found.</td>
             </tr>
             @endforelse
         </tbody>
@@ -111,12 +137,28 @@
 <div class="modal-overlay" id="addUserModal">
     <div class="modal-card modal-card-wide">
         <div class="modal-header">
-            <h3>Add User</h3>
+            <h3>Add User / Admin</h3>
             <button class="modal-close" id="closeAddUserModalBtn">&times;</button>
         </div>
         <form action="{{ route('users.store') }}" method="POST">
             @csrf
             <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="add_user_role">Role</label>
+                        <select id="add_user_role" name="role" class="form-control role-select" required>
+                            <option value="user" selected>User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="add_user_status">Status</label>
+                        <select id="add_user_status" name="status" class="form-control" required>
+                            <option value="Active" selected>Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_user_name">Name</label>
@@ -127,24 +169,39 @@
                         <input type="email" id="add_user_email" name="email" class="form-control" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_user_mobile">Mobile</label>
-                        <input type="text" id="add_user_mobile" name="mobile" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="add_user_device_limit">Device Limit</label>
-                        <input type="number" id="add_user_device_limit" name="device_limit" class="form-control" min="1" value="10" required>
-                    </div>
+                <div class="form-group">
+                    <label for="add_user_mobile">Mobile</label>
+                    <input type="text" id="add_user_mobile" name="mobile" class="form-control">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_user_start_date">Start Date</label>
-                        <input type="date" id="add_user_start_date" name="start_date" class="form-control" value="{{ $today }}" required>
+                <div class="user-only-fields" id="addUserOnlyFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="add_user_device_limit">Device Limit</label>
+                            <input type="number" id="add_user_device_limit" name="device_limit" class="form-control user-only-input" min="1" value="10">
+                        </div>
+                        <div class="form-group">
+                            <label for="add_user_start_date">Start Date</label>
+                            <input type="date" id="add_user_start_date" name="start_date" class="form-control user-only-input" value="{{ $today }}">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="add_user_expire_date">Expire Date</label>
+                            <input type="date" id="add_user_expire_date" name="expire_date" class="form-control user-only-input" value="{{ $oneYearLater }}">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="add_user_expire_date">Expire Date</label>
-                        <input type="date" id="add_user_expire_date" name="expire_date" class="form-control" value="{{ $oneYearLater }}" required>
+                        <label>Services</label>
+                        <div class="checkbox-group">
+                            @forelse($services as $service)
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="services[]" value="{{ $service->id }}" class="user-only-input">
+                                    {{ $service->name }}
+                                </label>
+                            @empty
+                                <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -157,23 +214,10 @@
                         <input type="password" id="add_user_password_confirmation" name="password_confirmation" class="form-control" required>
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Services</label>
-                    <div class="checkbox-group">
-                        @forelse($services as $service)
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="services[]" value="{{ $service->id }}">
-                                {{ $service->name }}
-                            </label>
-                        @empty
-                            <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
-                        @endforelse
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelAddUserModalBtn">Cancel</button>
-                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Create User</button>
+                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Create Account</button>
             </div>
         </form>
     </div>
@@ -183,13 +227,29 @@
 <div class="modal-overlay" id="editUserModal">
     <div class="modal-card modal-card-wide">
         <div class="modal-header">
-            <h3>Edit User</h3>
+            <h3>Edit Account</h3>
             <button class="modal-close" id="closeEditUserModalBtn">&times;</button>
         </div>
         <form action="" method="POST" id="editUserForm">
             @csrf
             @method('PUT')
             <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_user_role">Role</label>
+                        <select id="edit_user_role" name="role" class="form-control role-select" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_user_status">Status</label>
+                        <select id="edit_user_status" name="status" class="form-control" required>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit_user_name">Name</label>
@@ -200,24 +260,37 @@
                         <input type="email" id="edit_user_email" name="email" class="form-control" required>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_user_mobile">Mobile</label>
-                        <input type="text" id="edit_user_mobile" name="mobile" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_user_device_limit">Device Limit</label>
-                        <input type="number" id="edit_user_device_limit" name="device_limit" class="form-control" min="1" required>
-                    </div>
+                <div class="form-group">
+                    <label for="edit_user_mobile">Mobile</label>
+                    <input type="text" id="edit_user_mobile" name="mobile" class="form-control">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_user_start_date">Start Date</label>
-                        <input type="date" id="edit_user_start_date" name="start_date" class="form-control" required>
+                <div class="user-only-fields" id="editUserOnlyFields">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_user_device_limit">Device Limit</label>
+                            <input type="number" id="edit_user_device_limit" name="device_limit" class="form-control user-only-input" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit_user_start_date">Start Date</label>
+                            <input type="date" id="edit_user_start_date" name="start_date" class="form-control user-only-input">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit_user_expire_date">Expire Date</label>
+                            <input type="date" id="edit_user_expire_date" name="expire_date" class="form-control user-only-input">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label for="edit_user_expire_date">Expire Date</label>
-                        <input type="date" id="edit_user_expire_date" name="expire_date" class="form-control" required>
+                        <label>Services</label>
+                        <div class="checkbox-group" id="editUserServices">
+                            @foreach($services as $service)
+                                <label class="checkbox-label">
+                                    <input type="checkbox" name="services[]" value="{{ $service->id }}" class="edit-service-checkbox user-only-input">
+                                    {{ $service->name }}
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
                 <div class="form-row">
@@ -230,21 +303,10 @@
                         <input type="password" id="edit_user_password_confirmation" name="password_confirmation" class="form-control">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Services</label>
-                    <div class="checkbox-group" id="editUserServices">
-                        @foreach($services as $service)
-                            <label class="checkbox-label">
-                                <input type="checkbox" name="services[]" value="{{ $service->id }}" class="edit-service-checkbox">
-                                {{ $service->name }}
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelEditUserModalBtn">Cancel</button>
-                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Update User</button>
+                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Update Account</button>
             </div>
         </form>
     </div>
@@ -265,6 +327,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    function toggleUserFields(roleSelect, fieldsContainer) {
+        const isUser = roleSelect.value === 'user';
+        fieldsContainer.style.display = isUser ? '' : 'none';
+
+        fieldsContainer.querySelectorAll('.user-only-input').forEach(input => {
+            if (input.type === 'checkbox') {
+                input.disabled = !isUser;
+                if (!isUser) {
+                    input.checked = false;
+                }
+            } else {
+                input.required = isUser && input.name !== 'services[]';
+                input.disabled = !isUser;
+            }
+        });
+    }
+
+    const addRoleSelect = document.getElementById('add_user_role');
+    const addUserOnlyFields = document.getElementById('addUserOnlyFields');
+    addRoleSelect.addEventListener('change', () => toggleUserFields(addRoleSelect, addUserOnlyFields));
+    toggleUserFields(addRoleSelect, addUserOnlyFields);
+
+    const editRoleSelect = document.getElementById('edit_user_role');
+    const editUserOnlyFields = document.getElementById('editUserOnlyFields');
+    editRoleSelect.addEventListener('change', () => toggleUserFields(editRoleSelect, editUserOnlyFields));
+
     const addModal = document.getElementById('addUserModal');
     document.getElementById('openAddUserModalBtn').addEventListener('click', () => addModal.classList.add('open'));
     document.getElementById('closeAddUserModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
@@ -278,9 +366,11 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('edit_user_name').value = this.getAttribute('data-name');
             document.getElementById('edit_user_email').value = this.getAttribute('data-email');
             document.getElementById('edit_user_mobile').value = this.getAttribute('data-mobile') || '';
-            document.getElementById('edit_user_device_limit').value = this.getAttribute('data-device-limit');
-            document.getElementById('edit_user_start_date').value = this.getAttribute('data-start-date');
-            document.getElementById('edit_user_expire_date').value = this.getAttribute('data-expire-date');
+            editRoleSelect.value = this.getAttribute('data-role') || 'user';
+            document.getElementById('edit_user_status').value = this.getAttribute('data-status') || 'Active';
+            document.getElementById('edit_user_device_limit').value = this.getAttribute('data-device-limit') || '10';
+            document.getElementById('edit_user_start_date').value = this.getAttribute('data-start-date') || '';
+            document.getElementById('edit_user_expire_date').value = this.getAttribute('data-expire-date') || '';
             document.getElementById('edit_user_password').value = '';
             document.getElementById('edit_user_password_confirmation').value = '';
 
@@ -289,6 +379,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 cb.checked = serviceIds.includes(cb.value);
             });
 
+            toggleUserFields(editRoleSelect, editUserOnlyFields);
             editForm.action = `/users/${this.getAttribute('data-id')}`;
             editModal.classList.add('open');
         });

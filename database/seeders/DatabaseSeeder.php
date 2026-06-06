@@ -17,39 +17,49 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed Administrator User
         User::updateOrCreate(
             ['email' => 'admin@anvica.in'],
             [
                 'name' => 'admin',
                 'password' => Hash::make('123456'),
                 'role' => User::ROLE_ADMIN,
+                'is_admin' => true,
+                'status' => User::STATUS_ACTIVE,
             ]
         );
 
-        // Seed sample services
-        $networkMonitoring = Service::updateOrCreate(
-            ['name' => 'Network Monitoring'],
-            ['name' => 'Network Monitoring']
+        User::updateOrCreate(
+            ['email' => 'samir@gmail.com'],
+            [
+                'name' => 'samir',
+                'mobile' => '9898183457',
+                'password' => Hash::make('123456'),
+                'role' => User::ROLE_USER,
+                'is_admin' => false,
+                'status' => User::STATUS_ACTIVE,
+                'device_limit' => 5,
+                'start_date' => now(),
+                'expire_date' => now()->addDays(364),
+                'created_by' => 1,
+            ]
         );
-        $networkMonitoring->points()->delete();
-        $networkMonitoring->points()->createMany([
-            ['point' => 'CPU Usage', 'method' => 'SNMP'],
-            ['point' => 'Memory Usage', 'method' => 'SNMP'],
-            ['point' => 'Interface Status', 'method' => 'API'],
-        ]);
 
-        $uptimeCheck = Service::updateOrCreate(
-            ['name' => 'Uptime Check'],
-            ['name' => 'Uptime Check']
+        User::updateOrCreate(
+            ['email' => 'vijay@gmail.com'],
+            [
+                'name' => 'vijay',
+                'mobile' => '9898183458',
+                'password' => Hash::make('123456'),
+                'role' => User::ROLE_USER,
+                'is_admin' => false,
+                'status' => User::STATUS_ACTIVE,
+                'device_limit' => 5,
+                'start_date' => now(),
+                'expire_date' => now()->addDays(364),
+                'created_by' => 1,
+            ]
         );
-        $uptimeCheck->points()->delete();
-        $uptimeCheck->points()->createMany([
-            ['point' => 'Ping Response', 'method' => 'METHOD'],
-            ['point' => 'Availability', 'method' => 'API'],
-        ]);
 
-        // Seed Devices
         $devices = [
             [
                 'name' => 'Core-Switch01',
@@ -106,7 +116,6 @@ class DatabaseSeeder extends Seeder
             Device::updateOrCreate(['name' => $device['name']], $device);
         }
 
-        // Seed Alarms
         $alarms = [
             [
                 'device_name' => 'Core-Switch01',
@@ -150,13 +159,12 @@ class DatabaseSeeder extends Seeder
             Alarm::updateOrCreate(
                 [
                     'device_name' => $alarm['device_name'],
-                    'message' => $alarm['message']
+                    'message' => $alarm['message'],
                 ],
                 $alarm
             );
         }
 
-        // Seed Sites
         $sites = [
             [
                 'name' => 'HQ - Ahmedabad',
@@ -166,37 +174,92 @@ class DatabaseSeeder extends Seeder
                 'y_pos' => 45,
             ],
             [
-                'name' => 'DC - Mumbai',
+                'name' => 'DC - Gandhinagar',
                 'up_devices' => 34,
                 'total_devices' => 36,
                 'x_pos' => 30,
                 'y_pos' => 55,
             ],
-            [
-                'name' => 'Branch - Delhi',
-                'up_devices' => 17,
-                'total_devices' => 18,
-                'x_pos' => 38,
-                'y_pos' => 30,
-            ],
-            [
-                'name' => 'Branch - Bangalore',
-                'up_devices' => 10,
-                'total_devices' => 12,
-                'x_pos' => 40,
-                'y_pos' => 65,
-            ],
-            [
-                'name' => 'ISP POP - Singapore',
-                'up_devices' => 6,
-                'total_devices' => 6,
-                'x_pos' => 65,
-                'y_pos' => 50,
-            ],
         ];
 
         foreach ($sites as $site) {
             Site::updateOrCreate(['name' => $site['name']], $site);
+        }
+
+        $services = [
+            'Router' => [
+                ['CPU Usage', 'SNMP'],
+                ['RAM Usage', 'SNMP'],
+                ['Internet Traffic', 'SNMP'],
+                ['VPN Status', 'API'],
+                ['Uptime', 'SNMP'],
+                ['Packet Drops', 'SNMP'],
+                ['Temperature', 'SNMP'],
+                ['WAN Status', 'Ping/SNMP'],
+            ],
+            'Switch' => [
+                ['Port Up/Down', 'SNMP'],
+                ['RX/TX Traffic', 'SNMP'],
+                ['CPU', 'SNMP'],
+                ['MAC Count', 'SNMP'],
+                ['PoE Status', 'SNMP'],
+                ['Temperature', 'SNMP'],
+                ['Error Packets', 'SNMP'],
+            ],
+            'Firewall' => [
+                ['CPU', 'SNMP'],
+                ['Sessions', 'API'],
+                ['VPN Tunnel', 'API'],
+                ['WAN Health', 'SNMP'],
+                ['Threat Logs', 'Syslog'],
+                ['Interface Usage', 'SNMP'],
+            ],
+            'Access Point' => [
+                ['Client Count', 'SNMP'],
+                ['Signal Strength', 'SNMP'],
+                ['Channel Usage', 'SNMP'],
+                ['Throughput', 'SNMP'],
+                ['AP Status', 'Ping/SNMP'],
+            ],
+            'Server' => [
+                ['CPU', 'SNMP/WMI'],
+                ['RAM', 'SNMP/WMI'],
+                ['Disk Usage', 'SNMP/WMI'],
+                ['Service Status', 'WMI'],
+                ['Temperature', 'SNMP'],
+                ['Network Usage', 'SNMP'],
+            ],
+            'CCTV' => [
+                ['Camera Online', 'Ping'],
+                ['HDD Status', 'SNMP'],
+                ['Recording Status', 'API'],
+                ['Bitrate', 'SNMP'],
+                ['Camera Stream', 'RTSP/API'],
+            ],
+            'UPS' => [
+                ['Battery %', 'SNMP'],
+                ['Load %', 'SNMP'],
+                ['Input Voltage', 'SNMP'],
+                ['Output Voltage', 'SNMP'],
+                ['Battery Runtime', 'SNMP'],
+                ['Temperature', 'SNMP'],
+            ],
+        ];
+
+        foreach ($services as $serviceName => $points) {
+            $service = Service::updateOrCreate(
+                ['name' => $serviceName],
+                ['status' => Service::STATUS_ACTIVE]
+            );
+
+            $service->points()->delete();
+
+            foreach ($points as $point) {
+                $service->points()->create([
+                    'point' => $point[0],
+                    'method' => $point[1],
+                ]);
+            }
         }
     }
 }

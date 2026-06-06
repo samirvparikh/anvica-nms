@@ -18,12 +18,16 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:191|unique:services,name',
+            'status' => 'required|in:Active,Inactive',
             'points' => 'required|array|min:1',
             'points.*.point' => 'required|string|max:191',
             'points.*.method' => 'required|string|max:191',
         ]);
 
-        $service = Service::create(['name' => $validated['name']]);
+        $service = Service::create([
+            'name' => $validated['name'],
+            'status' => $validated['status'],
+        ]);
 
         foreach ($validated['points'] as $pointData) {
             $service->points()->create($pointData);
@@ -36,12 +40,16 @@ class ServiceController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:191|unique:services,name,' . $service->id,
+            'status' => 'required|in:Active,Inactive',
             'points' => 'required|array|min:1',
             'points.*.point' => 'required|string|max:191',
             'points.*.method' => 'required|string|max:191',
         ]);
 
-        $service->update(['name' => $validated['name']]);
+        $service->update([
+            'name' => $validated['name'],
+            'status' => $validated['status'],
+        ]);
         $service->points()->delete();
 
         foreach ($validated['points'] as $pointData) {

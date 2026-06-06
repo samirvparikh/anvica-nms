@@ -30,6 +30,7 @@
         <thead>
             <tr>
                 <th>Service Name</th>
+                <th>Status</th>
                 <th>Points & Methods</th>
                 <th style="text-align: right;">Actions</th>
             </tr>
@@ -39,6 +40,11 @@
             <tr class="service-row" data-name="{{ strtolower($service->name) }}">
                 <td style="font-weight: 700;">{{ $service->name }}</td>
                 <td>
+                    <span class="status-badge {{ strtolower($service->status) }}">
+                        {{ $service->status }}
+                    </span>
+                </td>
+                <td>
                     @foreach($service->points as $point)
                         <span class="service-point-tag">{{ $point->point }} <small>({{ $point->method }})</small></span>
                     @endforeach
@@ -47,6 +53,7 @@
                     <button class="btn-action edit-btn editServiceBtn"
                             data-id="{{ $service->id }}"
                             data-name="{{ $service->name }}"
+                            data-status="{{ $service->status }}"
                             data-points='@json($service->points->map(fn ($p) => ["point" => $p->point, "method" => $p->method]))'>
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -69,7 +76,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No services found.</td>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No services found.</td>
             </tr>
             @endforelse
         </tbody>
@@ -89,6 +96,13 @@
                 <div class="form-group">
                     <label for="add_service_name">Service Name</label>
                     <input type="text" id="add_service_name" name="name" class="form-control" placeholder="e.g. Network Monitoring" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_service_status">Status</label>
+                    <select id="add_service_status" name="status" class="form-control" required>
+                        <option value="Active" selected>Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Point & Method <span style="color: var(--text-muted); font-weight: 400;">(add multiple rows)</span></label>
@@ -129,6 +143,13 @@
                 <div class="form-group">
                     <label for="edit_service_name">Service Name</label>
                     <input type="text" id="edit_service_name" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit_service_status">Status</label>
+                    <select id="edit_service_status" name="status" class="form-control" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label>Point & Method <span style="color: var(--text-muted); font-weight: 400;">(add multiple rows)</span></label>
@@ -229,6 +250,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.editServiceBtn').forEach(btn => {
         btn.addEventListener('click', function () {
             document.getElementById('edit_service_name').value = this.getAttribute('data-name');
+            document.getElementById('edit_service_status').value = this.getAttribute('data-status') || 'Active';
             editPointsContainer.querySelectorAll('.point-row').forEach(row => row.remove());
             editPointIndex = 0;
 

@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign in - Anvica NMS</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
 <body>
@@ -65,7 +67,7 @@
                                     <polyline points="22,6 12,13 2,6"/>
                                 </svg>
                             </span>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="admin@anvica.in" value="admin@anvica.in" required>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="Enter Email" value="admin@anvica.in" required>
                         </div>
                     </div>
 
@@ -79,7 +81,7 @@
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                 </svg>
                             </span>
-                            <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" value="password" required>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Enter Password" value="" required>
                         </div>
                     </div>
 
