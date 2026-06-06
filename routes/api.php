@@ -15,8 +15,7 @@ use App\Http\Controllers\Api\DevicePushApiController;
 
 // Health & test
 Route::get('/ping', fn () => response()->json(['status' => 'ok', 'service' => 'Anvica NMS']));
-// Route::any('/test', [ApiController::class, 'handleTestRequest']);
-Route::any('/test', [ApiController::class, 'router']);
+Route::any('/test', [ApiController::class, 'handleTestRequest']);
 Route::post('/router', [ApiController::class, 'router']);
 Route::any('/router', [ApiController::class, 'router']);
 
