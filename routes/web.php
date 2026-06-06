@@ -7,6 +7,10 @@ use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\ApiRequestLogController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\SettingsController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -34,4 +38,25 @@ Route::middleware('auth')->group(function () {
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
     Route::get('/api-request-logs/{apiRequestLog}', [ApiRequestLogController::class, 'show'])->name('api-request-logs.show');
+
+    // Profile
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Admin-only routes
+    Route::middleware('admin')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+
+        Route::get('/services', [ServiceController::class, 'index'])->name('services.index');
+        Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
+        Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+        Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
+        Route::put('/settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail.update');
+        Route::post('/settings/mail/test', [SettingsController::class, 'testMail'])->name('settings.mail.test');
+    });
 });

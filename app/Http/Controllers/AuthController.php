@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -21,45 +22,41 @@ class AuthController extends Controller
     /**
      * Handle authentication attempt.
      */
-    public function login(Request $Request)
+    public function login(Request $request)
     {
-        $credentials = $Request->validate([
+        $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, true)) {
-            $Request->session()->regenerate();
-            return redirect()->intended('/');
+        if (! Auth::attempt($credentials, true)) {
+            throw ValidationException::withMessages([
+                'email' => 'The provided credentials do not match our records.',
+            ]);
         }
 
-        // According to screenshots, "Demo: any email & password works."
-        // Wait, should we allow any login or just authenticate using the user database?
-        // Let's implement actual database check. But wait, if they put anything, we could also log them in as the admin user!
-        // To be safe and user-friendly for a demo, let's first check if database attempt succeeds,
-        // and if it fails, let's fetch the first user (or create one) and log them in,
-        // so that indeed "any email & password works" as stated in the screenshot! That is genius.
-        // Let's do that:
-        $user = \App\Models\User::firstOrCreate(
-            ['email' => $credentials['email']],
-            [
-                'name' => 'admin',
-                'password' => \Illuminate\Support\Facades\Hash::make($credentials['password']),
-            ]
-        );
-        Auth::login($user, true);
-        $Request->session()->regenerate();
+        $user = Auth::user();
+
+        if (! $user->isActive()) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => 'Your account has expired. Please contact administrator.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+
         return redirect()->intended('/');
     }
 
     /**
      * Log the user out.
      */
-    public function logout(Request $Request)
+    public function logout(Request $request)
     {
         Auth::logout();
-        $Request->session()->invalidate();
-        $Request->session()->regenerateToken();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         return redirect('/login');
     }
 }

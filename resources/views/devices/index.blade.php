@@ -4,8 +4,13 @@
 <div class="page-header">
     <div class="page-title">
         <h1>Devices</h1>
-        <p>All monitored network devices.</p>
+        <p>All monitored network devices.
+            @if(!is_null($deviceLimit))
+                <span style="color: var(--text-muted);">({{ $deviceCount }} / {{ $deviceLimit }} devices used)</span>
+            @endif
+        </p>
     </div>
+    @if($canAddDevice)
     <button class="btn-add" id="openAddModalBtn">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
             <line x1="12" y1="5" x2="12" y2="19"/>
@@ -13,6 +18,11 @@
         </svg>
         Add Device
     </button>
+    @else
+    <button class="btn-add" disabled title="Device limit reached" style="opacity: 0.5; cursor: not-allowed;">
+        Device Limit Reached
+    </button>
+    @endif
 </div>
 
 <!-- Devices Card and Table -->
@@ -101,11 +111,11 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="add_name" style="margin-bottom:0.25rem;">Name</label>
-                    <input type="text" id="add_name" name="name" class="form-control" placeholder="e.g. Switch-Floor2" style="padding-left:1rem;" required>
+                    <input type="text" id="add_name" name="name" class="form-control" placeholder="e.g. Switch-Floor2" required>
                 </div>
                 <div class="form-group">
                     <label for="add_type" style="margin-bottom:0.25rem;">Type</label>
-                    <select id="add_type" name="type" class="form-control" style="padding-left:1rem;" required>
+                    <select id="add_type" name="type" class="form-control" required>
                         <option value="">Select Type</option>
                         <option value="Switch">Switch</option>
                         <option value="Firewall">Firewall</option>
@@ -126,7 +136,7 @@
                 </div>
                 <div class="form-group">
                     <label for="add_status" style="margin-bottom:0.25rem;">Status</label>
-                    <select id="add_status" name="status" class="form-control" style="padding-left:1rem;" required>
+                    <select id="add_status" name="status" class="form-control" required>
                         <option value="Up">Up</option>
                         <option value="Warning">Warning</option>
                         <option value="Down">Down</option>
@@ -154,11 +164,11 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="edit_name" style="margin-bottom:0.25rem;">Name</label>
-                    <input type="text" id="edit_name" name="name" class="form-control" style="padding-left:1rem;" required>
+                    <input type="text" id="edit_name" name="name" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_type" style="margin-bottom:0.25rem;">Type</label>
-                    <select id="edit_type" name="type" class="form-control" style="padding-left:1rem;" required>
+                    <select id="edit_type" name="type" class="form-control" required>
                         <option value="Switch">Switch</option>
                         <option value="Firewall">Firewall</option>
                         <option value="Router">Router</option>
@@ -170,15 +180,15 @@
                 </div>
                 <div class="form-group">
                     <label for="edit_ip" style="margin-bottom:0.25rem;">IP Address</label>
-                    <input type="text" id="edit_ip" name="ip_address" class="form-control" style="padding-left:1rem;" required>
+                    <input type="text" id="edit_ip" name="ip_address" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_location" style="margin-bottom:0.25rem;">Location</label>
-                    <input type="text" id="edit_location" name="location" class="form-control" style="padding-left:1rem;" required>
+                    <input type="text" id="edit_location" name="location" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="edit_status" style="margin-bottom:0.25rem;">Status</label>
-                    <select id="edit_status" name="status" class="form-control" style="padding-left:1rem;" required>
+                    <select id="edit_status" name="status" class="form-control" required>
                         <option value="Up">Up</option>
                         <option value="Warning">Warning</option>
                         <option value="Down">Down</option>
@@ -230,9 +240,11 @@
             }
         }
 
-        openAddBtn.addEventListener('click', () => toggleAddModal(true));
-        closeAddBtn.addEventListener('click', () => toggleAddModal(false));
-        cancelAddBtn.addEventListener('click', () => toggleAddModal(false));
+        if (openAddBtn) {
+            openAddBtn.addEventListener('click', () => toggleAddModal(true));
+        }
+        if (closeAddBtn) closeAddBtn.addEventListener('click', () => toggleAddModal(false));
+        if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => toggleAddModal(false));
 
         // Edit Modal Open/Close & Setup values
         const editModal = document.getElementById('editDeviceModal');

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Device;
 use App\Models\Alarm;
 use App\Models\Site;
+use App\Models\Service;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,9 +22,32 @@ class DatabaseSeeder extends Seeder
             ['email' => 'admin@anvica.in'],
             [
                 'name' => 'admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('123456'),
+                'role' => User::ROLE_ADMIN,
             ]
         );
+
+        // Seed sample services
+        $networkMonitoring = Service::updateOrCreate(
+            ['name' => 'Network Monitoring'],
+            ['name' => 'Network Monitoring']
+        );
+        $networkMonitoring->points()->delete();
+        $networkMonitoring->points()->createMany([
+            ['point' => 'CPU Usage', 'method' => 'SNMP'],
+            ['point' => 'Memory Usage', 'method' => 'SNMP'],
+            ['point' => 'Interface Status', 'method' => 'API'],
+        ]);
+
+        $uptimeCheck = Service::updateOrCreate(
+            ['name' => 'Uptime Check'],
+            ['name' => 'Uptime Check']
+        );
+        $uptimeCheck->points()->delete();
+        $uptimeCheck->points()->createMany([
+            ['point' => 'Ping Response', 'method' => 'METHOD'],
+            ['point' => 'Availability', 'method' => 'API'],
+        ]);
 
         // Seed Devices
         $devices = [
