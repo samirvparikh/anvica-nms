@@ -5,12 +5,17 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\AlarmController;
+use App\Http\Controllers\AlertController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\ApiRequestLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\ServicePointController;
+use App\Http\Controllers\DeviceVendorController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\Api\MonitoringApiController;
+use App\Http\Controllers\MonitoringController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -28,12 +33,15 @@ Route::middleware('auth')->group(function () {
     Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
-    // Alarms
+    // Alarms (legacy view)
     Route::get('/alarms', [AlarmController::class, 'index'])->name('alarms.index');
     Route::post('/alarms/{alarm}/ack', [AlarmController::class, 'acknowledge'])->name('alarms.ack');
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
+
+    // Monitoring data (user-scoped; admin sees all)
+    Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
 
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
@@ -42,6 +50,13 @@ Route::middleware('auth')->group(function () {
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    // Monitoring API (session auth)
+    Route::prefix('api/monitoring')->group(function () {
+        Route::get('/dashboard', [MonitoringApiController::class, 'dashboardSummary']);
+        Route::get('/devices/{device}/metrics', [MonitoringApiController::class, 'deviceMetrics']);
+        Route::get('/devices/{device}/health', [MonitoringApiController::class, 'deviceHealth']);
+    });
 
     // Admin-only routes
     Route::middleware('admin')->group(function () {
@@ -54,6 +69,22 @@ Route::middleware('auth')->group(function () {
         Route::post('/services', [ServiceController::class, 'store'])->name('services.store');
         Route::put('/services/{service}', [ServiceController::class, 'update'])->name('services.update');
         Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+
+        Route::get('/service-points', [ServicePointController::class, 'index'])->name('service-points.index');
+        Route::post('/service-points', [ServicePointController::class, 'store'])->name('service-points.store');
+        Route::put('/service-points/{servicePoint}', [ServicePointController::class, 'update'])->name('service-points.update');
+        Route::delete('/service-points/{servicePoint}', [ServicePointController::class, 'destroy'])->name('service-points.destroy');
+
+        Route::get('/vendors', [DeviceVendorController::class, 'index'])->name('vendors.index');
+        Route::post('/vendors', [DeviceVendorController::class, 'store'])->name('vendors.store');
+        Route::put('/vendors/{vendor}', [DeviceVendorController::class, 'update'])->name('vendors.update');
+        Route::delete('/vendors/{vendor}', [DeviceVendorController::class, 'destroy'])->name('vendors.destroy');
+
+        Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
+        Route::post('/alerts', [AlertController::class, 'store'])->name('alerts.store');
+        Route::put('/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
+        Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
+        Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->name('alerts.close');
 
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail.update');

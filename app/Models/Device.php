@@ -2,22 +2,104 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Device extends Model
 {
+    /** @use HasFactory<\Database\Factories\DeviceFactory> */
+    use HasFactory;
     protected $fillable = [
         'user_id',
+        'service_id',
+        'vendor_id',
         'name',
+        'hostname',
         'type',
+        'device_type',
         'ip_address',
         'location',
+        'api_url',
+        'api_username',
+        'api_password',
+        'snmp_version',
+        'snmp_port',
+        'snmp_community',
         'status',
+        'last_seen',
     ];
+
+    protected $hidden = [
+        'api_password',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'last_seen' => 'datetime',
+            'api_password' => 'encrypted',
+        ];
+    }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(DeviceVendor::class, 'vendor_id');
+    }
+
+    public function metrics(): HasMany
+    {
+        return $this->hasMany(DeviceMetric::class);
+    }
+
+    public function interfaces(): HasMany
+    {
+        return $this->hasMany(DeviceInterface::class);
+    }
+
+    public function alerts(): HasMany
+    {
+        return $this->hasMany(Alert::class);
+    }
+
+    public function driverSlug(): ?string
+    {
+        return $this->vendor?->slug;
+    }
+
+    public function healthScore(): int
+    {
+        if ($this->status === 'Down') {
+            return 0;
+        }
+
+        $cpu = (float) $this->metrics()->where('metric_slug', 'cpu')->latest('recorded_at')->value('metric_value');
+        $ram = (float) $this->metrics()->where('metric_slug', 'ram')->latest('recorded_at')->value('metric_value');
+
+        if ($cpu === 0.0 && $ram === 0.0) {
+            return $this->status === 'Warning' ? 60 : 100;
+        }
+
+        $score = 100;
+        $score -= min(40, max(0, $cpu - 50) * 0.8);
+        $score -= min(40, max(0, $ram - 60) * 0.8);
+
+        return (int) max(0, min(100, round($score)));
     }
 }

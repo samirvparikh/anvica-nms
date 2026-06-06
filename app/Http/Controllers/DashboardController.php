@@ -2,37 +2,106 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Device;
+use App\Models\Alert;
 use App\Models\Alarm;
+use App\Models\Device;
+use App\Models\DeviceMetric;
+use App\Services\UserScopeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    /**
-     * Display the dashboard view.
-     */
-    public function index()
+    public function __construct(
+        protected UserScopeService $userScope,
+    ) {}
+
+    public function index(Request $request)
     {
-        $totalDevices = Device::count();
-        $upDevices = Device::where('status', 'Up')->count();
-        $downDevices = Device::where('status', 'Down')->count();
-        $warningDevices = Device::where('status', 'Warning')->count();
+        $user = $request->user();
+        $deviceQuery = $this->userScope->devicesQuery($user);
 
-        // Alarm stats (Open alarms)
-        $totalAlarms = Alarm::where('status', 'Open')->count();
-        $criticalAlarms = Alarm::where('status', 'Open')->where('severity', 'Critical')->count();
-        $warningAlarms = Alarm::where('status', 'Open')->where('severity', 'Warning')->count();
+        $totalDevices = (clone $deviceQuery)->count();
+        $upDevices = (clone $deviceQuery)->where('status', 'Up')->count();
+        $downDevices = (clone $deviceQuery)->where('status', 'Down')->count();
+        $warningDevices = (clone $deviceQuery)->where('status', 'Warning')->count();
 
-        // Recent alarms/alerts
-        $recentAlerts = Alarm::orderBy('created_at', 'desc')->take(4)->get();
+        $deviceIds = $this->userScope->deviceIds($user);
 
-        // Top interfaces (mock utilization data matching screenshots)
-        $topInterfaces = [
-            ['name' => 'Gig0/1', 'utilization' => 85],
-            ['name' => 'Gig0/2', 'utilization' => 72],
-            ['name' => 'Gig0/3', 'utilization' => 65],
-            ['name' => 'Gig0/4', 'utilization' => 40],
-        ];
+        $alertQuery = $this->userScope->alertsQuery($user);
+        $totalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count()
+            + Alarm::where('status', 'Open')->count();
+        $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count()
+            + Alarm::where('status', 'Open')->where('severity', 'Critical')->count();
+        $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_WARNING)->count()
+            + Alarm::where('status', 'Open')->where('severity', 'Warning')->count();
+
+        $recentAlerts = $this->userScope->alertsQuery($user)->with('device')->latest()->take(4)->get();
+        if ($recentAlerts->isEmpty()) {
+            $recentAlerts = Alarm::orderBy('created_at', 'desc')->take(4)->get();
+        }
+
+        $cpuTrend = DeviceMetric::select('metric_value', 'recorded_at')
+            ->whereIn('device_id', $deviceIds)
+            ->where('metric_slug', 'cpu')
+            ->latest('recorded_at')
+            ->take(12)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $ramTrend = DeviceMetric::select('metric_value', 'recorded_at')
+            ->whereIn('device_id', $deviceIds)
+            ->where('metric_slug', 'ram')
+            ->latest('recorded_at')
+            ->take(12)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $trafficTrend = DeviceMetric::select(DB::raw('AVG(metric_value) as metric_value'), 'recorded_at')
+            ->whereIn('device_id', $deviceIds)
+            ->where('metric_slug', 'traffic')
+            ->groupBy('recorded_at')
+            ->orderBy('recorded_at')
+            ->take(12)
+            ->get();
+
+        $temperatureTrend = DeviceMetric::select('metric_value', 'recorded_at')
+            ->whereIn('device_id', $deviceIds)
+            ->where('metric_slug', 'temperature')
+            ->latest('recorded_at')
+            ->take(12)
+            ->get()
+            ->reverse()
+            ->values();
+
+        $devices = (clone $deviceQuery)->with(['service', 'vendor'])->take(10)->get();
+        $healthScores = $devices->map(fn (Device $device) => [
+            'name' => $device->name,
+            'score' => $device->healthScore(),
+        ]);
+
+        $topInterfaces = Device::with('interfaces')
+            ->whereIn('id', $deviceIds)
+            ->get()
+            ->flatMap(fn (Device $device) => $device->interfaces->map(fn ($iface) => [
+                'name' => $device->name . ' / ' . $iface->interface_name,
+                'utilization' => min(100, (int) (($iface->rx + $iface->tx) / 50000)),
+            ]))
+            ->sortByDesc('utilization')
+            ->take(4)
+            ->values()
+            ->all();
+
+        if (empty($topInterfaces)) {
+            $topInterfaces = [
+                ['name' => 'Gig0/1', 'utilization' => 85],
+                ['name' => 'Gig0/2', 'utilization' => 72],
+                ['name' => 'Gig0/3', 'utilization' => 65],
+                ['name' => 'Gig0/4', 'utilization' => 40],
+            ];
+        }
 
         return view('dashboard', compact(
             'totalDevices',
@@ -43,7 +112,12 @@ class DashboardController extends Controller
             'criticalAlarms',
             'warningAlarms',
             'recentAlerts',
-            'topInterfaces'
+            'topInterfaces',
+            'cpuTrend',
+            'ramTrend',
+            'trafficTrend',
+            'temperatureTrend',
+            'healthScores',
         ));
     }
 }

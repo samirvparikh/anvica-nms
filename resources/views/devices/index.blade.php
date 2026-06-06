@@ -41,7 +41,9 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Type</th>
+                @if($isAdmin)<th>Customer</th>@endif
+                <th>Service</th>
+                <th>Vendor</th>
                 <th>IP Address</th>
                 <th>Location</th>
                 <th>Status</th>
@@ -52,7 +54,9 @@
             @forelse($devices as $device)
             <tr class="device-row" data-name="{{ strtolower($device->name) }}" data-type="{{ strtolower($device->type) }}" data-ip="{{ $device->ip_address }}" data-loc="{{ strtolower($device->location) }}">
                 <td style="font-weight: 700;">{{ $device->name }}</td>
-                <td>{{ $device->type }}</td>
+                @if($isAdmin)<td>{{ $device->user?->name ?? 'Unassigned' }}</td>@endif
+                <td>{{ $device->service?->name ?? $device->type }}</td>
+                <td>{{ $device->vendor?->name ?? '—' }}</td>
                 <td>{{ $device->ip_address }}</td>
                 <td>{{ $device->location }}</td>
                 <td>
@@ -65,9 +69,18 @@
                     <button class="btn-action edit-btn editDeviceBtn" 
                             data-id="{{ $device->id }}"
                             data-name="{{ $device->name }}"
+                            data-user-id="{{ $device->user_id }}"
+                            data-service-id="{{ $device->service_id }}"
+                            data-vendor-id="{{ $device->vendor_id }}"
+                            data-hostname="{{ $device->hostname }}"
                             data-type="{{ $device->type }}"
                             data-ip="{{ $device->ip_address }}"
                             data-location="{{ $device->location }}"
+                            data-snmp-version="{{ $device->snmp_version }}"
+                            data-snmp-port="{{ $device->snmp_port }}"
+                            data-snmp-community="{{ $device->snmp_community }}"
+                            data-api-url="{{ $device->api_url }}"
+                            data-api-username="{{ $device->api_username }}"
                             data-status="{{ $device->status }}">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -92,7 +105,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No devices found.</td>
+                <td colspan="{{ $isAdmin ? 9 : 8 }}" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No devices found.</td>
             </tr>
             @endforelse
         </tbody>
@@ -101,7 +114,7 @@
 
 <!-- Add Device Modal -->
 <div class="modal-overlay" id="addDeviceModal">
-    <div class="modal-card">
+    <div class="modal-card modal-card-wide">
         <div class="modal-header">
             <h3>Add Monitored Device</h3>
             <button class="modal-close" id="closeAddModalBtn">&times;</button>
@@ -110,22 +123,43 @@
             @csrf
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="add_name" style="margin-bottom:0.25rem;">Name</label>
-                    <input type="text" id="add_name" name="name" class="form-control" placeholder="e.g. Switch-Floor2" required>
+                    <label for="add_name">Device Name</label>
+                    <input type="text" id="add_name" name="name" class="form-control" required>
                 </div>
+                @if($isAdmin)
                 <div class="form-group">
-                    <label for="add_type" style="margin-bottom:0.25rem;">Type</label>
-                    <select id="add_type" name="type" class="form-control" required>
-                        <option value="">Select Type</option>
-                        <option value="Switch">Switch</option>
-                        <option value="Firewall">Firewall</option>
-                        <option value="Router">Router</option>
-                        <option value="Access Point">Access Point</option>
-                        <option value="Server">Server</option>
-                        <option value="CCTV">CCTV</option>
-                        <option value="UPS">UPS</option>
+                    <label for="add_user_id">Customer (User)</label>
+                    <select id="add_user_id" name="user_id" class="form-control">
+                        <option value="">Unassigned (Admin)</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                        @endforeach
                     </select>
                 </div>
+                @endif
+                <div class="form-group">
+                    <label for="add_service_id">Service</label>
+                    <select id="add_service_id" name="service_id" class="form-control" required>
+                        <option value="">Select Service</option>
+                        @foreach($services as $service)
+                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add_vendor_id">Vendor</label>
+                    <select id="add_vendor_id" name="vendor_id" class="form-control">
+                        <option value="">Select Vendor</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}">{{ $vendor->name }} ({{ $vendor->service->name }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add_hostname">Hostname</label>
+                    <input type="text" id="add_hostname" name="hostname" class="form-control">
+                </div>
+                <input type="hidden" id="add_type" name="type" value="">
                 <div class="form-group">
                     <label for="add_ip" style="margin-bottom:0.25rem;">IP Address</label>
                     <input type="text" id="add_ip" name="ip_address" class="form-control" placeholder="e.g. 192.168.1.50" style="padding-left:1rem;" required>
@@ -135,7 +169,11 @@
                     <input type="text" id="add_location" name="location" class="form-control" placeholder="e.g. Rack A1" style="padding-left:1rem;" required>
                 </div>
                 <div class="form-group">
-                    <label for="add_status" style="margin-bottom:0.25rem;">Status</label>
+                    <label for="add_snmp_community">SNMP Community</label>
+                    <input type="text" id="add_snmp_community" name="snmp_community" class="form-control" value="public">
+                </div>
+                <div class="form-group">
+                    <label for="add_status">Status</label>
                     <select id="add_status" name="status" class="form-control" required>
                         <option value="Up">Up</option>
                         <option value="Warning">Warning</option>
@@ -153,7 +191,7 @@
 
 <!-- Edit Device Modal -->
 <div class="modal-overlay" id="editDeviceModal">
-    <div class="modal-card">
+    <div class="modal-card modal-card-wide">
         <div class="modal-header">
             <h3>Edit Monitored Device</h3>
             <button class="modal-close" id="closeEditModalBtn">&times;</button>
@@ -163,21 +201,42 @@
             @method('PUT')
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="edit_name" style="margin-bottom:0.25rem;">Name</label>
+                    <label for="edit_name">Device Name</label>
                     <input type="text" id="edit_name" name="name" class="form-control" required>
                 </div>
+                @if($isAdmin)
                 <div class="form-group">
-                    <label for="edit_type" style="margin-bottom:0.25rem;">Type</label>
-                    <select id="edit_type" name="type" class="form-control" required>
-                        <option value="Switch">Switch</option>
-                        <option value="Firewall">Firewall</option>
-                        <option value="Router">Router</option>
-                        <option value="Access Point">Access Point</option>
-                        <option value="Server">Server</option>
-                        <option value="CCTV">CCTV</option>
-                        <option value="UPS">UPS</option>
+                    <label for="edit_user_id">Customer (User)</label>
+                    <select id="edit_user_id" name="user_id" class="form-control">
+                        <option value="">Unassigned (Admin)</option>
+                        @foreach($customers as $customer)
+                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                        @endforeach
                     </select>
                 </div>
+                @endif
+                <div class="form-group">
+                    <label for="edit_service_id">Service</label>
+                    <select id="edit_service_id" name="service_id" class="form-control" required>
+                        @foreach($services as $service)
+                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_vendor_id">Vendor</label>
+                    <select id="edit_vendor_id" name="vendor_id" class="form-control">
+                        <option value="">Select Vendor</option>
+                        @foreach($vendors as $vendor)
+                            <option value="{{ $vendor->id }}">{{ $vendor->name }} ({{ $vendor->service->name }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_hostname">Hostname</label>
+                    <input type="text" id="edit_hostname" name="hostname" class="form-control">
+                </div>
+                <input type="hidden" id="edit_type" name="type" value="">
                 <div class="form-group">
                     <label for="edit_ip" style="margin-bottom:0.25rem;">IP Address</label>
                     <input type="text" id="edit_ip" name="ip_address" class="form-control" required>
@@ -252,27 +311,32 @@
         const cancelEditBtn = document.getElementById('cancelEditModalBtn');
         const editForm = document.getElementById('editDeviceForm');
 
-        const editNameInput = document.getElementById('edit_name');
-        const editTypeInput = document.getElementById('edit_type');
-        const editIpInput = document.getElementById('edit_ip');
-        const editLocationInput = document.getElementById('edit_location');
-        const editStatusInput = document.getElementById('edit_status');
+        const serviceTypeMap = @json($services->pluck('name', 'id'));
+        const addService = document.getElementById('add_service_id');
+        const addType = document.getElementById('add_type');
+        const editService = document.getElementById('edit_service_id');
+        const editType = document.getElementById('edit_type');
+
+        function syncType(select, typeInput) {
+            typeInput.value = serviceTypeMap[select.value] || '';
+        }
+
+        addService?.addEventListener('change', () => syncType(addService, addType));
+        editService?.addEventListener('change', () => syncType(editService, editType));
 
         document.querySelectorAll('.editDeviceBtn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const id = this.getAttribute('data-id');
-                const name = this.getAttribute('data-name');
-                const type = this.getAttribute('data-type');
-                const ip = this.getAttribute('data-ip');
-                const location = this.getAttribute('data-location');
-                const status = this.getAttribute('data-status');
-
-                // set input values
-                editNameInput.value = name;
-                editTypeInput.value = type;
-                editIpInput.value = ip;
-                editLocationInput.value = location;
-                editStatusInput.value = status;
+                document.getElementById('edit_name').value = this.getAttribute('data-name');
+                const editUserId = document.getElementById('edit_user_id');
+                if (editUserId) editUserId.value = this.getAttribute('data-user-id') || '';
+                document.getElementById('edit_service_id').value = this.getAttribute('data-service-id') || '';
+                document.getElementById('edit_vendor_id').value = this.getAttribute('data-vendor-id') || '';
+                document.getElementById('edit_hostname').value = this.getAttribute('data-hostname') || '';
+                document.getElementById('edit_type').value = this.getAttribute('data-type');
+                document.getElementById('edit_ip').value = this.getAttribute('data-ip');
+                document.getElementById('edit_location').value = this.getAttribute('data-location');
+                document.getElementById('edit_status').value = this.getAttribute('data-status');
 
                 // set action url
                 editForm.action = `/devices/${id}`;

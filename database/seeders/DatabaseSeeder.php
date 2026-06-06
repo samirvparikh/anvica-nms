@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Device;
 use App\Models\Alarm;
 use App\Models\Site;
-use App\Models\Service;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -186,80 +185,6 @@ class DatabaseSeeder extends Seeder
             Site::updateOrCreate(['name' => $site['name']], $site);
         }
 
-        $services = [
-            'Router' => [
-                ['CPU Usage', 'SNMP'],
-                ['RAM Usage', 'SNMP'],
-                ['Internet Traffic', 'SNMP'],
-                ['VPN Status', 'API'],
-                ['Uptime', 'SNMP'],
-                ['Packet Drops', 'SNMP'],
-                ['Temperature', 'SNMP'],
-                ['WAN Status', 'Ping/SNMP'],
-            ],
-            'Switch' => [
-                ['Port Up/Down', 'SNMP'],
-                ['RX/TX Traffic', 'SNMP'],
-                ['CPU', 'SNMP'],
-                ['MAC Count', 'SNMP'],
-                ['PoE Status', 'SNMP'],
-                ['Temperature', 'SNMP'],
-                ['Error Packets', 'SNMP'],
-            ],
-            'Firewall' => [
-                ['CPU', 'SNMP'],
-                ['Sessions', 'API'],
-                ['VPN Tunnel', 'API'],
-                ['WAN Health', 'SNMP'],
-                ['Threat Logs', 'Syslog'],
-                ['Interface Usage', 'SNMP'],
-            ],
-            'Access Point' => [
-                ['Client Count', 'SNMP'],
-                ['Signal Strength', 'SNMP'],
-                ['Channel Usage', 'SNMP'],
-                ['Throughput', 'SNMP'],
-                ['AP Status', 'Ping/SNMP'],
-            ],
-            'Server' => [
-                ['CPU', 'SNMP/WMI'],
-                ['RAM', 'SNMP/WMI'],
-                ['Disk Usage', 'SNMP/WMI'],
-                ['Service Status', 'WMI'],
-                ['Temperature', 'SNMP'],
-                ['Network Usage', 'SNMP'],
-            ],
-            'CCTV' => [
-                ['Camera Online', 'Ping'],
-                ['HDD Status', 'SNMP'],
-                ['Recording Status', 'API'],
-                ['Bitrate', 'SNMP'],
-                ['Camera Stream', 'RTSP/API'],
-            ],
-            'UPS' => [
-                ['Battery %', 'SNMP'],
-                ['Load %', 'SNMP'],
-                ['Input Voltage', 'SNMP'],
-                ['Output Voltage', 'SNMP'],
-                ['Battery Runtime', 'SNMP'],
-                ['Temperature', 'SNMP'],
-            ],
-        ];
-
-        foreach ($services as $serviceName => $points) {
-            $service = Service::updateOrCreate(
-                ['name' => $serviceName],
-                ['status' => Service::STATUS_ACTIVE]
-            );
-
-            $service->points()->delete();
-
-            foreach ($points as $point) {
-                $service->points()->create([
-                    'point' => $point[0],
-                    'method' => $point[1],
-                ]);
-            }
-        }
+        $this->call(MonitoringSeeder::class);
     }
 }

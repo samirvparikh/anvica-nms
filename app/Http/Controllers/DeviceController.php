@@ -2,94 +2,97 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreDeviceRequest;
+use App\Http\Requests\UpdateDeviceRequest;
 use App\Models\Device;
+use App\Models\DeviceVendor;
+use App\Models\Service;
+use App\Repositories\DeviceRepository;
 use Illuminate\Http\Request;
 
 class DeviceController extends Controller
 {
-    /**
-     * Display a listing of the devices.
-     */
+    public function __construct(
+        protected DeviceRepository $deviceRepository,
+    ) {}
+
     public function index(Request $request)
     {
         $user = $request->user();
 
-        $devices = $user->isAdmin()
-            ? Device::with('user')->orderBy('name')->get()
-            : $user->devices()->orderBy('name')->get();
-
         return view('devices.index', [
-            'devices' => $devices,
+            'devices' => $this->deviceRepository->allForUser($user),
+            'services' => Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get(),
+            'vendors' => DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get(),
+            'customers' => $user->isAdmin()
+                ? \App\Models\User::where('is_admin', false)->where('role', \App\Models\User::ROLE_USER)->orderBy('name')->get()
+                : collect(),
             'canAddDevice' => $user->canAddDevice(),
             'deviceLimit' => $user->isAdmin() ? null : $user->device_limit,
             'deviceCount' => $user->isAdmin() ? null : $user->deviceCount(),
+            'isAdmin' => $user->isAdmin(),
         ]);
     }
 
-    /**
-     * Store a newly created device in storage.
-     */
-    public function store(Request $request)
+    public function store(StoreDeviceRequest $request)
     {
         $user = $request->user();
 
         if (! $user->canAddDevice()) {
-            return back()->withErrors([
-                'device_limit' => 'Device limit reached. You cannot add more devices.',
-            ]);
+            return back()->withErrors(['device_limit' => 'Device limit reached. You cannot add more devices.']);
         }
 
         if (! $user->isActive()) {
-            return back()->withErrors([
-                'account' => 'Your account has expired. Please contact administrator.',
-            ]);
+            return back()->withErrors(['account' => 'Your account has expired. Please contact administrator.']);
         }
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:191|unique:devices,name',
-            'type' => 'required|string|max:191',
-            'ip_address' => 'required|ip',
-            'location' => 'required|string|max:191',
-            'status' => 'required|in:Up,Warning,Down',
-        ]);
+        $data = $this->prepareDeviceData($request->validated());
+        $data['user_id'] = $user->isAdmin()
+            ? ($request->input('user_id') ?: null)
+            : $user->id;
 
-        $validated['user_id'] = $user->isAdmin() ? null : $user->id;
-
-        Device::create($validated);
+        $this->deviceRepository->create($data);
 
         return redirect()->route('devices.index')->with('success', 'Device added successfully.');
     }
 
-    /**
-     * Update the specified device in storage.
-     */
-    public function update(Request $request, Device $device)
+    public function update(UpdateDeviceRequest $request, Device $device)
     {
+        $user = $request->user();
         $this->authorizeDevice($request, $device);
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:191|unique:devices,name,' . $device->id,
-            'type' => 'required|string|max:191',
-            'ip_address' => 'required|ip',
-            'location' => 'required|string|max:191',
-            'status' => 'required|in:Up,Warning,Down',
-        ]);
-
-        $device->update($validated);
+        $data = $this->prepareDeviceData($request->validated(), $device);
+        if ($user->isAdmin()) {
+            $data['user_id'] = $request->input('user_id') ?: null;
+        }
+        $this->deviceRepository->update($device, $data);
 
         return redirect()->route('devices.index')->with('success', 'Device updated successfully.');
     }
 
-    /**
-     * Remove the specified device from storage.
-     */
     public function destroy(Request $request, Device $device)
     {
         $this->authorizeDevice($request, $device);
-
-        $device->delete();
+        $this->deviceRepository->delete($device);
 
         return redirect()->route('devices.index')->with('success', 'Device deleted successfully.');
+    }
+
+    private function prepareDeviceData(array $data, ?Device $device = null): array
+    {
+        $service = Service::find($data['service_id']);
+        $data['type'] = $service?->name ?? ($data['type'] ?? 'Other');
+        $data['device_type'] = $data['type'];
+
+        if (empty($data['api_password'])) {
+            unset($data['api_password']);
+        }
+
+        if (empty($data['hostname'])) {
+            $data['hostname'] = $data['name'];
+        }
+
+        return $data;
     }
 
     private function authorizeDevice(Request $request, Device $device): void

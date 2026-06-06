@@ -12,11 +12,21 @@ class Service extends Model
 
     public const STATUS_INACTIVE = 'Inactive';
 
-    protected $fillable = ['name', 'status'];
+    protected $fillable = ['name', 'slug', 'icon', 'status'];
 
     public function points(): HasMany
     {
         return $this->hasMany(ServicePoint::class);
+    }
+
+    public function vendors(): HasMany
+    {
+        return $this->hasMany(DeviceVendor::class);
+    }
+
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
     }
 
     public function users(): BelongsToMany

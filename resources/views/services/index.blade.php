@@ -37,6 +37,18 @@
         </thead>
         <tbody>
             @forelse($services as $service)
+            @php
+                $servicePointsJson = $service->points->map(function ($point) {
+                    return [
+                        'name' => $point->name,
+                        'method' => $point->method,
+                        'unit' => $point->unit,
+                        'warning_threshold' => $point->warning_threshold,
+                        'critical_threshold' => $point->critical_threshold,
+                        'status' => $point->status,
+                    ];
+                })->values();
+            @endphp
             <tr class="service-row" data-name="{{ strtolower($service->name) }}">
                 <td style="font-weight: 700;">{{ $service->name }}</td>
                 <td>
@@ -46,7 +58,7 @@
                 </td>
                 <td>
                     @foreach($service->points as $point)
-                        <span class="service-point-tag">{{ $point->point }} <small>({{ $point->method }})</small></span>
+                        <span class="service-point-tag">{{ $point->name }} <small>({{ $point->method }})</small></span>
                     @endforeach
                 </td>
                 <td style="text-align: right;">
@@ -54,7 +66,7 @@
                             data-id="{{ $service->id }}"
                             data-name="{{ $service->name }}"
                             data-status="{{ $service->status }}"
-                            data-points='@json($service->points->map(fn ($p) => ["point" => $p->point, "method" => $p->method]))'>
+                            data-points="{{ $servicePointsJson->toJson() }}">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -113,7 +125,7 @@
                             <span></span>
                         </div>
                         <div class="point-row">
-                            <input type="text" name="points[0][point]" class="form-control" placeholder="Point" required>
+                            <input type="text" name="points[0][name]" class="form-control" placeholder="Point Name" required>
                             <input type="text" name="points[0][method]" class="form-control" placeholder="Method" required>
                             <button type="button" class="btn-remove-row" disabled>&times;</button>
                         </div>
@@ -194,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = document.createElement('div');
         row.className = 'point-row';
         row.innerHTML = `
-            <input type="text" name="points[${index}][point]" class="form-control" placeholder="Point" value="${escapeAttr(point)}" required>
+            <input type="text" name="points[${index}][name]" class="form-control" placeholder="Point Name" value="${escapeAttr(point)}" required>
             <input type="text" name="points[${index}][method]" class="form-control" placeholder="Method" value="${escapeAttr(method)}" required>
             <button type="button" class="btn-remove-row">&times;</button>
         `;
@@ -220,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function reindexPoints(container) {
         container.querySelectorAll('.point-row').forEach((row, idx) => {
             const inputs = row.querySelectorAll('input');
-            inputs[0].name = `points[${idx}][point]`;
+            inputs[0].name = `points[${idx}][name]`;
             inputs[1].name = `points[${idx}][method]`;
         });
     }
@@ -259,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 createPointRow(editPointsContainer, editPointIndex++);
             } else {
                 points.forEach(p => {
-                    createPointRow(editPointsContainer, editPointIndex++, p.point, p.method);
+                    createPointRow(editPointsContainer, editPointIndex++, p.name, p.method);
                 });
             }
 

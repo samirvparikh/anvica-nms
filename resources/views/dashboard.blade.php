@@ -69,7 +69,7 @@
             </svg>
         </div>
         <div class="card-info">
-            <div class="label">Alarms</div>
+            <div class="label">Active Alerts</div>
             <div class="value">{{ $totalAlarms }}</div>
             <div class="subtext">Critical <span class="bold">{{ $criticalAlarms }}</span> - Warning <span class="bold">{{ $warningAlarms }}</span></div>
         </div>
@@ -136,16 +136,17 @@
                 <div class="alert-details">
                     <div class="alert-pulse-dot {{ strtolower($alert->severity) }}"></div>
                     <div class="alert-meta-text">
-                        <span class="device-name">{{ $alert->device_name }}</span>
+                        <span class="device-name">{{ optional($alert->device)->name ?? $alert->device_name ?? 'Unknown' }}</span>
                         <span class="message">{{ $alert->message }}</span>
                     </div>
                 </div>
                 @php
-                    $isAck = $alert->status === 'Acknowledged';
+                    $isClosed = in_array($alert->status, ['Acknowledged', 'closed'], true);
+                    $severity = strtolower($alert->severity ?? 'warning');
                 @endphp
-                <span class="alert-time-badge {{ $isAck ? 'ack' : strtolower($alert->severity) }}">
-                    @if($isAck)
-                        ACKED
+                <span class="alert-time-badge {{ $isClosed ? 'ack' : $severity }}">
+                    @if($isClosed)
+                        CLOSED
                     @else
                         {{ $alert->created_at->format('h:i A') }}
                     @endif
@@ -157,6 +158,25 @@
         </div>
     </div>
 </div>
+
+@if($healthScores->isNotEmpty())
+<div class="dashboard-list-card" style="margin-top: 1.5rem;">
+    <div class="list-header"><h3>Device Health Score</h3></div>
+    <div class="interfaces-list">
+        @foreach($healthScores as $health)
+        <div class="interface-row">
+            <div class="interface-info">
+                <span class="name">{{ $health['name'] }}</span>
+                <span class="percent">{{ $health['score'] }}%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ $health['score'] }}%;"></div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endif
 
 <!-- Initialize Charts -->
 <script>

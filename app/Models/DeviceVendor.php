@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ServicePoint extends Model
+class DeviceVendor extends Model
 {
     public const STATUS_ACTIVE = 'Active';
 
@@ -16,28 +16,17 @@ class ServicePoint extends Model
         'service_id',
         'name',
         'slug',
-        'method',
-        'unit',
-        'warning_threshold',
-        'critical_threshold',
+        'logo',
         'status',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'warning_threshold' => 'decimal:4',
-            'critical_threshold' => 'decimal:4',
-        ];
-    }
 
     public function service(): BelongsTo
     {
         return $this->belongsTo(Service::class);
     }
 
-    public function alerts(): HasMany
+    public function devices(): HasMany
     {
-        return $this->hasMany(Alert::class);
+        return $this->hasMany(Device::class, 'vendor_id');
     }
 }
