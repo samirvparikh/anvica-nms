@@ -146,12 +146,6 @@
                             <span class="nav-link-text">Services</span>
                         </a>
                     </li>
-                </ul>
-                @endif
-                
-                @if($isAdmin)
-                <div class="nav-section-title">Settings</div>
-                <ul class="nav-list">
                     <li>
                         <a href="{{ route('settings.edit') }}" class="nav-link {{ request()->is('settings*') ? 'active' : '' }}" title="Settings">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -162,6 +156,11 @@
                         </a>
                     </li>
                 </ul>
+
+
+
+                    
+
                 @endif
 
                 <div class="nav-section-title">Account</div>
