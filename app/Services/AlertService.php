@@ -68,7 +68,7 @@ class AlertService
             ]);
         }
 
-        if ($device->status === 'Down') {
+        if ($device->health_status === Device::HEALTH_DOWN) {
             $this->raiseOfflineAlert($device);
         }
     }

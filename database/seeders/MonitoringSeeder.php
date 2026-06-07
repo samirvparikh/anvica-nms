@@ -153,10 +153,7 @@ class MonitoringSeeder extends Seeder
         $samir = \App\Models\User::where('email', 'samir@gmail.com')->first();
         $vijay = \App\Models\User::where('email', 'vijay@gmail.com')->first();
         $userAssignments = [
-            'Core-Switch01' => $samir?->id,
-            'Firewall-01' => $samir?->id,
-            'Router-WAN' => $vijay?->id,
-            'AP-Floor3' => $vijay?->id,
+            'Anvica_Demo' => $samir?->id,
         ];
 
         foreach ($deviceMap as $deviceName => $map) {

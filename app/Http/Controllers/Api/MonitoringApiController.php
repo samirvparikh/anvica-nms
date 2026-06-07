@@ -23,9 +23,9 @@ class MonitoringApiController extends Controller
 
         return response()->json([
             'total_devices' => (clone $deviceQuery)->count(),
-            'online_devices' => (clone $deviceQuery)->where('status', 'Up')->count(),
-            'offline_devices' => (clone $deviceQuery)->where('status', 'Down')->count(),
-            'warning_devices' => (clone $deviceQuery)->where('status', 'Warning')->count(),
+            'online_devices' => (clone $deviceQuery)->where('health_status', Device::HEALTH_UP)->count(),
+            'offline_devices' => (clone $deviceQuery)->where('health_status', Device::HEALTH_DOWN)->count(),
+            'warning_devices' => (clone $deviceQuery)->where('health_status', Device::HEALTH_WARNING)->count(),
             'active_alerts' => $this->userScope->alertsQuery($user)->where('status', Alert::STATUS_OPEN)->count(),
         ]);
     }
@@ -42,7 +42,7 @@ class MonitoringApiController extends Controller
             ->map(fn ($group) => $group->first());
 
         return response()->json([
-            'device' => array_merge($device->only(['id', 'name', 'hostname', 'status', 'last_seen']), [
+            'device' => array_merge($device->only(['id', 'name', 'hostname', 'status', 'health_status', 'last_seen']), [
                 'health_score' => $device->healthScore(),
             ]),
             'metrics' => $metrics,
@@ -58,6 +58,7 @@ class MonitoringApiController extends Controller
             'name' => $device->name,
             'hostname' => $device->hostname,
             'status' => $device->status,
+            'health_status' => $device->health_status,
             'health_score' => $device->healthScore(),
             'last_seen' => $device->last_seen,
         ]);

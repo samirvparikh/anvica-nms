@@ -192,10 +192,10 @@ class DevicePushApiController extends Controller
     }
 
     /**
-     * POST|GET /api/device/heartbeat — online ping + optional status.
+     * POST|GET /api/device/heartbeat — online ping + optional hostname.
      *
      * request_data example:
-     * {"ip_address":"192.168.5.1","status":"Up","hostname":"Anvica_Demo"}
+     * {"ip_address":"192.168.5.1","hostname":"Anvica_Demo"}
      */
     public function heartbeat(Request $request): JsonResponse
     {
@@ -203,7 +203,6 @@ class DevicePushApiController extends Controller
         $device = $this->resolveDevice($request, $payload);
 
         $validated = validator($payload, [
-            'status' => 'nullable|in:Up,Warning,Down',
             'hostname' => 'nullable|string|max:191',
             'Host_Name' => 'nullable|string|max:191',
             'host_name' => 'nullable|string|max:191',
@@ -216,7 +215,6 @@ class DevicePushApiController extends Controller
 
         $device->update([
             'last_seen' => Carbon::now(),
-            'status' => $validated['status'] ?? $device->status,
             'hostname' => $hostname ?? $device->hostname,
         ]);
 
@@ -244,6 +242,7 @@ class DevicePushApiController extends Controller
             'service' => $device->service?->name,
             'vendor' => $device->vendor?->name,
             'status' => $device->status,
+            'health_status' => $device->health_status,
             'last_seen' => $device->last_seen,
         ]);
     }

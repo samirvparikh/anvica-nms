@@ -22,9 +22,9 @@ class DashboardController extends Controller
         $deviceQuery = $this->userScope->devicesQuery($user);
 
         $totalDevices = (clone $deviceQuery)->count();
-        $upDevices = (clone $deviceQuery)->where('status', 'Up')->count();
-        $downDevices = (clone $deviceQuery)->where('status', 'Down')->count();
-        $warningDevices = (clone $deviceQuery)->where('status', 'Warning')->count();
+        $upDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_UP)->count();
+        $downDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_DOWN)->count();
+        $warningDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_WARNING)->count();
 
         $deviceIds = $this->userScope->deviceIds($user);
 

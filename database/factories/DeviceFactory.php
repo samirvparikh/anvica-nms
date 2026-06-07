@@ -23,7 +23,12 @@ class DeviceFactory extends Factory
             'device_type' => 'Router',
             'ip_address' => fake()->ipv4(),
             'location' => fake()->city(),
-            'status' => fake()->randomElement(['Up', 'Warning', 'Down']),
+            'status' => Device::STATUS_ACTIVE,
+            'health_status' => fake()->randomElement([
+                Device::HEALTH_UP,
+                Device::HEALTH_WARNING,
+                Device::HEALTH_DOWN,
+            ]),
             'snmp_version' => '2c',
             'snmp_port' => 161,
             'snmp_community' => 'public',

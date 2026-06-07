@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Device extends Model
 {
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_INACTIVE = 'inactive';
+
+    public const HEALTH_UP = 'Up';
+
+    public const HEALTH_WARNING = 'Warning';
+
+    public const HEALTH_DOWN = 'Down';
+
     /** @use HasFactory<\Database\Factories\DeviceFactory> */
     use HasFactory;
     protected $fillable = [
@@ -28,6 +38,7 @@ class Device extends Model
         'snmp_port',
         'snmp_community',
         'status',
+        'health_status',
         'last_seen',
     ];
 
@@ -85,7 +96,7 @@ class Device extends Model
 
     public function healthScore(): int
     {
-        if ($this->status === 'Down') {
+        if ($this->health_status === self::HEALTH_DOWN) {
             return 0;
         }
 
@@ -93,7 +104,7 @@ class Device extends Model
         $ram = (float) $this->metrics()->where('metric_slug', 'ram')->latest('recorded_at')->value('metric_value');
 
         if ($cpu === 0.0 && $ram === 0.0) {
-            return $this->status === 'Warning' ? 60 : 100;
+            return $this->health_status === self::HEALTH_WARNING ? 60 : 100;
         }
 
         $score = 100;

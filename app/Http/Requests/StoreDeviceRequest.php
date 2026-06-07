@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDeviceRequest extends FormRequest
 {
@@ -14,7 +15,12 @@ class StoreDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:191|unique:devices,name',
+            'name' => [
+                'required',
+                'string',
+                'max:191',
+                Rule::unique('devices', 'name')->where(fn ($query) => $query->where('ip_address', $this->input('ip_address'))),
+            ],
             'service_id' => 'required|exists:services,id',
             'vendor_id' => 'nullable|exists:device_vendors,id',
             'hostname' => 'nullable|string|max:191',
@@ -27,8 +33,15 @@ class StoreDeviceRequest extends FormRequest
             'snmp_version' => 'nullable|in:1,2c,3',
             'snmp_port' => 'nullable|integer|min:1|max:65535',
             'snmp_community' => 'nullable|string|max:191',
-            'status' => 'required|in:Up,Warning,Down',
+            'status' => 'nullable|in:active,inactive',
             'user_id' => 'nullable|exists:users,id',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'A device with this name and IP address already exists.',
         ];
     }
 }

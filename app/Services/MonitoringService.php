@@ -109,7 +109,7 @@ class MonitoringService
         $device->update([
             'last_seen' => $recordedAt,
             'hostname' => $result['hostname'] ?? $device->hostname,
-            'status' => $this->resolveStatus($result['metrics']),
+            'health_status' => $this->resolveHealthStatus($result['metrics']),
         ]);
 
         $this->alertService->evaluateDevice($device->fresh(), $result['metrics']);
@@ -118,7 +118,7 @@ class MonitoringService
     /**
      * @param  array<string, float|int>  $metrics
      */
-    protected function resolveStatus(array $metrics): string
+    protected function resolveHealthStatus(array $metrics): string
     {
         $cpu = (float) ($metrics['cpu'] ?? 0);
         $ram = (float) ($metrics['ram'] ?? 0);

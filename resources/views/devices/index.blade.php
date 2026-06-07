@@ -47,6 +47,7 @@
                 <th>IP Address</th>
                 <th>Location</th>
                 <th>Status</th>
+                @if($canAddDevice)<th style="text-align: center; width: 110px;">Add IP</th>@endif
                 <th style="text-align: right;">Actions</th>
             </tr>
         </thead>
@@ -60,10 +61,31 @@
                 <td>{{ $device->ip_address }}</td>
                 <td>{{ $device->location }}</td>
                 <td>
-                    <span class="status-badge {{ strtolower($device->status) }}">
-                        {{ $device->status }}
+                    <span class="status-badge {{ $device->status === 'active' ? 'active' : 'inactive' }}">
+                        {{ $device->status === 'active' ? 'Active' : 'Inactive' }}
                     </span>
                 </td>
+                @if($canAddDevice)
+                <td style="text-align: center;">
+                    <button type="button"
+                            class="btn-add-ip cloneDeviceBtn"
+                            title="Add new IP with same device details"
+                            data-name="{{ $device->name }}"
+                            data-user-id="{{ $device->user_id }}"
+                            data-service-id="{{ $device->service_id }}"
+                            data-vendor-id="{{ $device->vendor_id }}"
+                            data-hostname="{{ $device->hostname }}"
+                            data-type="{{ $device->type }}"
+                            data-location="{{ $device->location }}"
+                            data-snmp-community="{{ $device->snmp_community }}">
+                        <svg class="btn-add-ip-icon" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>Add IP</span>
+                    </button>
+                </td>
+                @endif
                 <td style="text-align: right;">
                     <!-- Edit Action Button -->
                     <button class="btn-action edit-btn editDeviceBtn" 
@@ -105,7 +127,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="{{ $isAdmin ? 9 : 8 }}" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No devices found.</td>
+                <td colspan="{{ $isAdmin ? ($canAddDevice ? 10 : 9) : ($canAddDevice ? 9 : 8) }}" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No devices found.</td>
             </tr>
             @endforelse
         </tbody>
@@ -170,15 +192,7 @@
                 </div>
                 <div class="form-group">
                     <label for="add_snmp_community">SNMP Community</label>
-                    <input type="text" id="add_snmp_community" name="snmp_community" class="form-control" value="public">
-                </div>
-                <div class="form-group">
-                    <label for="add_status">Status</label>
-                    <select id="add_status" name="status" class="form-control" required>
-                        <option value="Up">Up</option>
-                        <option value="Warning">Warning</option>
-                        <option value="Down">Down</option>
-                    </select>
+                    <input type="text" id="add_snmp_community" name="snmp_community" class="form-control" value="Anvica_NMS">
                 </div>
             </div>
             <div class="modal-footer">
@@ -246,11 +260,14 @@
                     <input type="text" id="edit_location" name="location" class="form-control" required>
                 </div>
                 <div class="form-group">
+                    <label for="edit_snmp_community">SNMP Community</label>
+                    <input type="text" id="edit_snmp_community" name="snmp_community" class="form-control" placeholder="Enter SNMP Community" value="Anvica_NMS">
+                </div>
+                <div class="form-group">
                     <label for="edit_status" style="margin-bottom:0.25rem;">Status</label>
                     <select id="edit_status" name="status" class="form-control" required>
-                        <option value="Up">Up</option>
-                        <option value="Warning">Warning</option>
-                        <option value="Down">Down</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
                     </select>
                 </div>
             </div>
@@ -298,6 +315,12 @@
         const addService = document.getElementById('add_service_id');
         const addType = document.getElementById('add_type');
         const addVendor = document.getElementById('add_vendor_id');
+        const addName = document.getElementById('add_name');
+        const addHostname = document.getElementById('add_hostname');
+        const addIp = document.getElementById('add_ip');
+        const addLocation = document.getElementById('add_location');
+        const addSnmpCommunity = document.getElementById('add_snmp_community');
+        const addUserId = document.getElementById('add_user_id');
         const editService = document.getElementById('edit_service_id');
         const editType = document.getElementById('edit_type');
         const editVendor = document.getElementById('edit_vendor_id');
@@ -308,6 +331,33 @@
             } else {
                 addModal.classList.remove('open');
             }
+        }
+
+        function resetAddForm() {
+            if (addName) addName.value = '';
+            if (addUserId) addUserId.value = '';
+            if (addService) addService.value = '';
+            if (addVendor) addVendor.value = '';
+            if (addHostname) addHostname.value = '';
+            if (addType) addType.value = '';
+            if (addIp) addIp.value = '';
+            if (addLocation) addLocation.value = '';
+            if (addSnmpCommunity) addSnmpCommunity.value = 'Anvica_NMS';
+            filterVendors(addService, addVendor, false);
+        }
+
+        function fillAddFormFromRow(btn) {
+            if (addName) addName.value = btn.getAttribute('data-name') || '';
+            if (addUserId) addUserId.value = btn.getAttribute('data-user-id') || '';
+            if (addService) addService.value = btn.getAttribute('data-service-id') || '';
+            syncType(addService, addType);
+            filterVendors(addService, addVendor, false);
+            if (addVendor) addVendor.value = btn.getAttribute('data-vendor-id') || '';
+            if (addHostname) addHostname.value = btn.getAttribute('data-hostname') || '';
+            if (addType) addType.value = btn.getAttribute('data-type') || '';
+            if (addIp) addIp.value = '';
+            if (addLocation) addLocation.value = btn.getAttribute('data-location') || '';
+            if (addSnmpCommunity) addSnmpCommunity.value = btn.getAttribute('data-snmp-community') || 'Anvica_NMS';
         }
 
         function syncType(select, typeInput) {
@@ -350,12 +400,24 @@
 
         if (openAddBtn) {
             openAddBtn.addEventListener('click', () => {
+                resetAddForm();
                 toggleAddModal(true);
-                filterVendors(addService, addVendor, false);
             });
         }
         if (closeAddBtn) closeAddBtn.addEventListener('click', () => toggleAddModal(false));
         if (cancelAddBtn) cancelAddBtn.addEventListener('click', () => toggleAddModal(false));
+
+        document.querySelectorAll('.cloneDeviceBtn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                fillAddFormFromRow(this);
+                toggleAddModal(true);
+                setTimeout(function () {
+                    if (addIp) {
+                        addIp.focus();
+                    }
+                }, 100);
+            });
+        });
 
         document.querySelectorAll('.editDeviceBtn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -370,6 +432,7 @@
                 document.getElementById('edit_type').value = this.getAttribute('data-type');
                 document.getElementById('edit_ip').value = this.getAttribute('data-ip');
                 document.getElementById('edit_location').value = this.getAttribute('data-location');
+                document.getElementById('edit_snmp_community').value = this.getAttribute('data-snmp-community') || '';
                 document.getElementById('edit_status').value = this.getAttribute('data-status');
 
                 // set action url

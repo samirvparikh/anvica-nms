@@ -1325,6 +1325,49 @@ h1, h2, h3, h4, h5, h6 {
     background: #f8fafc;
 }
 
+.btn-add-ip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    background: linear-gradient(180deg, #f7fdf0 0%, #eef9e4 100%);
+    border: 1px solid rgba(116, 198, 43, 0.35);
+    border-radius: 999px;
+    color: #4a8f1a;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: var(--transition);
+    box-shadow: 0 1px 2px rgba(116, 198, 43, 0.08);
+}
+
+.btn-add-ip-icon {
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.btn-add-ip:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(116, 198, 43, 0.28);
+    transform: translateY(-1px);
+}
+
+.btn-add-ip:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(116, 198, 43, 0.2);
+}
+
+.btn-add-ip:focus-visible {
+    outline: 2px solid rgba(116, 198, 43, 0.45);
+    outline-offset: 2px;
+}
+
 .btn-remove-row {
     width: 36px;
     height: 36px;

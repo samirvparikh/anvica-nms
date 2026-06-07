@@ -112,7 +112,7 @@ class ApiController extends Controller
             'device_name' => $device->name,
             'router_name' => $routerName,
             'metrics_stored' => $metrics,
-            'device_status' => $device->status,
+            'device_status' => $device->health_status,
             'last_seen' => $device->last_seen?->toIso8601String(),
         ], 200);
     }

@@ -39,7 +39,7 @@
                     <th>Hostname</th>
                     @if(Auth::user()->isAdmin())<th>Customer</th>@endif
                     <th>Service</th>
-                    <th>Status</th>
+                    <th>Health</th>
                     <th>Last Seen</th>
                     <th>CPU %</th>
                     <th>RAM %</th>
@@ -58,7 +58,7 @@
                     <td>{{ $device->user?->name ?? 'Admin / Unassigned' }}</td>
                     @endif
                     <td>{{ $device->service?->name ?? $device->type }}</td>
-                    <td><span class="status-badge {{ strtolower($device->status) }}">{{ $device->status }}</span></td>
+                    <td><span class="status-badge {{ strtolower($device->health_status) }}">{{ $device->health_status }}</span></td>
                     <td>{{ $device->last_seen?->format('M d, H:i') ?? '—' }}</td>
                     <td>{{ isset($m['cpu']) ? number_format($m['cpu']->metric_value, 1) : '—' }}</td>
                     <td>{{ isset($m['ram']) ? number_format($m['ram']->metric_value, 1) : '—' }}</td>

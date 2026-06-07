@@ -59,131 +59,44 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+
+        $samir = \App\Models\User::where('email', 'samir@gmail.com')->first();
         $devices = [
             [
-                'name' => 'Core-Switch01',
-                'type' => 'Switch',
-                'ip_address' => '10.0.0.1',
-                'location' => 'Data Center',
-                'status' => 'Up',
-            ],
-            [
-                'name' => 'Firewall-01',
-                'type' => 'Firewall',
-                'ip_address' => '10.0.0.2',
-                'location' => 'Edge',
-                'status' => 'Warning',
-            ],
-            [
-                'name' => 'Router-WAN',
+                'user_id' => $samir?->id,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                'name' => 'Anvica_Demo',
+                'hostname' => 'Anvica_Demo',
                 'type' => 'Router',
-                'ip_address' => '10.0.0.3',
-                'location' => 'Edge',
-                'status' => 'Up',
+                'device_type' => 'Router',
+                'ip_address' => '192.168.5.1',
+                'snmp_community' => 'Anvica_NMS',
+                'location' => 'Hathijan',
+                'status' => 'active',
+                'health_status' => 'Up',
             ],
             [
-                'name' => 'AP-Floor3',
-                'type' => 'Access Point',
-                'ip_address' => '10.0.3.21',
-                'location' => 'Floor 3',
-                'status' => 'Down',
-            ],
-            [
-                'name' => 'Server-02',
-                'type' => 'Server',
-                'ip_address' => '10.0.1.10',
-                'location' => 'Rack B2',
-                'status' => 'Warning',
-            ],
-            [
-                'name' => 'CCTV-Lobby',
-                'type' => 'CCTV',
-                'ip_address' => '10.0.4.5',
-                'location' => 'Lobby',
-                'status' => 'Up',
-            ],
-            [
-                'name' => 'UPS-Main',
-                'type' => 'UPS',
-                'ip_address' => '10.0.5.1',
-                'location' => 'Server Room',
-                'status' => 'Up',
+                'user_id' => $samir?->id,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                'name' => 'Anvica_Demo',
+                'hostname' => 'Anvica_Demo',
+                'type' => 'Router',
+                'device_type' => 'Router',
+                'ip_address' => '192.168.5.2',
+                'snmp_community' => 'Anvica_NMS',
+                'location' => 'Hathijan',
+                'status' => 'active',
+                'health_status' => 'Up',
             ],
         ];
 
         foreach ($devices as $device) {
-            Device::updateOrCreate(['name' => $device['name']], $device);
+            Device::updateOrCreate(['name' => $device['name'], 'ip_address' => $device['ip_address']], $device);
         }
 
-        $alarms = [
-            [
-                'device_name' => 'Core-Switch01',
-                'message' => 'Link Down on Gi0/1',
-                'severity' => 'Critical',
-                'status' => 'Open',
-            ],
-            [
-                'device_name' => 'Firewall-01',
-                'message' => 'CPU > 95%',
-                'severity' => 'Critical',
-                'status' => 'Open',
-            ],
-            [
-                'device_name' => 'Server-02',
-                'message' => 'Disk Space Low (92%)',
-                'severity' => 'Warning',
-                'status' => 'Acknowledged',
-            ],
-            [
-                'device_name' => 'AP Floor 3',
-                'message' => 'Device Unreachable',
-                'severity' => 'Critical',
-                'status' => 'Open',
-            ],
-            [
-                'device_name' => 'Router-WAN',
-                'message' => 'Latency spike',
-                'severity' => 'Warning',
-                'status' => 'Acknowledged',
-            ],
-            [
-                'device_name' => 'UPS-Main',
-                'message' => 'Battery test passed',
-                'severity' => 'Warning',
-                'status' => 'Acknowledged',
-            ],
-        ];
-
-        foreach ($alarms as $alarm) {
-            Alarm::updateOrCreate(
-                [
-                    'device_name' => $alarm['device_name'],
-                    'message' => $alarm['message'],
-                ],
-                $alarm
-            );
-        }
-
-        $sites = [
-            [
-                'name' => 'HQ - Ahmedabad',
-                'up_devices' => 45,
-                'total_devices' => 48,
-                'x_pos' => 35,
-                'y_pos' => 45,
-            ],
-            [
-                'name' => 'DC - Gandhinagar',
-                'up_devices' => 34,
-                'total_devices' => 36,
-                'x_pos' => 30,
-                'y_pos' => 55,
-            ],
-        ];
-
-        foreach ($sites as $site) {
-            Site::updateOrCreate(['name' => $site['name']], $site);
-        }
+        
 
         $this->call(MonitoringSeeder::class);
     }

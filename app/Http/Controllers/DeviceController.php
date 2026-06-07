@@ -92,6 +92,8 @@ class DeviceController extends Controller
             $data['hostname'] = $data['name'];
         }
 
+        $data['status'] = $data['status'] ?? ($device?->status ?? Device::STATUS_ACTIVE);
+
         return $data;
     }
 
