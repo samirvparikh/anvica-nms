@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ApiRequestLog;
 use App\Models\Device;
 use App\Models\DeviceMetric;
 use App\Monitoring\Normalizers\MikroTikPipeParser;
+use App\Services\ApiRequestLogger;
 use App\Services\MonitoringService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -18,15 +20,25 @@ class ApiController extends Controller
     ) {}
 
     /**
-     * Handle incoming test request (logged automatically by LogApiRequest middleware).
+     * Handle incoming test request and log details to database.
      */
     public function handleTestRequest(Request $request): JsonResponse
     {
+        $log = $this->logRequest($request);
+
         return response()->json([
             'status' => 'success',
-            'message' => 'API request successfully logged to api_request_logs.',
-            'url' => $request->fullUrl(),
-            'method' => $request->method(),
+            'message' => 'API request successfully logged to MySQL database.',
+            'logged_data' => [
+                'id' => $log->id,
+                'url' => $log->url,
+                'method' => $log->method,
+                'ip_address' => $log->ip_address,
+                'user_agent' => $log->user_agent,
+                'referer' => $log->referer,
+                'request_data' => $log->request_data,
+                'timestamp' => $log->created_at->toIso8601String(),
+            ],
         ], 200);
     }
 
@@ -38,11 +50,11 @@ class ApiController extends Controller
      */
     public function router(Request $request): JsonResponse
     {
+        $this->logRequest($request);
+
         $payload = $this->extractRouterPayload($request);
-        // dd($payload);
         // $routerName = $payload['SYSTEM']['Router'] ?? null;
         $routerName = $payload['Router'] ?? null;
-        // dd($routerName);
 
         if (! $routerName) {
             return response()->json([
@@ -114,5 +126,20 @@ class ApiController extends Controller
         }
 
         return $all;
+    }
+
+    protected function logRequest(Request $request): ApiRequestLog
+    {
+        return ApiRequestLog::create([
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'referer' => $request->header('referer') ?? $request->header('referrer') ?? $request->server('HTTP_REFERER'),
+            'request_data' => $request->all() ?: ['raw' => $request->getContent()],
+            'headers' => collect($request->headers->all())->map(function ($item) {
+                return is_array($item) && count($item) === 1 ? $item[0] : $item;
+            })->toArray(),
+        ]);
     }
 }
