@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('api_request_logs', function (Blueprint $Blueprint) {
             $Blueprint->id();
-            $Blueprint->string('url');
+            $Blueprint->text('url');
             $Blueprint->string('method');
             $Blueprint->string('ip_address');
             $Blueprint->text('user_agent')->nullable();
