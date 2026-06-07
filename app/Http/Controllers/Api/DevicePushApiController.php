@@ -28,10 +28,8 @@ class DevicePushApiController extends Controller
     {
         $payload ??= $this->extractPayload($request);
 
-        $ip = $request->header('X-Device-Ip')
-            ?? $payload['ip_address']
-            ?? $payload['IP_Address']
-            ?? $request->input('ip_address');
+        $ip = $this->extractIpAddress($request, $payload);
+        $name = $this->extractDeviceName($payload);
 
         $device = null;
 
@@ -39,24 +37,65 @@ class DevicePushApiController extends Controller
             $device = Device::where('ip_address', $ip)->first();
         }
 
-        if (! $device) {
-            $name = $payload['Router']
-                ?? $payload['router']
-                ?? $payload['Host_Name']
-                ?? $payload['host_name']
-                ?? null;
-
-            if ($name) {
-                $device = Device::query()
-                    ->where('name', $name)
-                    ->orWhere('hostname', $name)
-                    ->first();
-            }
+        if (! $device && $name) {
+            $device = Device::query()
+                ->where('name', $name)
+                ->orWhere('hostname', $name)
+                ->first();
         }
 
-        abort_unless($ip || $device, 422, 'ip_address or Router/Host_Name required (body, query, or X-Device-Ip header).');
+        abort_unless($ip || $name, 422, 'ip_address or Router/Host_Name required (body, query, or X-Device-Ip header).');
         abort_unless($device, 404, 'Device not registered in NMS. Add it under Devices first.');
 
+        return $this->authorizeDeviceApiKey($request, $payload, $device);
+    }
+
+    /**
+     * Device lookup for /api/device/metrics — requires both name and ip_address.
+     */
+    protected function resolveDeviceByNameAndIp(Request $request, ?array $payload = null): Device
+    {
+        $payload ??= $this->extractPayload($request);
+
+        $ip = $this->extractIpAddress($request, $payload);
+        $name = $this->extractDeviceName($payload);
+
+        abort_unless($ip, 422, 'ip_address is required (body, query, or X-Device-Ip header).');
+        abort_unless($name, 422, 'name is required (use name, Router, or Host_Name in payload).');
+
+        $device = Device::query()
+            ->where('ip_address', $ip)
+            ->where(function ($query) use ($name) {
+                $query->where('name', $name)
+                    ->orWhere('hostname', $name);
+            })
+            ->first();
+
+        abort_unless($device, 404, 'Device not found. No device matches this name and IP address.');
+
+        return $this->authorizeDeviceApiKey($request, $payload, $device);
+    }
+
+    protected function extractIpAddress(Request $request, array $payload): ?string
+    {
+        return $request->header('X-Device-Ip')
+            ?? $payload['ip_address']
+            ?? $payload['IP_Address']
+            ?? $request->input('ip_address');
+    }
+
+    protected function extractDeviceName(array $payload): ?string
+    {
+        return $payload['name']
+            ?? $payload['Router']
+            ?? $payload['router']
+            ?? $payload['Host_Name']
+            ?? $payload['host_name']
+            ?? null;
+    }
+
+    protected function authorizeDeviceApiKey(Request $request, array $payload, Device $device): Device
+    {
         $apiKey = $request->header('X-Api-Key') ?? $payload['api_key'] ?? $request->input('api_key');
         if ($apiKey && $device->snmp_community && $apiKey !== $device->snmp_community) {
             abort(401, 'Invalid API key.');
@@ -104,15 +143,15 @@ class DevicePushApiController extends Controller
      * POST|GET /api/device/metrics — metrics only (flat router params or nested metrics object).
      *
      * Flat request_data:
-     * {"ip_address":"192.168.5.1","CPU":"6","CPU_Temp":"60","Ram_Uses":"1852352","Total_Ram":"8388608",...}
+     * {"name":"Anvica_Demo","ip_address":"192.168.5.1","CPU":"6","CPU_Temp":"60","Ram_Uses":"1852352","Total_Ram":"8388608",...}
      *
      * Nested request_data:
-     * {"ip_address":"192.168.5.1","metrics":{"cpu":6,"ram":22,"disk":0,"temperature":60}}
+     * {"name":"Anvica_Demo","ip_address":"192.168.5.1","metrics":{"cpu":6,"ram":22,"disk":0,"temperature":60}}
      */
     public function metrics(Request $request): JsonResponse
     {
         $payload = $this->extractPayload($request);
-        $device = $this->resolveDevice($request, $payload);
+        $device = $this->resolveDeviceByNameAndIp($request, $payload);
 
         if (MetricNormalizer::isFlatRouterPush($payload)) {
             $info = MetricNormalizer::fromRouterPush($payload);
@@ -253,7 +292,7 @@ class DevicePushApiController extends Controller
     public function latestMetrics(Request $request): JsonResponse
     {
         $payload = $this->extractPayload($request);
-        $device = $this->resolveDevice($request, $payload);
+        $device = $this->resolveDeviceByNameAndIp($request, $payload);
 
         $metrics = DeviceMetric::where('device_id', $device->id)
             ->latest('recorded_at')
