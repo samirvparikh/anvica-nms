@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Service;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -53,14 +55,24 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         if ($user->id === $request->user()->id && $request->input('role') !== User::ROLE_ADMIN) {
-            return back()->withErrors(['role' => 'You cannot change your own account to a regular user.']);
+            return $this->redirectToUsersIndexWithEdit($user)
+                ->withErrors(['role' => 'You cannot change your own account to a regular user.']);
         }
 
         if ($user->id === $request->user()->id && $request->input('status') === User::STATUS_INACTIVE) {
-            return back()->withErrors(['status' => 'You cannot deactivate your own account.']);
+            return $this->redirectToUsersIndexWithEdit($user)
+                ->withErrors(['status' => 'You cannot deactivate your own account.']);
         }
 
-        $validated = $this->validateUser($request, $user);
+        $validator = Validator::make($request->all(), $this->userRules($request, $user));
+
+        if ($validator->fails()) {
+            return $this->redirectToUsersIndexWithEdit($user)
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
 
         $isAdmin = $validated['role'] === User::ROLE_ADMIN;
 
@@ -106,6 +118,11 @@ class UserController extends Controller
 
     private function validateUser(Request $request, ?User $user = null): array
     {
+        return $request->validate($this->userRules($request, $user));
+    }
+
+    private function userRules(Request $request, ?User $user = null): array
+    {
         $isUserRole = $request->input('role', User::ROLE_USER) === User::ROLE_USER;
 
         $rules = [
@@ -134,6 +151,13 @@ class UserController extends Controller
             $rules['services.*'] = 'exists:services,id';
         }
 
-        return $request->validate($rules);
+        return $rules;
+    }
+
+    private function redirectToUsersIndexWithEdit(User $user): RedirectResponse
+    {
+        return redirect()->route('users.index')
+            ->withInput()
+            ->with('edit_user_id', $user->id);
     }
 }

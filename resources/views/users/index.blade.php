@@ -4,6 +4,7 @@
 @php
     $today = now()->format('Y-m-d');
     $oneYearLater = now()->addYear()->format('Y-m-d');
+    $editUserId = session('edit_user_id');
 @endphp
 
 <div class="page-header">
@@ -94,6 +95,7 @@
                 <td style="text-align: right;">
                     <button class="btn-action edit-btn editUserBtn"
                             data-id="{{ $user->id }}"
+                            data-update-url="{{ route('users.update', $user) }}"
                             data-name="{{ $user->name }}"
                             data-email="{{ $user->email }}"
                             data-mobile="{{ $user->mobile }}"
@@ -143,6 +145,7 @@
         <form action="{{ route('users.store') }}" method="POST">
             @csrf
             <div class="modal-body">
+                <input type="hidden" name="status" value="Active">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="add_user_role">Role</label>
@@ -151,40 +154,31 @@
                             <option value="admin">Admin</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="add_user_status">Status</label>
-                        <select id="add_user_status" name="status" class="form-control" required>
-                            <option value="Active" selected>Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
+                    <div class="form-group user-device-limit-field" id="addDeviceLimitField">
+                        <label for="add_user_device_limit">Device Limit</label>
+                        <input type="number" id="add_user_device_limit" name="device_limit" class="form-control user-only-input" min="1" value="10">
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="add_user_name">Name</label>
+                    <input type="text" id="add_user_name" name="name" class="form-control" required>
+                </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_user_name">Name</label>
-                        <input type="text" id="add_user_name" name="name" class="form-control" required>
-                    </div>
                     <div class="form-group">
                         <label for="add_user_email">Email</label>
                         <input type="email" id="add_user_email" name="email" class="form-control" required>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="add_user_mobile">Mobile</label>
-                    <input type="text" id="add_user_mobile" name="mobile" class="form-control">
+                    <div class="form-group">
+                        <label for="add_user_mobile">Mobile</label>
+                        <input type="text" id="add_user_mobile" name="mobile" class="form-control">
+                    </div>
                 </div>
                 <div class="user-only-fields" id="addUserOnlyFields">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="add_user_device_limit">Device Limit</label>
-                            <input type="number" id="add_user_device_limit" name="device_limit" class="form-control user-only-input" min="1" value="10">
-                        </div>
-                        <div class="form-group">
                             <label for="add_user_start_date">Start Date</label>
                             <input type="date" id="add_user_start_date" name="start_date" class="form-control user-only-input" value="{{ $today }}">
                         </div>
-                    </div>
-                    <div class="form-row">
                         <div class="form-group">
                             <label for="add_user_expire_date">Expire Date</label>
                             <input type="date" id="add_user_expire_date" name="expire_date" class="form-control user-only-input" value="{{ $oneYearLater }}">
@@ -230,55 +224,51 @@
             <h3>Edit Account</h3>
             <button class="modal-close" id="closeEditUserModalBtn">&times;</button>
         </div>
-        <form action="" method="POST" id="editUserForm">
+        <form action="{{ $editUserId ? route('users.update', $editUserId) : '' }}" method="POST" id="editUserForm">
             @csrf
             @method('PUT')
             <div class="modal-body">
+                @if($errors->any() && $editUserId)
+                <div class="form-alert form-alert-error" style="margin-bottom: 1rem;">
+                    {{ $errors->first() }}
+                </div>
+                @endif
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit_user_role">Role</label>
                         <select id="edit_user_role" name="role" class="form-control role-select" required>
-                            <option value="user">User</option>
-                            <option value="admin">Admin</option>
+                            <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>User</option>
+                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label for="edit_user_status">Status</label>
-                        <select id="edit_user_status" name="status" class="form-control" required>
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="edit_user_name">Name</label>
-                        <input type="text" id="edit_user_name" name="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit_user_email">Email</label>
-                        <input type="email" id="edit_user_email" name="email" class="form-control" required>
+                    <div class="form-group user-device-limit-field" id="editDeviceLimitField">
+                        <label for="edit_user_device_limit">Device Limit</label>
+                        <input type="number" id="edit_user_device_limit" name="device_limit" class="form-control user-only-input" min="1" value="{{ old('device_limit') }}">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="edit_user_mobile">Mobile</label>
-                    <input type="text" id="edit_user_mobile" name="mobile" class="form-control">
+                    <label for="edit_user_name">Name</label>
+                    <input type="text" id="edit_user_name" name="name" class="form-control" value="{{ old('name') }}" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="edit_user_email">Email</label>
+                        <input type="email" id="edit_user_email" name="email" class="form-control" value="{{ old('email') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit_user_mobile">Mobile</label>
+                        <input type="text" id="edit_user_mobile" name="mobile" class="form-control" value="{{ old('mobile') }}">
+                    </div>
                 </div>
                 <div class="user-only-fields" id="editUserOnlyFields">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="edit_user_device_limit">Device Limit</label>
-                            <input type="number" id="edit_user_device_limit" name="device_limit" class="form-control user-only-input" min="1">
-                        </div>
-                        <div class="form-group">
                             <label for="edit_user_start_date">Start Date</label>
-                            <input type="date" id="edit_user_start_date" name="start_date" class="form-control user-only-input">
+                            <input type="date" id="edit_user_start_date" name="start_date" class="form-control user-only-input" value="{{ old('start_date') }}">
                         </div>
-                    </div>
-                    <div class="form-row">
                         <div class="form-group">
                             <label for="edit_user_expire_date">Expire Date</label>
-                            <input type="date" id="edit_user_expire_date" name="expire_date" class="form-control user-only-input">
+                            <input type="date" id="edit_user_expire_date" name="expire_date" class="form-control user-only-input" value="{{ old('expire_date') }}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -286,12 +276,21 @@
                         <div class="checkbox-group" id="editUserServices">
                             @foreach($services as $service)
                                 <label class="checkbox-label">
-                                    <input type="checkbox" name="services[]" value="{{ $service->id }}" class="edit-service-checkbox user-only-input">
+                                    <input type="checkbox" name="services[]" value="{{ $service->id }}"
+                                           class="edit-service-checkbox user-only-input"
+                                           {{ in_array($service->id, old('services', [])) ? 'checked' : '' }}>
                                     {{ $service->name }}
                                 </label>
                             @endforeach
                         </div>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="edit_user_status">Status</label>
+                    <select id="edit_user_status" name="status" class="form-control" required>
+                        <option value="Active" {{ old('status', 'Active') === 'Active' ? 'selected' : '' }}>Active</option>
+                        <option value="Inactive" {{ old('status') === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -327,9 +326,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    function toggleUserFields(roleSelect, fieldsContainer) {
+    function toggleUserFields(roleSelect, fieldsContainer, deviceLimitField) {
         const isUser = roleSelect.value === 'user';
         fieldsContainer.style.display = isUser ? '' : 'none';
+
+        if (deviceLimitField) {
+            deviceLimitField.style.display = isUser ? '' : 'none';
+        }
 
         fieldsContainer.querySelectorAll('.user-only-input').forEach(input => {
             if (input.type === 'checkbox') {
@@ -342,16 +345,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 input.disabled = !isUser;
             }
         });
+
+        const deviceLimitInput = deviceLimitField?.querySelector('.user-only-input');
+        if (deviceLimitInput) {
+            deviceLimitInput.required = isUser;
+            deviceLimitInput.disabled = !isUser;
+        }
     }
 
     const addRoleSelect = document.getElementById('add_user_role');
     const addUserOnlyFields = document.getElementById('addUserOnlyFields');
-    addRoleSelect.addEventListener('change', () => toggleUserFields(addRoleSelect, addUserOnlyFields));
-    toggleUserFields(addRoleSelect, addUserOnlyFields);
+    const addDeviceLimitField = document.getElementById('addDeviceLimitField');
+    addRoleSelect.addEventListener('change', () => toggleUserFields(addRoleSelect, addUserOnlyFields, addDeviceLimitField));
+    toggleUserFields(addRoleSelect, addUserOnlyFields, addDeviceLimitField);
 
     const editRoleSelect = document.getElementById('edit_user_role');
     const editUserOnlyFields = document.getElementById('editUserOnlyFields');
-    editRoleSelect.addEventListener('change', () => toggleUserFields(editRoleSelect, editUserOnlyFields));
+    const editDeviceLimitField = document.getElementById('editDeviceLimitField');
+    editRoleSelect.addEventListener('change', () => toggleUserFields(editRoleSelect, editUserOnlyFields, editDeviceLimitField));
 
     const addModal = document.getElementById('addUserModal');
     document.getElementById('openAddUserModalBtn').addEventListener('click', () => addModal.classList.add('open'));
@@ -379,14 +390,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 cb.checked = serviceIds.includes(cb.value);
             });
 
-            toggleUserFields(editRoleSelect, editUserOnlyFields);
-            editForm.action = `/users/${this.getAttribute('data-id')}`;
+            toggleUserFields(editRoleSelect, editUserOnlyFields, editDeviceLimitField);
+            editForm.action = this.getAttribute('data-update-url');
             editModal.classList.add('open');
         });
     });
 
     document.getElementById('closeEditUserModalBtn').addEventListener('click', () => editModal.classList.remove('open'));
     document.getElementById('cancelEditUserModalBtn').addEventListener('click', () => editModal.classList.remove('open'));
+
+    @if($editUserId)
+    toggleUserFields(editRoleSelect, editUserOnlyFields, editDeviceLimitField);
+    editModal.classList.add('open');
+    @endif
 });
 </script>
 @endsection
