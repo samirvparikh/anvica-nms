@@ -64,8 +64,8 @@ class DatabaseSeeder extends Seeder
         $devices = [
             [
                 'user_id' => $samir?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                // 'service_id' => 1,
+                // 'vendor_id' => 1,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo',
                 'type' => 'Router',
@@ -78,8 +78,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'user_id' => $samir?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                // 'service_id' => 1,
+                // 'vendor_id' => 1,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo',
                 'type' => 'Router',
