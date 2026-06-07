@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StoreDeviceRequest extends FormRequest
 {
@@ -36,6 +38,42 @@ class StoreDeviceRequest extends FormRequest
             'status' => 'nullable|in:active,inactive',
             'user_id' => 'nullable|exists:users,id',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $authUser = $this->user();
+            $owner = $this->resolveDeviceOwner($authUser);
+
+            if (! $authUser->isAdmin() && ! $authUser->isActive()) {
+                $validator->errors()->add('account', 'Your account has expired. Please contact administrator.');
+            }
+
+            if ($owner === null) {
+                return;
+            }
+
+            if (! $owner->canAddDevice()) {
+                $limit = $owner->device_limit;
+                $message = $authUser->isAdmin()
+                    ? "Device limit reached for {$owner->name}. Maximum {$limit} device(s) allowed."
+                    : "Device limit reached. You can add up to {$limit} device(s).";
+
+                $validator->errors()->add('device_limit', $message);
+            }
+        });
+    }
+
+    protected function resolveDeviceOwner(User $authUser): ?User
+    {
+        if ($authUser->isAdmin()) {
+            $userId = $this->input('user_id');
+
+            return $userId ? User::find($userId) : null;
+        }
+
+        return $authUser;
     }
 
     public function messages(): array

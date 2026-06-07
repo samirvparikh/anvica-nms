@@ -164,13 +164,13 @@ class MonitoringSeeder extends Seeder
 
             Device::where('name', $deviceName)->update([
                 'user_id' => $userAssignments[$deviceName] ?? null,
-                'service_id' => $service?->id,
-                'vendor_id' => $vendor?->id,
-                'device_type' => $service?->name,
-                'hostname' => $deviceName,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                // 'device_type' => $service?->name,
+                // 'hostname' => $deviceName,
                 'snmp_version' => '2c',
                 'snmp_port' => 161,
-                'snmp_community' => 'Anvica_NMS',
+                // 'snmp_community' => 'Anvica_NMS',
             ]);
         }
 

@@ -66,7 +66,11 @@
                     </span>
                 </td>
                 @if($canAddDevice)
+                @php
+                    $rowCanAddIp = ! $isAdmin || ! $device->user_id || ($device->user && $device->user->canAddDevice());
+                @endphp
                 <td style="text-align: center;">
+                    @if($rowCanAddIp)
                     <button type="button"
                             class="btn-add-ip cloneDeviceBtn"
                             title="Add new IP with same device details"
@@ -84,6 +88,9 @@
                         </svg>
                         <span>Add IP</span>
                     </button>
+                    @else
+                    <span class="device-limit-badge" title="Device limit reached for {{ $device->user?->name ?? 'this customer' }}">Limit</span>
+                    @endif
                 </td>
                 @endif
                 <td style="text-align: right;">
@@ -144,9 +151,14 @@
         <form action="{{ route('devices.store') }}" method="POST">
             @csrf
             <div class="modal-body">
+                @if($errors->has('device_limit') || $errors->has('account'))
+                <div class="form-alert form-alert-error" style="margin-bottom: 1rem;">
+                    {{ $errors->first('device_limit') ?: $errors->first('account') }}
+                </div>
+                @endif
                 <div class="form-group">
                     <label for="add_name">Device Name</label>
-                    <input type="text" id="add_name" name="name" class="form-control" required>
+                    <input type="text" id="add_name" name="name" class="form-control" value="{{ old('name') }}" required>
                 </div>
                 @if($isAdmin)
                 <div class="form-group">
@@ -154,7 +166,12 @@
                     <select id="add_user_id" name="user_id" class="form-control">
                         <option value="">Unassigned (Admin)</option>
                         @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                            <option value="{{ $customer->id }}" {{ (string) old('user_id') === (string) $customer->id ? 'selected' : '' }}>
+                                {{ $customer->name }}
+                                @if($customer->device_limit !== null)
+                                    ({{ $customer->devices_count }}/{{ $customer->device_limit }})
+                                @endif
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -164,7 +181,7 @@
                     <select id="add_service_id" name="service_id" class="form-control" required>
                         <option value="">Select Service</option>
                         @foreach($services as $service)
-                            <option value="{{ $service->id }}">{{ $service->name }}</option>
+                            <option value="{{ $service->id }}" {{ (string) old('service_id') === (string) $service->id ? 'selected' : '' }}>{{ $service->name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -173,26 +190,26 @@
                     <select id="add_vendor_id" name="vendor_id" class="form-control">
                         <option value="">Select Vendor</option>
                         @foreach($vendors as $vendor)
-                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}">{{ $vendor->name }}</option>
+                            <option value="{{ $vendor->id }}" data-service="{{ $vendor->service_id }}" {{ (string) old('vendor_id') === (string) $vendor->id ? 'selected' : '' }}>{{ $vendor->name }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="add_hostname">Hostname</label>
-                    <input type="text" id="add_hostname" name="hostname" class="form-control">
+                    <input type="text" id="add_hostname" name="hostname" class="form-control" value="{{ old('hostname') }}">
                 </div>
-                <input type="hidden" id="add_type" name="type" value="">
+                <input type="hidden" id="add_type" name="type" value="{{ old('type') }}">
                 <div class="form-group">
                     <label for="add_ip" style="margin-bottom:0.25rem;">IP Address</label>
-                    <input type="text" id="add_ip" name="ip_address" class="form-control" placeholder="e.g. 192.168.1.50" style="padding-left:1rem;" required>
+                    <input type="text" id="add_ip" name="ip_address" class="form-control" placeholder="e.g. 192.168.1.50" style="padding-left:1rem;" value="{{ old('ip_address') }}" required>
                 </div>
                 <div class="form-group">
                     <label for="add_location" style="margin-bottom:0.25rem;">Location</label>
-                    <input type="text" id="add_location" name="location" class="form-control" placeholder="e.g. Rack A1" style="padding-left:1rem;" required>
+                    <input type="text" id="add_location" name="location" class="form-control" placeholder="e.g. Rack A1" style="padding-left:1rem;" value="{{ old('location') }}" required>
                 </div>
                 <div class="form-group">
                     <label for="add_snmp_community">SNMP Community</label>
-                    <input type="text" id="add_snmp_community" name="snmp_community" class="form-control" value="Anvica_NMS">
+                    <input type="text" id="add_snmp_community" name="snmp_community" class="form-control" value="{{ old('snmp_community', 'Anvica_NMS') }}">
                 </div>
             </div>
             <div class="modal-footer">
@@ -449,6 +466,14 @@
 
         closeEditBtn.addEventListener('click', closeEditModal);
         cancelEditBtn.addEventListener('click', closeEditModal);
+
+        @if($errors->any() && old('_token'))
+        toggleAddModal(true);
+        if (addService && addService.value) {
+            syncType(addService, addType);
+            filterVendors(addService, addVendor, true);
+        }
+        @endif
     });
 </script>
 @endsection

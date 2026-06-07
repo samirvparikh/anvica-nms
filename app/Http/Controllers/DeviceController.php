@@ -25,7 +25,7 @@ class DeviceController extends Controller
             'services' => Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get(),
             'vendors' => DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get(),
             'customers' => $user->isAdmin()
-                ? \App\Models\User::where('is_admin', false)->where('role', \App\Models\User::ROLE_USER)->orderBy('name')->get()
+                ? \App\Models\User::where('is_admin', false)->where('role', \App\Models\User::ROLE_USER)->withCount('devices')->orderBy('name')->get()
                 : collect(),
             'canAddDevice' => $user->canAddDevice(),
             'deviceLimit' => $user->isAdmin() ? null : $user->device_limit,
@@ -37,14 +37,6 @@ class DeviceController extends Controller
     public function store(StoreDeviceRequest $request)
     {
         $user = $request->user();
-
-        if (! $user->canAddDevice()) {
-            return back()->withErrors(['device_limit' => 'Device limit reached. You cannot add more devices.']);
-        }
-
-        if (! $user->isActive()) {
-            return back()->withErrors(['account' => 'Your account has expired. Please contact administrator.']);
-        }
 
         $data = $this->prepareDeviceData($request->validated());
         $data['user_id'] = $user->isAdmin()

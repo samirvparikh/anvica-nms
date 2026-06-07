@@ -13,7 +13,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with(['services', 'creator'])
-            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->get();
 
         $services = Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get();
