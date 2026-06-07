@@ -39,7 +39,10 @@ class ApiController extends Controller
     public function router(Request $request): JsonResponse
     {
         $payload = $this->extractRouterPayload($request);
-        $routerName = $payload['SYSTEM']['Router'] ?? null;
+        // dd($payload);
+        // $routerName = $payload['SYSTEM']['Router'] ?? null;
+        $routerName = $payload['Router'] ?? null;
+        // dd($routerName);
 
         if (! $routerName) {
             return response()->json([
