@@ -51,6 +51,14 @@ class MonitoringService
                 'hostname' => $info['hostname'] ?? $device->hostname,
                 'uptime' => $info['uptime'] ?? null,
             ];
+        } elseif (\App\Monitoring\Normalizers\MetricNormalizer::isFlatRouterPush($payload)) {
+            $info = \App\Monitoring\Normalizers\MetricNormalizer::fromRouterPush($payload);
+            $result = [
+                'metrics' => $info['metrics'],
+                'interfaces' => $payload['interfaces'] ?? [],
+                'hostname' => $info['hostname'] ?? $device->hostname,
+                'uptime' => $info['uptime'] ?? null,
+            ];
         } else {
             $info = \App\Monitoring\Normalizers\MetricNormalizer::fromGeneric($payload);
             $result = [

@@ -53,26 +53,41 @@ class ApiController extends Controller
         $this->logRequest($request);
 
         $payload = $this->extractRouterPayload($request);
-        // $routerName = $payload['SYSTEM']['Router'] ?? null;
-        $routerName = $payload['Router'] ?? null;
+        $routerName = $payload['Router']
+            ?? $payload['router']
+            ?? $payload['Host_Name']
+            ?? $payload['host_name']
+            ?? $payload['SYSTEM']['Router']
+            ?? null;
 
-        if (! $routerName) {
+        if (! $routerName && empty($payload['IP_Address']) && empty($payload['ip_address'])) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Router name not found in payload. Expected SYSTEM.Router or Router:_Name in pipe format.',
+                'message' => 'Router name not found in payload. Expected Router, Host_Name, or IP_Address.',
             ], 422);
         }
 
-        $device = Device::query()
-            ->where('name', $routerName)
-            ->orWhere('hostname', $routerName)
-            ->first();
+        $device = null;
+
+        if ($routerName) {
+            $device = Device::query()
+                ->where('name', $routerName)
+                ->orWhere('hostname', $routerName)
+                ->first();
+        }
+
+        $ipAddress = $payload['IP_Address'] ?? $payload['ip_address'] ?? null;
+
+        if (! $device && $ipAddress) {
+            $device = Device::query()->where('ip_address', $ipAddress)->first();
+        }
 
         if (! $device) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Device not found. Create a device with name or hostname: ' . $routerName,
+                'message' => 'Device not found. Create a device matching Router/Host_Name or IP_Address.',
                 'router_name' => $routerName,
+                'ip_address' => $ipAddress,
             ], 404);
         }
 

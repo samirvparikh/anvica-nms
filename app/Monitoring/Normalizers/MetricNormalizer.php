@@ -40,6 +40,48 @@ class MetricNormalizer
         ];
     }
 
+    /**
+     * Flat router push via GET/POST query params (MikroTik script).
+     *
+     * @return array{hostname: ?string, uptime: mixed, metrics: array<string, float|int>}
+     */
+    public static function fromRouterPush(array $raw): array
+    {
+        $ramUsed = (int) ($raw['Ram_Uses'] ?? $raw['ram_uses'] ?? 0);
+        $ramTotal = (int) ($raw['Total_Ram'] ?? $raw['total_ram'] ?? 0);
+        $cpuTemp = (float) ($raw['CPU_Temp'] ?? $raw['cpu_temp'] ?? 0);
+        $boardTemp = (float) ($raw['Board_Temp'] ?? $raw['board_temp'] ?? 0);
+
+        $metrics = [
+            'cpu' => self::parsePercent((string) ($raw['CPU'] ?? $raw['cpu'] ?? '0')),
+            'cpu_temp' => $cpuTemp,
+            'board_temp' => $boardTemp,
+            'temperature' => max($cpuTemp, $boardTemp),
+            'ram_uses' => $ramUsed,
+            'total_ram' => $ramTotal,
+            'ram' => $ramTotal > 0 ? round(($ramUsed / $ramTotal) * 100, 2) : 0,
+            'up_time' => (float) ($raw['UP_time'] ?? $raw['up_time'] ?? 0),
+            'power1_status' => (float) ($raw['Power1_Status'] ?? $raw['power1_status'] ?? 0),
+            'power2_status' => (float) ($raw['Power2_Status'] ?? $raw['power2_status'] ?? 0),
+        ];
+
+        return [
+            'hostname' => $raw['Host_Name'] ?? $raw['host_name'] ?? $raw['Router'] ?? $raw['router'] ?? null,
+            'uptime' => $raw['UP_time'] ?? $raw['up_time'] ?? null,
+            'metrics' => $metrics,
+        ];
+    }
+
+    public static function isFlatRouterPush(array $raw): bool
+    {
+        return isset($raw['Router'])
+            || isset($raw['router'])
+            || isset($raw['CPU'])
+            || isset($raw['cpu'])
+            || isset($raw['IP_Address'])
+            || isset($raw['ip_address']);
+    }
+
     public static function parsePercent(string $value): float
     {
         return (float) str_replace('%', '', trim($value));
