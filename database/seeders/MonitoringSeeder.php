@@ -162,16 +162,16 @@ class MonitoringSeeder extends Seeder
                 ? DeviceVendor::where('service_id', $service->id)->where('slug', $map['vendor'])->first()
                 : null;
 
-            Device::where('name', $deviceName)->update([
-                'user_id' => $userAssignments[$deviceName] ?? null,
-                'service_id' => 1,
-                'vendor_id' => 1,
-                // 'device_type' => $service?->name,
-                // 'hostname' => $deviceName,
-                'snmp_version' => '2c',
-                'snmp_port' => 161,
-                // 'snmp_community' => 'Anvica_NMS',
-            ]);
+            // Device::where('name', $deviceName)->update([
+            //     'user_id' => $userAssignments[$deviceName] ?? null,
+            //     'service_id' => 1,
+            //     'vendor_id' => 1,
+            //     // 'device_type' => $service?->name,
+            //     // 'hostname' => $deviceName,
+            //     'snmp_version' => '2c',
+            //     'snmp_port' => 161,
+            //     // 'snmp_community' => 'Anvica_NMS',
+            // ]);
         }
 
         $firewall = Device::where('name', 'Firewall-01')->first();
