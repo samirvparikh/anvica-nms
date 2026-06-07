@@ -148,12 +148,13 @@ class MonitoringSeeder extends Seeder
             'Server-02' => ['service' => 'server', 'vendor' => 'linux-server'],
             'CCTV-Lobby' => ['service' => 'cctv', 'vendor' => 'hikvision'],
             'UPS-Main' => ['service' => 'ups', 'vendor' => 'apc'],
+            'Anvica_Demo' => ['service' => 'router', 'vendor' => 'mikrotik'],
         ];
 
         $samir = \App\Models\User::where('email', 'samir@gmail.com')->first();
         $vijay = \App\Models\User::where('email', 'vijay@gmail.com')->first();
         $userAssignments = [
-            'Anvica_Demo' => $samir?->id,
+            // 'Anvica_Demo' => $samir?->id,
         ];
 
         foreach ($deviceMap as $deviceName => $map) {
@@ -162,16 +163,16 @@ class MonitoringSeeder extends Seeder
                 ? DeviceVendor::where('service_id', $service->id)->where('slug', $map['vendor'])->first()
                 : null;
 
-            // Device::where('name', $deviceName)->update([
-            //     'user_id' => $userAssignments[$deviceName] ?? null,
-            //     'service_id' => 1,
-            //     'vendor_id' => 1,
-            //     // 'device_type' => $service?->name,
-            //     // 'hostname' => $deviceName,
-            //     'snmp_version' => '2c',
-            //     'snmp_port' => 161,
-            //     // 'snmp_community' => 'Anvica_NMS',
-            // ]);
+            Device::where('name', $deviceName)->update([
+                // 'user_id' => $userAssignments[$deviceName] ?? null,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                // 'device_type' => $service?->name,
+                // 'hostname' => $deviceName,
+                'snmp_version' => '2c',
+                'snmp_port' => 161,
+                // 'snmp_community' => 'Anvica_NMS',
+            ]);
         }
 
         $firewall = Device::where('name', 'Firewall-01')->first();
