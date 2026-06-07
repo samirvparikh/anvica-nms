@@ -170,7 +170,7 @@ class MonitoringSeeder extends Seeder
                 'hostname' => $deviceName,
                 'snmp_version' => '2c',
                 'snmp_port' => 161,
-                'snmp_community' => 'public',
+                'snmp_community' => 'Anvica_NMS',
             ]);
         }
 
