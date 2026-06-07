@@ -36,7 +36,7 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Hostname</th>
+                    <th>IP Address</th>
                     @if(Auth::user()->isAdmin())<th>Customer</th>@endif
                     <th>Service</th>
                     <th>Health</th>
@@ -53,7 +53,7 @@
                 @php $m = $latestMetrics[$device->id] ?? []; @endphp
                 <tr>
                     <td style="font-weight:700;">{{ $device->name }}</td>
-                    <td>{{ $device->hostname ?? '—' }}</td>
+                    <td>{{ $device->ip_address ?? '—' }}</td>
                     @if(Auth::user()->isAdmin())
                     <td>{{ $device->user?->name ?? 'Admin / Unassigned' }}</td>
                     @endif
