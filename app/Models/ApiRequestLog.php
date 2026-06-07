@@ -16,10 +16,13 @@ class ApiRequestLog extends Model
         'referer',
         'request_data',
         'headers',
+        'response_status',
+        'route_exists',
     ];
 
     protected $casts = [
         'request_data' => 'array',
         'headers' => 'array',
+        'route_exists' => 'boolean',
     ];
 }

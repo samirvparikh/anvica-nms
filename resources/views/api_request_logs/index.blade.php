@@ -25,6 +25,9 @@
             <tr>
                 <th style="width: 60px;">Sr. No.</th>
                 <th>Method</th>
+                <th>URL</th>
+                <th>Route</th>
+                <th>Status</th>
                 <th>IP Address</th>
                 <th>User Agent</th>
                 <th>Request Data</th>
@@ -42,6 +45,7 @@
                 <tr
                     class="api-log-row"
                     data-method="{{ strtolower($log->method) }}"
+                    data-url="{{ strtolower($log->url) }}"
                     data-ip="{{ strtolower($log->ip_address) }}"
                     data-agent="{{ strtolower($log->user_agent) }}"
                     data-request="{{ strtolower($requestDataText) }}"
@@ -54,6 +58,25 @@
                         <span class="method-badge {{ strtolower($log->method) }}">
                             {{ $log->method }}
                         </span>
+                    </td>
+                    <td>
+                        <div class="cell-truncate cell-mono" title="{{ $log->url }}">
+                            {{ Str::limit($log->url, 50) }}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ $log->route_exists ? 'active' : 'down' }}">
+                            {{ $log->route_exists ? 'Exists' : 'Not Found' }}
+                        </span>
+                    </td>
+                    <td>
+                        @if($log->response_status)
+                            <span class="status-badge {{ $log->response_status < 400 ? 'active' : 'down' }}">
+                                {{ $log->response_status }}
+                            </span>
+                        @else
+                            —
+                        @endif
                     </td>
                     <td class="cell-mono">{{ $log->ip_address }}</td>
                     <td>
@@ -85,7 +108,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                    <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
                         No API requests logged yet.
                     </td>
                 </tr>
@@ -111,6 +134,7 @@
 
             tableRows.forEach(function (row) {
                 const method = row.getAttribute('data-method') || '';
+                const url = row.getAttribute('data-url') || '';
                 const ip = row.getAttribute('data-ip') || '';
                 const agent = row.getAttribute('data-agent') || '';
                 const request = row.getAttribute('data-request') || '';
@@ -118,6 +142,7 @@
 
                 if (
                     method.includes(query) ||
+                    url.includes(query) ||
                     ip.includes(query) ||
                     agent.includes(query) ||
                     request.includes(query) ||

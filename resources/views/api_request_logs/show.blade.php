@@ -21,6 +21,18 @@
             <dd class="cell-mono">{{ $log->url }}</dd>
         </div>
         <div class="api-log-detail-item">
+            <dt>Route Exists</dt>
+            <dd>
+                <span class="status-badge {{ $log->route_exists ? 'active' : 'down' }}">
+                    {{ $log->route_exists ? 'Yes — matched route' : 'No — URL not found' }}
+                </span>
+            </dd>
+        </div>
+        <div class="api-log-detail-item">
+            <dt>Response Status</dt>
+            <dd>{{ $log->response_status ?? '—' }}</dd>
+        </div>
+        <div class="api-log-detail-item">
             <dt>IP Address</dt>
             <dd class="cell-mono">{{ $log->ip_address }}</dd>
         </div>
