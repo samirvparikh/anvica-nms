@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ParsesApiPayload;
 use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Models\DeviceInterface;
 use App\Models\DeviceMetric;
+use App\Monitoring\Normalizers\MetricNormalizer;
 use App\Services\MonitoringService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -13,24 +15,49 @@ use Illuminate\Http\Request;
 
 class DevicePushApiController extends Controller
 {
+    use ParsesApiPayload;
+
     public function __construct(
         protected MonitoringService $monitoringService,
     ) {}
 
     /**
-     * Device lookup by IP — must exist in NMS devices table.
+     * Device lookup by IP, Router name, or Host_Name — must exist in NMS devices table.
      */
-    protected function resolveDevice(Request $request): Device
+    protected function resolveDevice(Request $request, ?array $payload = null): Device
     {
-        $ip = $request->header('X-Device-Ip') ?? $request->input('ip_address');
+        $payload ??= $this->extractPayload($request);
 
-        abort_unless($ip, 422, 'ip_address required (body or X-Device-Ip header).');
+        $ip = $request->header('X-Device-Ip')
+            ?? $payload['ip_address']
+            ?? $payload['IP_Address']
+            ?? $request->input('ip_address');
 
-        $device = Device::where('ip_address', $ip)->first();
+        $device = null;
 
+        if ($ip) {
+            $device = Device::where('ip_address', $ip)->first();
+        }
+
+        if (! $device) {
+            $name = $payload['Router']
+                ?? $payload['router']
+                ?? $payload['Host_Name']
+                ?? $payload['host_name']
+                ?? null;
+
+            if ($name) {
+                $device = Device::query()
+                    ->where('name', $name)
+                    ->orWhere('hostname', $name)
+                    ->first();
+            }
+        }
+
+        abort_unless($ip || $device, 422, 'ip_address or Router/Host_Name required (body, query, or X-Device-Ip header).');
         abort_unless($device, 404, 'Device not registered in NMS. Add it under Devices first.');
 
-        $apiKey = $request->header('X-Api-Key') ?? $request->input('api_key');
+        $apiKey = $request->header('X-Api-Key') ?? $payload['api_key'] ?? $request->input('api_key');
         if ($apiKey && $device->snmp_community && $apiKey !== $device->snmp_community) {
             abort(401, 'Invalid API key.');
         }
@@ -39,12 +66,30 @@ class DevicePushApiController extends Controller
     }
 
     /**
-     * POST /api/device/push — full MikroTik or generic payload.
+     * GET /api/device/metrics — read latest | POST|GET — push metrics (flat or nested request_data).
+     */
+    public function metricsEndpoint(Request $request): JsonResponse
+    {
+        $payload = $this->extractPayload($request);
+
+        if ($request->isMethod('GET') && ! MetricNormalizer::isFlatRouterPush($payload) && ! isset($payload['metrics'])) {
+            return $this->latestMetrics($request);
+        }
+
+        return $this->metrics($request);
+    }
+
+    /**
+     * POST|GET /api/device/push — full MikroTik flat payload or generic JSON.
+     *
+     * request_data example:
+     * {"ip_address":"192.168.5.1","CPU":"6","Router":"Anvica_Demo","Ram_Uses":"1852352","Total_Ram":"8388608",...}
      */
     public function push(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
-        $this->monitoringService->ingestPush($device, $request->all());
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
+        $this->monitoringService->ingestPush($device, $payload);
 
         return response()->json([
             'status' => 'success',
@@ -56,22 +101,38 @@ class DevicePushApiController extends Controller
     }
 
     /**
-     * POST /api/device/metrics — push CPU, RAM, disk, temperature only.
+     * POST|GET /api/device/metrics — metrics only (flat router params or nested metrics object).
+     *
+     * Flat request_data:
+     * {"ip_address":"192.168.5.1","CPU":"6","CPU_Temp":"60","Ram_Uses":"1852352","Total_Ram":"8388608",...}
+     *
+     * Nested request_data:
+     * {"ip_address":"192.168.5.1","metrics":{"cpu":6,"ram":22,"disk":0,"temperature":60}}
      */
     public function metrics(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
 
-        $validated = $request->validate([
-            'metrics' => 'required|array',
-            'metrics.cpu' => 'nullable|numeric',
-            'metrics.ram' => 'nullable|numeric',
-            'metrics.disk' => 'nullable|numeric',
-            'metrics.temperature' => 'nullable|numeric',
-            'hostname' => 'nullable|string|max:191',
-        ]);
+        if (MetricNormalizer::isFlatRouterPush($payload)) {
+            $info = MetricNormalizer::fromRouterPush($payload);
+            $this->monitoringService->ingestPush($device, array_merge($payload, [
+                'metrics' => $info['metrics'],
+                'hostname' => $info['hostname'],
+                'uptime' => $info['uptime'],
+            ]));
+        } else {
+            $validated = validator($payload, [
+                'metrics' => 'required|array',
+                'metrics.cpu' => 'nullable|numeric',
+                'metrics.ram' => 'nullable|numeric',
+                'metrics.disk' => 'nullable|numeric',
+                'metrics.temperature' => 'nullable|numeric',
+                'hostname' => 'nullable|string|max:191',
+            ])->validate();
 
-        $this->monitoringService->ingestPush($device, $validated);
+            $this->monitoringService->ingestPush($device, $validated);
+        }
 
         return response()->json([
             'status' => 'success',
@@ -81,13 +142,17 @@ class DevicePushApiController extends Controller
     }
 
     /**
-     * POST /api/device/interfaces — push interface traffic data.
+     * POST|GET /api/device/interfaces — push interface traffic data.
+     *
+     * request_data example:
+     * {"ip_address":"192.168.5.1","interfaces":[{"name":"ether1","status":"up","rx":1000,"tx":2000}]}
      */
     public function interfaces(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
 
-        $validated = $request->validate([
+        $validated = validator($payload, [
             'interfaces' => 'required|array|min:1',
             'interfaces.*.name' => 'required_without:interfaces.*.interface_name|string|max:191',
             'interfaces.*.interface_name' => 'nullable|string|max:191',
@@ -96,7 +161,7 @@ class DevicePushApiController extends Controller
             'interfaces.*.tx' => 'nullable|integer|min:0',
             'interfaces.*.rx_packets' => 'nullable|integer|min:0',
             'interfaces.*.tx_packets' => 'nullable|integer|min:0',
-        ]);
+        ])->validate();
 
         $recordedAt = Carbon::now();
 
@@ -127,21 +192,32 @@ class DevicePushApiController extends Controller
     }
 
     /**
-     * POST /api/device/heartbeat — online ping + optional status.
+     * POST|GET /api/device/heartbeat — online ping + optional status.
+     *
+     * request_data example:
+     * {"ip_address":"192.168.5.1","status":"Up","hostname":"Anvica_Demo"}
      */
     public function heartbeat(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
 
-        $validated = $request->validate([
+        $validated = validator($payload, [
             'status' => 'nullable|in:Up,Warning,Down',
             'hostname' => 'nullable|string|max:191',
-        ]);
+            'Host_Name' => 'nullable|string|max:191',
+            'host_name' => 'nullable|string|max:191',
+        ])->validate();
+
+        $hostname = $validated['hostname']
+            ?? $validated['Host_Name']
+            ?? $validated['host_name']
+            ?? null;
 
         $device->update([
             'last_seen' => Carbon::now(),
             'status' => $validated['status'] ?? $device->status,
-            'hostname' => $validated['hostname'] ?? $device->hostname,
+            'hostname' => $hostname ?? $device->hostname,
         ]);
 
         return response()->json([
@@ -157,7 +233,8 @@ class DevicePushApiController extends Controller
      */
     public function info(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
 
         return response()->json([
             'device_id' => $device->id,
@@ -176,7 +253,8 @@ class DevicePushApiController extends Controller
      */
     public function latestMetrics(Request $request): JsonResponse
     {
-        $device = $this->resolveDevice($request);
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
 
         $metrics = DeviceMetric::where('device_id', $device->id)
             ->latest('recorded_at')

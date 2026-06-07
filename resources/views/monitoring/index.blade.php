@@ -45,6 +45,7 @@
                     <th>RAM %</th>
                     <th>Disk %</th>
                     <th>Temp °C</th>
+                    <th style="text-align:right;">Show</th>
                 </tr>
             </thead>
             <tbody>
@@ -63,10 +64,22 @@
                     <td>{{ isset($m['ram']) ? number_format($m['ram']->metric_value, 1) : '—' }}</td>
                     <td>{{ isset($m['disk']) ? number_format($m['disk']->metric_value, 1) : '—' }}</td>
                     <td>{{ isset($m['temperature']) ? number_format($m['temperature']->metric_value, 1) : '—' }}</td>
+                    <td style="text-align:right;">
+                        <button type="button"
+                                class="btn-action view-btn showMetricsBtn"
+                                title="Show metrics history"
+                                data-device-name="{{ $device->name }}"
+                                data-url="{{ route('monitoring.device.metrics', $device) }}{{ $customerId ? '?user_id='.$customerId : '' }}">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="{{ Auth::user()->isAdmin() ? 10 : 9 }}" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <td colspan="{{ Auth::user()->isAdmin() ? 11 : 10 }}" style="text-align:center;padding:2rem;color:var(--text-muted);">
                         No devices found for this account.
                     </td>
                 </tr>
@@ -165,4 +178,106 @@
         </table>
     </div>
 </div>
+
+<!-- Device Metrics History Modal -->
+<div class="modal-overlay" id="metricsHistoryModal">
+    <div class="modal-card modal-card-wide metrics-history-modal">
+        <div class="modal-header">
+            <h3 id="metricsHistoryTitle">Device Metrics History</h3>
+            <button type="button" class="modal-close" id="closeMetricsHistoryModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="table-scroll">
+                <table class="data-table" id="metricsHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>Recorded At</th>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metricsHistoryBody">
+                        <tr>
+                            <td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelMetricsHistoryModal">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('metricsHistoryModal');
+    const title = document.getElementById('metricsHistoryTitle');
+    const tbody = document.getElementById('metricsHistoryBody');
+    const closeBtn = document.getElementById('closeMetricsHistoryModal');
+    const cancelBtn = document.getElementById('cancelMetricsHistoryModal');
+
+    function openModal() {
+        modal.classList.add('open');
+    }
+
+    function closeModal() {
+        modal.classList.remove('open');
+    }
+
+    function renderMetrics(metrics) {
+        if (!metrics.length) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">No metrics recorded yet.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = metrics.map(function (metric) {
+            return '<tr>'
+                + '<td style="white-space:nowrap;color:var(--text-muted);">' + metric.recorded_at + '</td>'
+                + '<td style="font-weight:600;">' + metric.metric_slug + '</td>'
+                + '<td class="cell-mono">' + metric.metric_value + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    document.querySelectorAll('.showMetricsBtn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const url = this.getAttribute('data-url');
+            const deviceName = this.getAttribute('data-device-name');
+
+            title.textContent = deviceName + ' — Metrics History';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--text-muted);">Loading...</td></tr>';
+            openModal();
+
+            fetch(url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Failed to load metrics');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    renderMetrics(data.metrics || []);
+                })
+                .catch(function () {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:2rem;color:var(--status-down);">Unable to load metrics history.</td></tr>';
+                });
+        });
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+});
+</script>
 @endsection

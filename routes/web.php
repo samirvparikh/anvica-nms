@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function () {
 
     // Monitoring data (user-scoped; admin sees all)
     Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
+    Route::get('/monitoring/devices/{device}/metrics', [MonitoringController::class, 'deviceMetrics'])->name('monitoring.device.metrics');
 
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');

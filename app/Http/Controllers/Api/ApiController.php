@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Api\Concerns\ParsesApiPayload;
 use App\Http\Controllers\Controller;
 use App\Models\ApiRequestLog;
 use App\Models\Device;
 use App\Models\DeviceMetric;
-use App\Monitoring\Normalizers\MikroTikPipeParser;
-use App\Services\ApiRequestLogger;
 use App\Services\MonitoringService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +14,8 @@ use Illuminate\Http\Request;
 
 class ApiController extends Controller
 {
+    use ParsesApiPayload;
+
     public function __construct(
         protected MonitoringService $monitoringService,
     ) {}
@@ -52,7 +53,7 @@ class ApiController extends Controller
     {
         $this->logRequest($request);
 
-        $payload = $this->extractRouterPayload($request);
+        $payload = $this->extractPayload($request);
         $routerName = $payload['Router']
             ?? $payload['router']
             ?? $payload['Host_Name']
@@ -114,33 +115,6 @@ class ApiController extends Controller
             'device_status' => $device->status,
             'last_seen' => $device->last_seen?->toIso8601String(),
         ], 200);
-    }
-
-    protected function extractRouterPayload(Request $request): array
-    {
-        $all = $request->all();
-
-        if (isset($all['SYSTEM'])) {
-            return $all;
-        }
-
-        if ($request->filled('data') && is_string($request->input('data'))) {
-            return MikroTikPipeParser::parse($request->input('data'));
-        }
-
-        if (count($all) === 1) {
-            $key = array_key_first($all);
-            if (is_string($key) && str_contains($key, '_|_')) {
-                return MikroTikPipeParser::parse($key);
-            }
-        }
-
-        $body = trim($request->getContent());
-        if ($body !== '' && str_contains($body, '_|_')) {
-            return MikroTikPipeParser::parse($body);
-        }
-
-        return $all;
     }
 
     protected function logRequest(Request $request): ApiRequestLog

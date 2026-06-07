@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Device;
 use App\Services\UserScopeService;
 use Illuminate\Http\Request;
 
@@ -49,5 +50,36 @@ class MonitoringController extends Controller
             'customers',
             'customerId',
         ));
+    }
+
+    public function deviceMetrics(Request $request, Device $device)
+    {
+        if (! $this->userScope->canAccessDevice($request->user(), $device)) {
+            abort(403);
+        }
+
+        $customerId = $request->user()->isAdmin()
+            ? ($request->integer('user_id') ?: null)
+            : null;
+
+        $metrics = $this->userScope
+            ->metricsQuery($request->user(), $customerId)
+            ->where('device_id', $device->id)
+            ->orderByDesc('recorded_at')
+            ->orderBy('metric_slug')
+            ->limit(1000)
+            ->get();
+
+        return response()->json([
+            'device' => [
+                'id' => $device->id,
+                'name' => $device->name,
+            ],
+            'metrics' => $metrics->map(fn ($metric) => [
+                'metric_slug' => $metric->metric_slug,
+                'metric_value' => $metric->metric_value,
+                'recorded_at' => $metric->recorded_at->format('M d, Y H:i:s'),
+            ]),
+        ]);
     }
 }

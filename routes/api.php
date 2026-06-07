@@ -19,12 +19,11 @@ Route::any('/test', [ApiController::class, 'handleTestRequest']);
 Route::post('/router', [ApiController::class, 'router']);
 Route::any('/router', [ApiController::class, 'router']);
 
-// Device push (router/device → NMS)
+// Device push (router/device → NMS) — flat request_data per endpoint
 Route::prefix('device')->group(function () {
-    Route::get('/info', [DevicePushApiController::class, 'info']);
-    Route::get('/metrics', [DevicePushApiController::class, 'latestMetrics']);
-    Route::post('/push', [DevicePushApiController::class, 'push']);
-    Route::post('/metrics', [DevicePushApiController::class, 'metrics']);
-    Route::post('/interfaces', [DevicePushApiController::class, 'interfaces']);
-    Route::post('/heartbeat', [DevicePushApiController::class, 'heartbeat']);
+    Route::any('/info', [DevicePushApiController::class, 'info']);
+    Route::any('/metrics', [DevicePushApiController::class, 'metricsEndpoint']);
+    Route::any('/push', [DevicePushApiController::class, 'push']);
+    Route::any('/interfaces', [DevicePushApiController::class, 'interfaces']);
+    Route::any('/heartbeat', [DevicePushApiController::class, 'heartbeat']);
 });
