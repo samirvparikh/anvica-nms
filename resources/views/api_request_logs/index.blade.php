@@ -23,6 +23,7 @@
     <table class="data-table" id="apiLogsTable">
         <thead>
             <tr>
+                <th style="text-align: center; width: 80px;">Actions</th>
                 <th style="width: 60px;">Sr. No.</th>
                 <th>Method</th>
                 <th>URL</th>
@@ -33,7 +34,6 @@
                 <th>Request Data</th>
                 <th>Headers</th>
                 <th>Timestamp</th>
-                <th style="text-align: right; width: 80px;">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -51,6 +51,14 @@
                     data-request="{{ strtolower($requestDataText) }}"
                     data-headers="{{ strtolower($headersText) }}"
                 >
+                    <td style="text-align: center;">
+                        <a href="{{ route('api-request-logs.show', $log) }}" class="btn-action view-btn" title="View log details">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </a>
+                    </td>
                     <td style="font-weight: 700; text-align: center;">
                         {{ $log->id }}
                     </td>
@@ -96,14 +104,6 @@
                     </td>
                     <td style="color: var(--text-muted); white-space: nowrap;">
                         {{ $log->created_at->format('M d, Y H:i:s') }}
-                    </td>
-                    <td style="text-align: right;">
-                        <a href="{{ route('api-request-logs.show', $log) }}" class="btn-action view-btn" title="View log details">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                        </a>
                     </td>
                 </tr>
             @empty
