@@ -24,6 +24,7 @@ Route::prefix('device')->group(function () {
     Route::any('/info', [DevicePushApiController::class, 'info']);
     Route::any('/metrics', [DevicePushApiController::class, 'metricsEndpoint']);
     Route::any('/push', [DevicePushApiController::class, 'push']);
+    Route::any('/interfaces/data', [DevicePushApiController::class, 'interfaceData']);
     Route::any('/interfaces', [DevicePushApiController::class, 'interfaces']);
     Route::any('/heartbeat', [DevicePushApiController::class, 'heartbeat']);
 });

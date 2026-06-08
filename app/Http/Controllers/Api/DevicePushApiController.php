@@ -60,7 +60,7 @@ class DevicePushApiController extends Controller
         $ip = $this->extractIpAddress($request, $payload);
         $name = $this->extractDeviceName($payload);
 
-        abort_unless($ip, 422, 'ip_address is required (body, query, or X-Device-Ip header).');
+        abort_unless($ip, 422, 'ip_address or target_ip is required (body, query, or X-Device-Ip header).');
         abort_unless($name, 422, 'name is required (use name, Router, or Host_Name in payload).');
 
         $device = Device::query()
@@ -81,6 +81,8 @@ class DevicePushApiController extends Controller
         return $request->header('X-Device-Ip')
             ?? $payload['ip_address']
             ?? $payload['IP_Address']
+            ?? $payload['target_ip']
+            ?? $payload['Target_Ip']
             ?? $request->input('ip_address');
     }
 
@@ -228,6 +230,84 @@ class DevicePushApiController extends Controller
             'device_id' => $device->id,
             'count' => count($validated['interfaces']),
         ]);
+    }
+
+    /**
+     * POST|GET /api/device/interfaces/data — flat MikroTik interface push (one interface per request).
+     *
+     * request_data example:
+     * {
+     *   "Router": "Anvica_Demo",
+     *   "Host_Name": "Anvica_Demo",
+     *   "target_ip": "192.168.5.1",
+     *   "if_name": "ether1",
+     *   "if_index": "3",
+     *   "status": "1",
+     *   "rx_bytes": "402554371",
+     *   "tx_bytes": "652943407",
+     *   "rx_packets": "2861513",
+     *   "tx_packets": "5271135"
+     * }
+     */
+    public function interfaceData(Request $request): JsonResponse
+    {
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDeviceByNameAndIp($request, $payload);
+
+        $validated = validator($payload, [
+            'if_name' => 'required_without:interface_name|string|max:191',
+            'interface_name' => 'nullable|string|max:191',
+            'if_index' => 'nullable|string|max:50',
+            'status' => 'nullable|string|max:50',
+            'rx_bytes' => 'nullable|numeric|min:0',
+            'tx_bytes' => 'nullable|numeric|min:0',
+            'rx_packets' => 'nullable|numeric|min:0',
+            'tx_packets' => 'nullable|numeric|min:0',
+        ])->validate();
+
+        $interfaceName = $validated['if_name'] ?? $validated['interface_name'];
+        $recordedAt = Carbon::now();
+
+        DeviceInterface::updateOrCreate(
+            [
+                'device_id' => $device->id,
+                'interface_name' => $interfaceName,
+            ],
+            [
+                'status' => $this->normalizeInterfaceStatus($validated['status'] ?? '1'),
+                'rx' => (int) ($validated['rx_bytes'] ?? 0),
+                'tx' => (int) ($validated['tx_bytes'] ?? 0),
+                'rx_packets' => (int) ($validated['rx_packets'] ?? 0),
+                'tx_packets' => (int) ($validated['tx_packets'] ?? 0),
+            ]
+        );
+
+        $device->update(['last_seen' => $recordedAt]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Interface data stored.',
+            'device_id' => $device->id,
+            'device_name' => $device->name,
+            'interface_name' => $interfaceName,
+            'if_index' => $validated['if_index'] ?? null,
+            'recorded_at' => $recordedAt->toIso8601String(),
+        ]);
+    }
+
+    protected function normalizeInterfaceStatus(mixed $status): string
+    {
+        $value = strtolower(trim((string) $status));
+
+        if (in_array($value, ['0', 'false', 'down', 'no', 'offline'], true)) {
+            return 'down';
+        }
+
+        if (in_array($value, ['1', 'true', 'up', 'yes', 'online', 'running'], true)) {
+            return 'up';
+        }
+
+        return $value !== '' ? $value : 'up';
     }
 
     /**
