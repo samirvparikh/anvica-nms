@@ -148,6 +148,87 @@ class MonitoringService
     }
 
     /**
+     * Store flat metrics plus interfaces[] from /api/device/data.
+     *
+     * @param  array<string, mixed>  $payload
+     * @return array{interfaces_stored: int}
+     */
+    public function ingestMetricsAndInterfacesData(Device $device, array $payload): array
+    {
+        $interfaces = $payload['interfaces'] ?? [];
+        if (! is_array($interfaces)) {
+            $interfaces = [];
+        }
+
+        $this->ingestFlatMetrics($device, $payload);
+
+        return [
+            'interfaces_stored' => $this->ingestInterfaceRecords($device, $interfaces),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $interfaces
+     */
+    public function ingestInterfaceRecords(Device $device, array $interfaces): int
+    {
+        $recordedAt = Carbon::now();
+        $count = 0;
+
+        foreach ($interfaces as $iface) {
+            if (! is_array($iface)) {
+                continue;
+            }
+
+            $interfaceName = $iface['if_name']
+                ?? $iface['interface_name']
+                ?? $iface['name']
+                ?? null;
+
+            if (! $interfaceName) {
+                continue;
+            }
+
+            DeviceInterface::updateOrCreate(
+                [
+                    'device_id' => $device->id,
+                    'interface_name' => $interfaceName,
+                ],
+                [
+                    'status' => $this->normalizeInterfaceStatus($iface['status'] ?? '1'),
+                    'rx' => (int) ($iface['rx_bytes'] ?? $iface['rx'] ?? 0),
+                    'tx' => (int) ($iface['tx_bytes'] ?? $iface['tx'] ?? 0),
+                    'rx_packets' => (int) ($iface['rx_packets'] ?? 0),
+                    'tx_packets' => (int) ($iface['tx_packets'] ?? 0),
+                ]
+            );
+
+            $count++;
+        }
+
+        if ($count > 0) {
+            $device->update(['last_seen' => $recordedAt]);
+        }
+
+        return $count;
+    }
+
+    public function normalizeInterfaceStatus(mixed $status): string
+    {
+        $value = trim((string) $status);
+
+        if ($value === '1' || in_array(strtolower($value), ['up', 'true', 'yes', 'online', 'running'], true)) {
+            return 'Up';
+        }
+
+        if ($value === '2' || in_array(strtolower($value), ['down', '0', 'false', 'no', 'offline'], true)) {
+            return 'Down';
+        }
+
+        return $value !== '' ? ucfirst(strtolower($value)) : 'Up';
+    }
+
+    /**
      * @return array{0: float, 1: ?string}
      */
     protected function parseFlatMetricValue(mixed $value): array

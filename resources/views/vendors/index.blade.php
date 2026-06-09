@@ -37,7 +37,7 @@
                 <th>Service</th>
                 <th>Slug</th>
                 <th>Status</th>
-                <th style="text-align:right;">Actions</th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -47,23 +47,37 @@
                 <td>{{ $vendor->service->name }}</td>
                 <td>{{ $vendor->slug }}</td>
                 <td><span class="status-badge {{ strtolower($vendor->status) }}">{{ $vendor->status }}</span></td>
-                <td style="text-align:right;">
-                    <button class="btn-action edit-btn editVendorBtn"
-                        data-id="{{ $vendor->id }}"
-                        data-service-id="{{ $vendor->service_id }}"
-                        data-name="{{ $vendor->name }}"
-                        data-logo="{{ $vendor->logo }}"
-                        data-status="{{ $vendor->status }}">Edit</button>
-                    <form action="{{ route('vendors.destroy', $vendor) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete vendor?');">
-                        @csrf @method('DELETE')
-                        @if($serviceId)
-                            <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
-                        @endif
-                        @if($vendorId)
-                            <input type="hidden" name="redirect_vendor_id" value="{{ $vendorId }}">
-                        @endif
-                        <button type="submit" class="btn-action delete-btn">Delete</button>
-                    </form>
+                <td class="col-actions">
+                    <div class="table-actions">
+                        <button type="button" class="btn-action edit-btn editVendorBtn" title="Edit"
+                            data-id="{{ $vendor->id }}"
+                            data-service-id="{{ $vendor->service_id }}"
+                            data-name="{{ $vendor->name }}"
+                            data-logo="{{ $vendor->logo }}"
+                            data-status="{{ $vendor->status }}">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <form action="{{ route('vendors.destroy', $vendor) }}" method="POST" onsubmit="return confirm('Delete vendor?');">
+                            @csrf @method('DELETE')
+                            @if($serviceId)
+                                <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+                            @endif
+                            @if($vendorId)
+                                <input type="hidden" name="redirect_vendor_id" value="{{ $vendorId }}">
+                            @endif
+                            <button type="submit" class="btn-action delete-btn" title="Delete">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty

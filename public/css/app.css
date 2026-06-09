@@ -1084,6 +1084,29 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-dark);
 }
 
+.data-table th.col-actions,
+.data-table td.col-actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.data-table td.col-actions .table-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+}
+
+.data-table td.col-actions .table-actions form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
 .data-table tr:last-child td {
     border-bottom: none;
 }
@@ -1513,6 +1536,43 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-action.delete-btn {
     color: var(--status-down);
+}
+
+.table-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.table-actions form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.table-actions .btn-action.edit-btn {
+    margin-right: 0;
+}
+
+.table-actions .btn-action.edit-btn,
+.table-actions .btn-action.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    flex-shrink: 0;
+}
+
+.table-actions .btn-action svg {
+    display: block;
+    flex-shrink: 0;
 }
 
 .btn-action.view-btn {

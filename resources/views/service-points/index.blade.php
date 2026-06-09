@@ -32,7 +32,7 @@
                 <th>Warning</th>
                 <th>Critical</th>
                 <th>Status</th>
-                <th style="text-align:right;">Actions</th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -45,23 +45,37 @@
                 <td>{{ $point->warning_threshold ?? '—' }}</td>
                 <td>{{ $point->critical_threshold ?? '—' }}</td>
                 <td><span class="status-badge {{ strtolower($point->status) }}">{{ $point->status }}</span></td>
-                <td style="text-align:right;">
-                    <button class="btn-action edit-btn editPointBtn"
-                        data-id="{{ $point->id }}"
-                        data-service-id="{{ $point->service_id }}"
-                        data-name="{{ $point->name }}"
-                        data-method="{{ $point->method }}"
-                        data-unit="{{ $point->unit }}"
-                        data-warning="{{ $point->warning_threshold }}"
-                        data-critical="{{ $point->critical_threshold }}"
-                        data-status="{{ $point->status }}">Edit</button>
-                    <form action="{{ route('service-points.destroy', $point) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete service point?');">
-                        @csrf @method('DELETE')
-                        @if($serviceId)
-                            <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
-                        @endif
-                        <button type="submit" class="btn-action delete-btn">Delete</button>
-                    </form>
+                <td class="col-actions">
+                    <div class="table-actions">
+                        <button type="button" class="btn-action edit-btn editPointBtn" title="Edit"
+                            data-id="{{ $point->id }}"
+                            data-service-id="{{ $point->service_id }}"
+                            data-name="{{ $point->name }}"
+                            data-method="{{ $point->method }}"
+                            data-unit="{{ $point->unit }}"
+                            data-warning="{{ $point->warning_threshold }}"
+                            data-critical="{{ $point->critical_threshold }}"
+                            data-status="{{ $point->status }}">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                        </button>
+                        <form action="{{ route('service-points.destroy', $point) }}" method="POST" onsubmit="return confirm('Delete service point?');">
+                            @csrf @method('DELETE')
+                            @if($serviceId)
+                                <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+                            @endif
+                            <button type="submit" class="btn-action delete-btn" title="Delete">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty

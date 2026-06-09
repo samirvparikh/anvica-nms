@@ -32,7 +32,7 @@
                 <th>Service Name</th>
                 <th>Status</th>
                 <th>Points & Methods</th>
-                <th style="text-align: right;">Actions</th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -61,29 +61,31 @@
                         <span class="service-point-tag">{{ $point->name }} <small>({{ $point->method }})</small></span>
                     @endforeach
                 </td>
-                <td style="text-align: right;">
-                    <button class="btn-action edit-btn editServiceBtn"
-                            data-id="{{ $service->id }}"
-                            data-name="{{ $service->name }}"
-                            data-status="{{ $service->status }}"
-                            data-points="{{ $servicePointsJson->toJson() }}">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                        </svg>
-                    </button>
-                    <form action="{{ route('services.destroy', $service->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this service?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn-action delete-btn">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
-                                <polyline points="3 6 5 6 21 6"/>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                <line x1="10" y1="11" x2="10" y2="17"/>
-                                <line x1="14" y1="11" x2="14" y2="17"/>
+                <td class="col-actions">
+                    <div class="table-actions">
+                        <button type="button" class="btn-action edit-btn editServiceBtn" title="Edit"
+                                data-id="{{ $service->id }}"
+                                data-name="{{ $service->name }}"
+                                data-status="{{ $service->status }}"
+                                data-points="{{ $servicePointsJson->toJson() }}">
+                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                             </svg>
                         </button>
-                    </form>
+                        <form action="{{ route('services.destroy', $service->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this service?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-action delete-btn" title="Delete">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
