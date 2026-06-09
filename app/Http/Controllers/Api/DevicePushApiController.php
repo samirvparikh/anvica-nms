@@ -139,7 +139,7 @@ class DevicePushApiController extends Controller
         $payload = $this->extractPayload($request);
         $device = $this->resolveDeviceByNameAndIp($request, $payload);
 
-        $validated = validator($payload, [
+        validator($payload, [
             'interfaces' => 'nullable|array',
             'interfaces.*.if_name' => 'required_without:interfaces.*.interface_name,interfaces.*.name|string|max:191',
             'interfaces.*.interface_name' => 'nullable|string|max:191',
@@ -154,7 +154,7 @@ class DevicePushApiController extends Controller
             'interfaces.*.tx_packets' => 'nullable|numeric|min:0',
         ])->validate();
 
-        $result = $this->monitoringService->ingestMetricsAndInterfacesData($device, $validated);
+        $result = $this->monitoringService->ingestMetricsAndInterfacesData($device, $payload);
         $recordedAt = Carbon::now();
 
         return response()->json([
