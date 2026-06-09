@@ -7,6 +7,30 @@ use Illuminate\Database\Eloquent\Collection;
 
 class DeviceVendorRepository
 {
+    public function filtered(?int $serviceId = null, ?int $vendorId = null): Collection
+    {
+        if ($vendorId) {
+            $vendor = DeviceVendor::find($vendorId);
+            if (! $vendor || ($serviceId && $vendor->service_id !== $serviceId)) {
+                $vendorId = null;
+            }
+        }
+
+        return DeviceVendor::with('service')
+            ->when($serviceId, fn ($query) => $query->where('service_id', $serviceId))
+            ->when($vendorId, fn ($query) => $query->where('id', $vendorId))
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function filterOptions(?int $serviceId = null): Collection
+    {
+        return DeviceVendor::with('service')
+            ->when($serviceId, fn ($query) => $query->where('service_id', $serviceId))
+            ->orderBy('name')
+            ->get();
+    }
+
     public function allWithService(): Collection
     {
         return DeviceVendor::with('service')->orderBy('name')->get();

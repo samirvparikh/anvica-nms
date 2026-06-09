@@ -6,7 +6,27 @@
         <h1>Device Vendors</h1>
         <p>Manage vendors per device service type.</p>
     </div>
-    <button class="btn-add" id="openAddVendorBtn">+ Add Vendor</button>
+    <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+        <form method="GET" action="{{ route('vendors.index') }}" class="monitoring-user-filter" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            <select name="service_id" id="vendorFilterService" class="form-control" onchange="document.getElementById('vendorFilterVendor').value=''; this.form.submit();" style="min-width:180px;padding-left:1rem;">
+                <option value="">All Services</option>
+                @foreach($services as $service)
+                    <option value="{{ $service->id }}" {{ (int) $serviceId === $service->id ? 'selected' : '' }}>
+                        {{ $service->name }}
+                    </option>
+                @endforeach
+            </select>
+            <select name="vendor_id" id="vendorFilterVendor" class="form-control" onchange="this.form.submit()" style="min-width:180px;padding-left:1rem;">
+                <option value="">All Vendors</option>
+                @foreach($vendorOptions as $vendorOption)
+                    <option value="{{ $vendorOption->id }}" {{ (int) $vendorId === $vendorOption->id ? 'selected' : '' }}>
+                        {{ $vendorOption->name }}@if(! $serviceId) ({{ $vendorOption->service->name }})@endif
+                    </option>
+                @endforeach
+            </select>
+        </form>
+        <button class="btn-add" id="openAddVendorBtn">+ Add Vendor</button>
+    </div>
 </div>
 
 <div class="card-table-container">
@@ -36,6 +56,12 @@
                         data-status="{{ $vendor->status }}">Edit</button>
                     <form action="{{ route('vendors.destroy', $vendor) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete vendor?');">
                         @csrf @method('DELETE')
+                        @if($serviceId)
+                            <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+                        @endif
+                        @if($vendorId)
+                            <input type="hidden" name="redirect_vendor_id" value="{{ $vendorId }}">
+                        @endif
                         <button type="submit" class="btn-action delete-btn">Delete</button>
                     </form>
                 </td>
@@ -55,6 +81,12 @@
         </div>
         <form action="{{ route('vendors.store') }}" method="POST" id="vendorForm">
             @csrf
+            @if($serviceId)
+                <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+            @endif
+            @if($vendorId)
+                <input type="hidden" name="redirect_vendor_id" value="{{ $vendorId }}">
+            @endif
             <div id="vendorMethodField"></div>
             <div class="modal-body">
                 <div class="form-group">
@@ -107,7 +139,9 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.add('open');
     }
 
-    document.getElementById('openAddVendorBtn').onclick = () => openModal(false);
+    document.getElementById('openAddVendorBtn').onclick = () => openModal(false, {
+        serviceId: '{{ $serviceId ?? '' }}',
+    });
     document.getElementById('closeVendorModal').onclick = () => modal.classList.remove('open');
     document.getElementById('cancelVendorModal').onclick = () => modal.classList.remove('open');
 

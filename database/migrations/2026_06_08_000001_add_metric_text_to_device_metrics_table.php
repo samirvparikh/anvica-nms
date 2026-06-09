@@ -17,6 +17,6 @@ return new class extends Migration
     {
         Schema::table('device_metrics', function (Blueprint $table) {
             $table->dropColumn('metric_text');
-        });
+        }); 
     }
 };

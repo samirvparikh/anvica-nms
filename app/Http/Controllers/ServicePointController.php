@@ -9,11 +9,19 @@ use Illuminate\Support\Str;
 
 class ServicePointController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $serviceId = $request->integer('service_id') ?: null;
+
+        $servicePoints = ServicePoint::with('service')
+            ->when($serviceId, fn ($query) => $query->where('service_id', $serviceId))
+            ->orderBy('name')
+            ->get();
+
         return view('service-points.index', [
-            'servicePoints' => ServicePoint::with('service')->orderBy('name')->get(),
+            'servicePoints' => $servicePoints,
             'services' => Service::orderBy('name')->get(),
+            'serviceId' => $serviceId,
         ]);
     }
 
@@ -32,7 +40,7 @@ class ServicePointController extends Controller
         $validated['slug'] = Str::slug($validated['name']);
         ServicePoint::create($validated);
 
-        return redirect()->route('service-points.index')->with('success', 'Service point created successfully.');
+        return $this->redirectToIndex($request, 'Service point created successfully.');
     }
 
     public function update(Request $request, ServicePoint $servicePoint)
@@ -50,13 +58,24 @@ class ServicePointController extends Controller
         $validated['slug'] = Str::slug($validated['name']);
         $servicePoint->update($validated);
 
-        return redirect()->route('service-points.index')->with('success', 'Service point updated successfully.');
+        return $this->redirectToIndex($request, 'Service point updated successfully.');
     }
 
-    public function destroy(ServicePoint $servicePoint)
+    public function destroy(Request $request, ServicePoint $servicePoint)
     {
         $servicePoint->delete();
 
-        return redirect()->route('service-points.index')->with('success', 'Service point deleted successfully.');
+        return $this->redirectToIndex($request, 'Service point deleted successfully.');
+    }
+
+    protected function redirectToIndex(Request $request, string $message)
+    {
+        $params = $request->filled('redirect_service_id')
+            ? ['service_id' => $request->integer('redirect_service_id')]
+            : [];
+
+        return redirect()
+            ->route('service-points.index', $params)
+            ->with('success', $message);
     }
 }

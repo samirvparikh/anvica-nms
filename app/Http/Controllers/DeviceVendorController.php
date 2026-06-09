@@ -14,11 +14,17 @@ class DeviceVendorController extends Controller
         protected DeviceVendorRepository $vendorRepository,
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
+        $serviceId = $request->integer('service_id') ?: null;
+        $vendorId = $request->integer('vendor_id') ?: null;
+
         return view('vendors.index', [
-            'vendors' => $this->vendorRepository->allWithService(),
+            'vendors' => $this->vendorRepository->filtered($serviceId, $vendorId),
             'services' => Service::orderBy('name')->get(),
+            'vendorOptions' => $this->vendorRepository->filterOptions($serviceId),
+            'serviceId' => $serviceId,
+            'vendorId' => $vendorId,
         ]);
     }
 
@@ -34,7 +40,7 @@ class DeviceVendorController extends Controller
         $validated['slug'] = Str::slug($validated['name']);
         $this->vendorRepository->create($validated);
 
-        return redirect()->route('vendors.index')->with('success', 'Vendor created successfully.');
+        return $this->redirectToIndex($request, 'Vendor created successfully.');
     }
 
     public function update(Request $request, DeviceVendor $vendor)
@@ -49,13 +55,25 @@ class DeviceVendorController extends Controller
         $validated['slug'] = Str::slug($validated['name']);
         $this->vendorRepository->update($vendor, $validated);
 
-        return redirect()->route('vendors.index')->with('success', 'Vendor updated successfully.');
+        return $this->redirectToIndex($request, 'Vendor updated successfully.');
     }
 
-    public function destroy(DeviceVendor $vendor)
+    public function destroy(Request $request, DeviceVendor $vendor)
     {
         $this->vendorRepository->delete($vendor);
 
-        return redirect()->route('vendors.index')->with('success', 'Vendor deleted successfully.');
+        return $this->redirectToIndex($request, 'Vendor deleted successfully.');
+    }
+
+    protected function redirectToIndex(Request $request, string $message)
+    {
+        $params = array_filter([
+            'service_id' => $request->filled('redirect_service_id') ? $request->integer('redirect_service_id') : null,
+            'vendor_id' => $request->filled('redirect_vendor_id') ? $request->integer('redirect_vendor_id') : null,
+        ]);
+
+        return redirect()
+            ->route('vendors.index', $params)
+            ->with('success', $message);
     }
 }

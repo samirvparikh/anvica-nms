@@ -6,7 +6,19 @@
         <h1>Service Points</h1>
         <p>Monitoring metrics and collection methods per service.</p>
     </div>
-    <button class="btn-add" id="openAddPointBtn">+ Add Service Point</button>
+    <div style="display:flex;align-items:center;gap:0.75rem;">
+        <form method="GET" action="{{ route('service-points.index') }}" class="monitoring-user-filter">
+            <select name="service_id" class="form-control" onchange="this.form.submit()" style="min-width:200px;padding-left:1rem;">
+                <option value="">All Services</option>
+                @foreach($services as $service)
+                    <option value="{{ $service->id }}" {{ (int) $serviceId === $service->id ? 'selected' : '' }}>
+                        {{ $service->name }}
+                    </option>
+                @endforeach
+            </select>
+        </form>
+        <button class="btn-add" id="openAddPointBtn">+ Add Service Point</button>
+    </div>
 </div>
 
 <div class="card-table-container">
@@ -45,6 +57,9 @@
                         data-status="{{ $point->status }}">Edit</button>
                     <form action="{{ route('service-points.destroy', $point) }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete service point?');">
                         @csrf @method('DELETE')
+                        @if($serviceId)
+                            <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+                        @endif
                         <button type="submit" class="btn-action delete-btn">Delete</button>
                     </form>
                 </td>
@@ -64,6 +79,9 @@
         </div>
         <form action="{{ route('service-points.store') }}" method="POST" id="pointForm">
             @csrf
+            @if($serviceId)
+                <input type="hidden" name="redirect_service_id" value="{{ $serviceId }}">
+            @endif
             <div id="pointMethodField"></div>
             <div class="modal-body">
                 <div class="form-group">
@@ -130,7 +148,9 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.add('open');
     }
 
-    document.getElementById('openAddPointBtn').onclick = () => openModal(false);
+    document.getElementById('openAddPointBtn').onclick = () => openModal(false, {
+        serviceId: '{{ $serviceId ?? '' }}',
+    });
     document.getElementById('closePointModal').onclick = () => modal.classList.remove('open');
     document.getElementById('cancelPointModal').onclick = () => modal.classList.remove('open');
 
