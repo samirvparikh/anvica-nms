@@ -25,6 +25,7 @@ class MonitoringController extends Controller
             ->get();
 
         $latestMetrics = $this->userScope->latestMetricsByDevice($user, $customerId);
+        $deviceHealth = $this->userScope->deviceHealthByRecentMetrics($user, $customerId);
 
         $interfaces = $this->userScope
             ->interfacesQuery($user, $customerId)
@@ -45,6 +46,7 @@ class MonitoringController extends Controller
         return view('monitoring.index', compact(
             'devices',
             'latestMetrics',
+            'deviceHealth',
             'interfaces',
             'alerts',
             'customers',

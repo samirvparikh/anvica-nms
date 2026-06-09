@@ -89,4 +89,32 @@ class UserScopeService
 
         return $result;
     }
+
+    /**
+     * Health from device_metrics: Up if any metric recorded within last 5 minutes, else Down.
+     *
+     * @return array<int, string>
+     */
+    public function deviceHealthByRecentMetrics(User $user, ?int $customerId = null, int $withinMinutes = 5): array
+    {
+        $deviceIds = $this->deviceIds($user, $customerId);
+
+        if (empty($deviceIds)) {
+            return [];
+        }
+
+        $activeDeviceIds = DeviceMetric::query()
+            ->whereIn('device_id', $deviceIds)
+            ->where('recorded_at', '>=', now()->subMinutes($withinMinutes))
+            ->distinct()
+            ->pluck('device_id')
+            ->flip();
+
+        $health = [];
+        foreach ($deviceIds as $deviceId) {
+            $health[$deviceId] = isset($activeDeviceIds[$deviceId]) ? 'Up' : 'Down';
+        }
+
+        return $health;
+    }
 }

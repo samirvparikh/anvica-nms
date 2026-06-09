@@ -50,7 +50,10 @@
             </thead>
             <tbody>
                 @forelse($devices as $device)
-                @php $m = $latestMetrics[$device->id] ?? []; @endphp
+                @php
+                    $m = $latestMetrics[$device->id] ?? [];
+                    $health = $deviceHealth[$device->id] ?? 'Down';
+                @endphp
                 <tr>
                     <td style="font-weight:700;">{{ $device->name }}</td>
                     <td>{{ $device->ip_address ?? '—' }}</td>
@@ -58,7 +61,7 @@
                     <td>{{ $device->user?->name ?? 'Admin / Unassigned' }}</td>
                     @endif
                     <td>{{ $device->service?->name ?? $device->type }}</td>
-                    <td><span class="status-badge {{ strtolower($device->health_status) }}">{{ $device->health_status }}</span></td>
+                    <td><span class="status-badge {{ strtolower($health) }}">{{ $health }}</span></td>
                     <td>{{ $device->last_seen?->format('M d, H:i') ?? '—' }}</td>
                     <td>{{ isset($m['cpu']) ? number_format($m['cpu']->metric_value, 1) : '—' }}</td>
                     <td>{{ isset($m['ram']) ? number_format($m['ram']->metric_value, 1) : '—' }}</td>
