@@ -155,17 +155,8 @@ class DevicePushApiController extends Controller
         $payload = $this->extractPayload($request);
         $device = $this->resolveDeviceByNameAndIp($request, $payload);
 
-        if (MetricNormalizer::isPingOnlyPush($payload)) {
-            $pingStatus = MetricNormalizer::parsePingStatus($payload);
-            $this->monitoringService->ingestPingStatus($device, $pingStatus ?? 0);
-        } elseif (MetricNormalizer::isFlatRouterPush($payload)) {
-            $info = MetricNormalizer::fromRouterPush($payload);
-            $this->monitoringService->ingestPush($device, array_merge($payload, [
-                'metrics' => $info['metrics'],
-                'hostname' => $info['hostname'],
-                'uptime' => $info['uptime'],
-            ]));
-        } else {
+        if (isset($payload['metrics']) && is_array($payload['metrics'])
+            && ! isset($payload['Router']) && ! isset($payload['IP_Address']) && ! isset($payload['target_ip'])) {
             $validated = validator($payload, [
                 'metrics' => 'required|array',
                 'metrics.cpu' => 'nullable|numeric',
@@ -176,6 +167,8 @@ class DevicePushApiController extends Controller
             ])->validate();
 
             $this->monitoringService->ingestPush($device, $validated);
+        } else {
+            $this->monitoringService->ingestFlatMetrics($device, $payload);
         }
 
         return response()->json([

@@ -53,6 +53,12 @@
                 @php
                     $m = $latestMetrics[$device->id] ?? [];
                     $health = $deviceHealth[$device->id] ?? 'Down';
+                    $cpuMetric = $m['CPU'] ?? $m['cpu'] ?? null;
+                    $ramUsed = (float) (($m['Ram_Used'] ?? $m['ram_uses'] ?? null)?->metric_value ?? 0);
+                    $ramTotal = (float) (($m['Total_Ram'] ?? $m['total_ram'] ?? null)?->metric_value ?? 0);
+                    $ramPct = isset($m['ram']) ? (float) $m['ram']->metric_value : ($ramTotal > 0 ? round(($ramUsed / $ramTotal) * 100, 1) : null);
+                    $tempMetric = $m['CPU_Temp'] ?? $m['MB_Temp'] ?? $m['Board_Temp'] ?? $m['temperature'] ?? null;
+                    $diskMetric = $m['disk'] ?? null;
                 @endphp
                 <tr>
                     <td style="font-weight:700;">{{ $device->name }}</td>
@@ -63,10 +69,10 @@
                     <td>{{ $device->service?->name ?? $device->type }}</td>
                     <td><span class="status-badge {{ strtolower($health) }}">{{ $health }}</span></td>
                     <td>{{ $device->last_seen?->format('M d, H:i') ?? '—' }}</td>
-                    <td>{{ isset($m['cpu']) ? number_format($m['cpu']->metric_value, 1) : '—' }}</td>
-                    <td>{{ isset($m['ram']) ? number_format($m['ram']->metric_value, 1) : '—' }}</td>
-                    <td>{{ isset($m['disk']) ? number_format($m['disk']->metric_value, 1) : '—' }}</td>
-                    <td>{{ isset($m['temperature']) ? number_format($m['temperature']->metric_value, 1) : '—' }}</td>
+                    <td>{{ $cpuMetric ? number_format((float) $cpuMetric->metric_value, 1) : '—' }}</td>
+                    <td>{{ $ramPct !== null ? number_format($ramPct, 1) : '—' }}</td>
+                    <td>{{ $diskMetric ? number_format((float) $diskMetric->metric_value, 1) : '—' }}</td>
+                    <td>{{ $tempMetric ? number_format((float) $tempMetric->metric_value, 1) : '—' }}</td>
                     <td style="text-align:right;">
                         <button type="button"
                                 class="btn-action view-btn showMetricsBtn"
@@ -238,10 +244,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         tbody.innerHTML = metrics.map(function (metric) {
+            var displayValue = metric.metric_text != null && metric.metric_text !== ''
+                ? metric.metric_text
+                : metric.metric_value;
             return '<tr>'
                 + '<td style="white-space:nowrap;color:var(--text-muted);">' + metric.recorded_at + '</td>'
                 + '<td style="font-weight:600;">' + metric.metric_slug + '</td>'
-                + '<td class="cell-mono">' + metric.metric_value + '</td>'
+                + '<td class="cell-mono">' + displayValue + '</td>'
                 + '</tr>';
         }).join('');
     }

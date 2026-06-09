@@ -11,6 +11,7 @@ class DeviceMetric extends Model
         'device_id',
         'metric_slug',
         'metric_value',
+        'metric_text',
         'recorded_at',
     ];
 

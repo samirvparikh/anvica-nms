@@ -80,6 +80,7 @@ class MonitoringController extends Controller
             'metrics' => $metrics->map(fn ($metric) => [
                 'metric_slug' => $metric->metric_slug,
                 'metric_value' => $metric->metric_value,
+                'metric_text' => $metric->metric_text,
                 'recorded_at' => $metric->recorded_at->format('M d, Y H:i:s'),
             ]),
         ]);

@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Device;
 use App\Models\DeviceInterface;
 use App\Models\DeviceMetric;
+use App\Models\ServicePoint;
 use App\Monitoring\MonitoringDriverFactory;
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class MonitoringService
 {
@@ -78,23 +80,189 @@ class MonitoringService
     }
 
     /**
-     * Store ping status only (Ping_Status UP/DOWN without CPU/RAM metrics).
+     * Store flat request_data keys directly in device_metrics (metric_slug = key).
+     *
+     * @param  array<string, mixed>  $payload
      */
-    public function ingestPingStatus(Device $device, int $pingUp): void
+    public function ingestFlatMetrics(Device $device, array $payload): void
     {
         $recordedAt = Carbon::now();
+        $skipKeys = ['interfaces', 'metrics', 'SYSTEM', 'INTERFACE', 'data', 'api_key'];
+        $storedMetricKeys = [];
 
-        DeviceMetric::create([
-            'device_id' => $device->id,
-            'metric_slug' => 'ping_status',
-            'metric_value' => $pingUp,
-            'recorded_at' => $recordedAt,
-        ]);
+        foreach ($payload as $key => $value) {
+            if (in_array($key, $skipKeys, true) || $value === null || $value === '') {
+                continue;
+            }
+
+            if (is_array($value) || is_object($value)) {
+                continue;
+            }
+
+            [$numericValue, $textValue] = $this->parseFlatMetricValue($value);
+
+            DeviceMetric::create([
+                'device_id' => $device->id,
+                'metric_slug' => (string) $key,
+                'metric_value' => $numericValue,
+                'metric_text' => $textValue,
+                'recorded_at' => $recordedAt,
+            ]);
+
+            $storedMetricKeys[] = (string) $key;
+        }
+
+        $this->syncServicePointsFromMetricKeys($device, $storedMetricKeys);
+
+        $hostname = $payload['Host_Name']
+            ?? $payload['host_name']
+            ?? $payload['hostname']
+            ?? null;
+
+        $pingStatus = $payload['Ping_Status'] ?? $payload['ping_status'] ?? null;
+        $healthStatus = $device->health_status;
+
+        if ($pingStatus !== null && $pingStatus !== '') {
+            $pingText = strtoupper(trim((string) $pingStatus));
+            $healthStatus = in_array($pingText, ['UP', '1', 'TRUE', 'ONLINE'], true) ? 'Up' : 'Down';
+        }
 
         $device->update([
             'last_seen' => $recordedAt,
-            'health_status' => $pingUp ? 'Up' : 'Down',
+            'hostname' => $hostname ?? $device->hostname,
+            'health_status' => $healthStatus,
         ]);
+    }
+
+    /**
+     * @return array{0: float, 1: ?string}
+     */
+    protected function parseFlatMetricValue(mixed $value): array
+    {
+        if (is_bool($value)) {
+            return [$value ? 1 : 0, $value ? 'true' : 'false'];
+        }
+
+        $stringValue = trim((string) $value);
+
+        if ($stringValue === '') {
+            return [0, null];
+        }
+
+        $upper = strtoupper($stringValue);
+
+        if (in_array($upper, ['UP', 'DOWN', 'ONLINE', 'OFFLINE'], true)) {
+            return [
+                in_array($upper, ['UP', 'ONLINE'], true) ? 1 : 0,
+                $upper,
+            ];
+        }
+
+        if (is_numeric($stringValue)) {
+            return [(float) $stringValue, null];
+        }
+
+        return [0, $stringValue];
+    }
+
+    /**
+     * Create or update service_points on the device service from API metric keys.
+     *
+     * @param  list<string>  $metricKeys
+     */
+    protected function syncServicePointsFromMetricKeys(Device $device, array $metricKeys): void
+    {
+        if (! $device->service_id || $metricKeys === []) {
+            return;
+        }
+
+        $serviceId = $device->service_id;
+
+        foreach ($metricKeys as $key) {
+            if ($this->isDeviceMetaMetricKey($key)) {
+                continue;
+            }
+
+            $slug = (string) $key;
+            $name = $this->metricKeyToPointName($slug);
+
+            $existing = ServicePoint::query()
+                ->where('service_id', $serviceId)
+                ->where(function ($query) use ($slug) {
+                    $query->where('slug', $slug)
+                        ->orWhere('slug', Str::slug($slug))
+                        ->orWhere('slug', strtolower($slug));
+                })
+                ->first();
+
+            if ($existing) {
+                $existing->update([
+                    'name' => $name,
+                    'method' => 'API',
+                    'unit' => $this->inferMetricUnit($slug) ?? $existing->unit,
+                    'status' => ServicePoint::STATUS_ACTIVE,
+                ]);
+
+                continue;
+            }
+
+            ServicePoint::create([
+                'service_id' => $serviceId,
+                'name' => $name,
+                'slug' => $slug,
+                'method' => 'API',
+                'unit' => $this->inferMetricUnit($slug),
+                'status' => ServicePoint::STATUS_ACTIVE,
+            ]);
+        }
+    }
+
+    protected function isDeviceMetaMetricKey(string $key): bool
+    {
+        return in_array($key, [
+            'Router',
+            'router',
+            'Host_Name',
+            'host_name',
+            'hostname',
+            'name',
+            'IP_Address',
+            'ip_address',
+            'target_ip',
+            'Target_Ip',
+        ], true);
+    }
+
+    protected function metricKeyToPointName(string $key): string
+    {
+        return str_replace('_', ' ', $key);
+    }
+
+    protected function inferMetricUnit(string $key): ?string
+    {
+        $normalized = strtolower($key);
+
+        if (str_contains($normalized, 'temp')) {
+            return '°C';
+        }
+
+        if (in_array($normalized, ['cpu', 'ram'], true) || str_ends_with($normalized, '_ram')) {
+            return '%';
+        }
+
+        if (str_contains($normalized, 'ping')) {
+            return null;
+        }
+
+        if (str_contains($normalized, 'ram_uses') || str_contains($normalized, 'total_ram') || str_contains($normalized, 'bytes')) {
+            return 'bytes';
+        }
+
+        if (str_contains($normalized, 'time') || str_contains($normalized, 'uptime')) {
+            return 'sec';
+        }
+
+        return null;
     }
 
     public function storePollResult(Device $device, array $result): void

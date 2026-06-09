@@ -66,7 +66,6 @@ class UserScopeService
      */
     public function latestMetricsByDevice(User $user, ?int $customerId = null): array
     {
-        $slugs = ['cpu', 'ram', 'disk', 'temperature'];
         $deviceIds = $this->deviceIds($user, $customerId);
 
         if (empty($deviceIds)) {
@@ -74,7 +73,6 @@ class UserScopeService
         }
 
         $metrics = DeviceMetric::whereIn('device_id', $deviceIds)
-            ->whereIn('metric_slug', $slugs)
             ->orderByDesc('recorded_at')
             ->get()
             ->groupBy('device_id');
@@ -92,7 +90,7 @@ class UserScopeService
 
     /**
      * Health from device_metrics within last 5 minutes.
-     * Uses latest ping_status when present; otherwise Up if any metric exists.
+     * Shows Ping_Status value when present; otherwise Up if any row exists, else Down.
      *
      * @return array<int, string>
      */
@@ -125,8 +123,11 @@ class UserScopeService
                 ->groupBy('metric_slug')
                 ->map(fn ($group) => $group->first());
 
-            if ($latestBySlug->has('ping_status')) {
-                $health[$deviceId] = (float) $latestBySlug['ping_status']->metric_value >= 1 ? 'Up' : 'Down';
+            $pingMetric = $latestBySlug->get('Ping_Status') ?? $latestBySlug->get('ping_status');
+
+            if ($pingMetric) {
+                $health[$deviceId] = $pingMetric->metric_text
+                    ?? (strtoupper((string) $pingMetric->metric_value) === '1' || (float) $pingMetric->metric_value >= 1 ? 'UP' : 'DOWN');
 
                 continue;
             }
