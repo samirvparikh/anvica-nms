@@ -178,7 +178,56 @@ class DevicePushApiController extends Controller
         ]);
     }
 
-    
+    /**
+     * POST|GET /api/device/interfaces — push interface traffic data.
+     *
+     * request_data example:
+     * {"ip_address":"192.168.5.1","interfaces":[{"name":"ether1","status":"up","rx":1000,"tx":2000}]}
+     */
+    public function interfaces(Request $request): JsonResponse
+    {
+        $payload = $this->extractPayload($request);
+        $device = $this->resolveDevice($request, $payload);
+
+        $validated = validator($payload, [
+            'interfaces' => 'required|array|min:1',
+            'interfaces.*.name' => 'required_without:interfaces.*.interface_name|string|max:191',
+            'interfaces.*.interface_name' => 'nullable|string|max:191',
+            'interfaces.*.status' => 'nullable|string|max:50',
+            'interfaces.*.rx' => 'nullable|integer|min:0',
+            'interfaces.*.tx' => 'nullable|integer|min:0',
+            'interfaces.*.rx_packets' => 'nullable|integer|min:0',
+            'interfaces.*.tx_packets' => 'nullable|integer|min:0',
+        ])->validate();
+
+        $recordedAt = Carbon::now();
+
+        foreach ($validated['interfaces'] as $iface) {
+            DeviceInterface::updateOrCreate(
+                [
+                    'device_id' => $device->id,
+                    'interface_name' => $iface['name'] ?? $iface['interface_name'],
+                ],
+                [
+                    'status' => $this->normalizeInterfaceStatus($iface['status'] ?? '1'),
+                    'rx' => (int) ($iface['rx'] ?? 0),
+                    'tx' => (int) ($iface['tx'] ?? 0),
+                    'rx_packets' => (int) ($iface['rx_packets'] ?? 0),
+                    'tx_packets' => (int) ($iface['tx_packets'] ?? 0),
+                ]
+            );
+        }
+
+        $device->update(['last_seen' => $recordedAt]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Interfaces stored.',
+            'device_id' => $device->id,
+            'count' => count($validated['interfaces']),
+        ]);
+    }
+
     /**
      * POST|GET /api/device/interfaces/data — flat MikroTik interface push (one interface per request).
      *
@@ -196,7 +245,7 @@ class DevicePushApiController extends Controller
      *   "tx_packets": "5271135"
      * }
      */
-    public function interfaces(Request $request): JsonResponse
+    public function interfaceData(Request $request): JsonResponse
     {
         $payload = $this->extractPayload($request);
         $device = $this->resolveDeviceByNameAndIp($request, $payload);
@@ -241,51 +290,6 @@ class DevicePushApiController extends Controller
             'recorded_at' => $recordedAt->toIso8601String(),
         ]);
     }
-
-    public function interfacesData(Request $request): JsonResponse
-    {
-        $payload = $this->extractPayload($request);
-        $device = $this->resolveDevice($request, $payload);
-
-        $validated = validator($payload, [
-            'interfaces' => 'required|array|min:1',
-            'interfaces.*.name' => 'required_without:interfaces.*.interface_name|string|max:191',
-            'interfaces.*.interface_name' => 'nullable|string|max:191',
-            'interfaces.*.status' => 'nullable|string|max:50',
-            'interfaces.*.rx' => 'nullable|integer|min:0',
-            'interfaces.*.tx' => 'nullable|integer|min:0',
-            'interfaces.*.rx_packets' => 'nullable|integer|min:0',
-            'interfaces.*.tx_packets' => 'nullable|integer|min:0',
-        ])->validate();
-
-        $recordedAt = Carbon::now();
-
-        foreach ($validated['interfaces'] as $iface) {
-            DeviceInterface::updateOrCreate(
-                [
-                    'device_id' => $device->id,
-                    'interface_name' => $iface['name'] ?? $iface['interface_name'],
-                ],
-                [
-                    'status' => $this->normalizeInterfaceStatus($iface['status'] ?? '1'),
-                    'rx' => (int) ($iface['rx'] ?? 0),
-                    'tx' => (int) ($iface['tx'] ?? 0),
-                    'rx_packets' => (int) ($iface['rx_packets'] ?? 0),
-                    'tx_packets' => (int) ($iface['tx_packets'] ?? 0),
-                ]
-            );
-        }
-
-        $device->update(['last_seen' => $recordedAt]);
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Interfaces stored.',
-            'device_id' => $device->id,
-            'count' => count($validated['interfaces']),
-        ]);
-    }
-
 
     protected function normalizeInterfaceStatus(mixed $status): string
     {
