@@ -209,7 +209,7 @@ class DevicePushApiController extends Controller
                     'interface_name' => $iface['name'] ?? $iface['interface_name'],
                 ],
                 [
-                    'status' => $iface['status'] ?? 'up',
+                    'status' => $this->normalizeInterfaceStatus($iface['status'] ?? '1'),
                     'rx' => (int) ($iface['rx'] ?? 0),
                     'tx' => (int) ($iface['tx'] ?? 0),
                     'rx_packets' => (int) ($iface['rx_packets'] ?? 0),
@@ -293,17 +293,17 @@ class DevicePushApiController extends Controller
 
     protected function normalizeInterfaceStatus(mixed $status): string
     {
-        $value = strtolower(trim((string) $status));
+        $value = trim((string) $status);
 
-        if (in_array($value, ['0', 'false', 'down', 'no', 'offline'], true)) {
-            return 'down';
+        if ($value === '1' || in_array(strtolower($value), ['up', 'true', 'yes', 'online', 'running'], true)) {
+            return 'Up';
         }
 
-        if (in_array($value, ['1', 'true', 'up', 'yes', 'online', 'running'], true)) {
-            return 'up';
+        if ($value === '2' || in_array(strtolower($value), ['down', '0', 'false', 'no', 'offline'], true)) {
+            return 'Down';
         }
 
-        return $value !== '' ? $value : 'up';
+        return $value !== '' ? ucfirst(strtolower($value)) : 'Up';
     }
 
     /**
