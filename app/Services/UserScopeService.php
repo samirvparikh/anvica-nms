@@ -91,7 +91,8 @@ class UserScopeService
     }
 
     /**
-     * Health from device_metrics: Up if any metric recorded within last 5 minutes, else Down.
+     * Health from device_metrics within last 5 minutes.
+     * Uses latest ping_status when present; otherwise Up if any metric exists.
      *
      * @return array<int, string>
      */
@@ -103,16 +104,34 @@ class UserScopeService
             return [];
         }
 
-        $activeDeviceIds = DeviceMetric::query()
+        $recentMetrics = DeviceMetric::query()
             ->whereIn('device_id', $deviceIds)
             ->where('recorded_at', '>=', now()->subMinutes($withinMinutes))
-            ->distinct()
-            ->pluck('device_id')
-            ->flip();
+            ->orderByDesc('recorded_at')
+            ->get()
+            ->groupBy('device_id');
 
         $health = [];
         foreach ($deviceIds as $deviceId) {
-            $health[$deviceId] = isset($activeDeviceIds[$deviceId]) ? 'Up' : 'Down';
+            $metrics = $recentMetrics->get($deviceId);
+
+            if (! $metrics || $metrics->isEmpty()) {
+                $health[$deviceId] = 'Down';
+
+                continue;
+            }
+
+            $latestBySlug = $metrics
+                ->groupBy('metric_slug')
+                ->map(fn ($group) => $group->first());
+
+            if ($latestBySlug->has('ping_status')) {
+                $health[$deviceId] = (float) $latestBySlug['ping_status']->metric_value >= 1 ? 'Up' : 'Down';
+
+                continue;
+            }
+
+            $health[$deviceId] = 'Up';
         }
 
         return $health;

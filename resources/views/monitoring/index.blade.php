@@ -103,6 +103,7 @@
                 <tr>
                     <th>Device</th>
                     @if(Auth::user()->isAdmin())<th>Customer</th>@endif
+                    <th>IP Address</th>
                     <th>Interface</th>
                     <th>Status</th>
                     <th>RX</th>
@@ -119,6 +120,7 @@
                     @if(Auth::user()->isAdmin())
                     <td>{{ $iface->device->user?->name ?? 'Admin / Unassigned' }}</td>
                     @endif
+                    <td>{{ $iface->device->ip_address ?? '—' }}</td>
                     <td>{{ $iface->interface_name }}</td>
                     <td><span class="status-badge {{ strtolower($iface->status) }}">{{ ucfirst($iface->status) }}</span></td>
                     <td>{{ number_format($iface->rx) }}</td>

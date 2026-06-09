@@ -155,7 +155,10 @@ class DevicePushApiController extends Controller
         $payload = $this->extractPayload($request);
         $device = $this->resolveDeviceByNameAndIp($request, $payload);
 
-        if (MetricNormalizer::isFlatRouterPush($payload)) {
+        if (MetricNormalizer::isPingOnlyPush($payload)) {
+            $pingStatus = MetricNormalizer::parsePingStatus($payload);
+            $this->monitoringService->ingestPingStatus($device, $pingStatus ?? 0);
+        } elseif (MetricNormalizer::isFlatRouterPush($payload)) {
             $info = MetricNormalizer::fromRouterPush($payload);
             $this->monitoringService->ingestPush($device, array_merge($payload, [
                 'metrics' => $info['metrics'],

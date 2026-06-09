@@ -60,16 +60,57 @@ class MetricNormalizer
             'ram_uses' => $ramUsed,
             'total_ram' => $ramTotal,
             'ram' => $ramTotal > 0 ? round(($ramUsed / $ramTotal) * 100, 2) : 0,
-            'up_time' => (float) ($raw['UP_time'] ?? $raw['up_time'] ?? 0),
+            'up_time' => (float) ($raw['UP_time'] ?? $raw['up_time'] ?? $raw['UP_Time'] ?? 0),
             'power1_status' => (float) ($raw['Power1_Status'] ?? $raw['power1_status'] ?? 0),
             'power2_status' => (float) ($raw['Power2_Status'] ?? $raw['power2_status'] ?? 0),
         ];
 
+        $pingStatus = self::parsePingStatus($raw);
+        if ($pingStatus !== null) {
+            $metrics['ping_status'] = $pingStatus;
+        }
+
         return [
             'hostname' => $raw['Host_Name'] ?? $raw['host_name'] ?? $raw['Router'] ?? $raw['router'] ?? null,
-            'uptime' => $raw['UP_time'] ?? $raw['up_time'] ?? null,
+            'uptime' => $raw['UP_time'] ?? $raw['up_time'] ?? $raw['UP_Time'] ?? null,
             'metrics' => $metrics,
         ];
+    }
+
+    /**
+     * Ping_Status only push (no CPU/RAM metrics).
+     */
+    public static function isPingOnlyPush(array $raw): bool
+    {
+        if (self::parsePingStatus($raw) === null) {
+            return false;
+        }
+
+        return ! isset($raw['CPU']) && ! isset($raw['cpu']) && ! isset($raw['metrics']);
+    }
+
+    /**
+     * @return int|null 1 = UP, 0 = DOWN
+     */
+    public static function parsePingStatus(array $raw): ?int
+    {
+        $status = $raw['Ping_Status'] ?? $raw['ping_status'] ?? null;
+
+        if ($status === null || $status === '') {
+            return null;
+        }
+
+        $value = strtoupper(trim((string) $status));
+
+        if (in_array($value, ['UP', '1', 'TRUE', 'ONLINE'], true)) {
+            return 1;
+        }
+
+        if (in_array($value, ['DOWN', '0', 'FALSE', 'OFFLINE'], true)) {
+            return 0;
+        }
+
+        return is_numeric($status) ? ((int) $status >= 1 ? 1 : 0) : null;
     }
 
     public static function isFlatRouterPush(array $raw): bool
@@ -79,7 +120,9 @@ class MetricNormalizer
             || isset($raw['CPU'])
             || isset($raw['cpu'])
             || isset($raw['IP_Address'])
-            || isset($raw['ip_address']);
+            || isset($raw['ip_address'])
+            || isset($raw['Ping_Status'])
+            || isset($raw['ping_status']);
     }
 
     public static function parsePercent(string $value): float

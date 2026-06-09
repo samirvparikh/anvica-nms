@@ -77,6 +77,26 @@ class MonitoringService
         $this->storePollResult($device, $result);
     }
 
+    /**
+     * Store ping status only (Ping_Status UP/DOWN without CPU/RAM metrics).
+     */
+    public function ingestPingStatus(Device $device, int $pingUp): void
+    {
+        $recordedAt = Carbon::now();
+
+        DeviceMetric::create([
+            'device_id' => $device->id,
+            'metric_slug' => 'ping_status',
+            'metric_value' => $pingUp,
+            'recorded_at' => $recordedAt,
+        ]);
+
+        $device->update([
+            'last_seen' => $recordedAt,
+            'health_status' => $pingUp ? 'Up' : 'Down',
+        ]);
+    }
+
     public function storePollResult(Device $device, array $result): void
     {
         $recordedAt = Carbon::now();
@@ -109,7 +129,9 @@ class MonitoringService
         $device->update([
             'last_seen' => $recordedAt,
             'hostname' => $result['hostname'] ?? $device->hostname,
-            'health_status' => $this->resolveHealthStatus($result['metrics']),
+            'health_status' => isset($result['metrics']['ping_status'])
+                ? (((float) $result['metrics']['ping_status'] >= 1) ? 'Up' : 'Down')
+                : $this->resolveHealthStatus($result['metrics']),
         ]);
 
         $this->alertService->evaluateDevice($device->fresh(), $result['metrics']);
