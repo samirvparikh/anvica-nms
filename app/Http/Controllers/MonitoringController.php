@@ -65,7 +65,7 @@ class MonitoringController extends Controller
             : null;
 
         $metrics = $this->userScope
-            ->metricsQuery($request->user(), $customerId)
+            ->metricLogsQuery($request->user(), $customerId)
             ->where('device_id', $device->id)
             ->orderByDesc('recorded_at')
             ->orderBy('metric_slug')

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Device;
 use App\Models\DeviceInterface;
 use App\Models\DeviceMetric;
+use App\Models\DeviceMetricLog;
 use App\Models\ServicePoint;
 use App\Monitoring\MonitoringDriverFactory;
 use Carbon\Carbon;
@@ -101,13 +102,25 @@ class MonitoringService
 
             [$numericValue, $textValue] = $this->parseFlatMetricValue($value);
 
-            DeviceMetric::create([
-                'device_id' => $device->id,
-                'metric_slug' => (string) $key,
+            $metricData = [
                 'metric_value' => $numericValue,
                 'metric_text' => $textValue,
                 'recorded_at' => $recordedAt,
+            ];
+
+            DeviceMetricLog::create([
+                'device_id' => $device->id,
+                'metric_slug' => (string) $key,
+                ...$metricData,
             ]);
+
+            DeviceMetric::updateOrCreate(
+                [
+                    'device_id' => $device->id,
+                    'metric_slug' => (string) $key,
+                ],
+                $metricData,
+            );
 
             $storedMetricKeys[] = (string) $key;
         }

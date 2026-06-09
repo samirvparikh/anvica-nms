@@ -6,6 +6,7 @@ use App\Models\Alert;
 use App\Models\Device;
 use App\Models\DeviceInterface;
 use App\Models\DeviceMetric;
+use App\Models\DeviceMetricLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -52,6 +53,13 @@ class UserScopeService
         $deviceIds = $this->deviceIds($user, $customerId);
 
         return DeviceMetric::query()->whereIn('device_id', $deviceIds ?: [-1]);
+    }
+
+    public function metricLogsQuery(User $user, ?int $customerId = null): Builder
+    {
+        $deviceIds = $this->deviceIds($user, $customerId);
+
+        return DeviceMetricLog::query()->whereIn('device_id', $deviceIds ?: [-1]);
     }
 
     public function interfacesQuery(User $user, ?int $customerId = null): Builder

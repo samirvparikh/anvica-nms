@@ -21,7 +21,7 @@ Route::any('/router', [ApiController::class, 'router']);
 
 // Device push (router/device → NMS) — flat request_data per endpoint
 Route::prefix('device')->group(function () {
-    Route::any('/data', [DevicePushApiController::class, 'dataEndpoint']); 
+    Route::any('/data', [DevicePushApiController::class, 'dataEndpoint']); //For Both Matrics and Interfaces Data
     Route::any('/metrics', [DevicePushApiController::class, 'metricsEndpoint']);
     Route::any('/interfaces', [DevicePushApiController::class, 'interfaces']);
     // Route::any('/interfaces/data', [DevicePushApiController::class, 'interfacesData']);    

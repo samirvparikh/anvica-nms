@@ -79,6 +79,11 @@ class Device extends Model
         return $this->hasMany(DeviceMetric::class);
     }
 
+    public function metricLogs(): HasMany
+    {
+        return $this->hasMany(DeviceMetricLog::class);
+    }
+
     public function interfaces(): HasMany
     {
         return $this->hasMany(DeviceInterface::class);
