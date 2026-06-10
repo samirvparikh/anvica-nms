@@ -45,7 +45,7 @@
                     <th>RAM %</th>
                     <th>Disk %</th>
                     <th>Temp °C</th>
-                    <th style="text-align:right;">Show</th>
+                    <th class="col-actions" style="text-align:right;">Show</th>
                 </tr>
             </thead>
             <tbody>
@@ -253,6 +253,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 + '<td class="cell-mono">' + displayValue + '</td>'
                 + '</tr>';
         }).join('');
+
+        const historyTable = document.getElementById('metricsHistoryTable');
+        if (historyTable && window.resetDataTableSort) {
+            window.resetDataTableSort(historyTable);
+        }
     }
 
     document.querySelectorAll('.showMetricsBtn').forEach(function (btn) {

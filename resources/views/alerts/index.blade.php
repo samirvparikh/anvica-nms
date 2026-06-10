@@ -19,7 +19,7 @@
                 <th>Message</th>
                 <th>Status</th>
                 <th>Created</th>
-                <th style="text-align:right;">Actions</th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>

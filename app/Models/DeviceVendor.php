@@ -29,4 +29,9 @@ class DeviceVendor extends Model
     {
         return $this->hasMany(Device::class, 'vendor_id');
     }
+
+    public function servicePointCodes(): HasMany
+    {
+        return $this->hasMany(ServicePointCode::class, 'vendor_id');
+    }
 }

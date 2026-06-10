@@ -1077,6 +1077,50 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom: 1px solid var(--border-color);
 }
 
+.data-table thead th {
+    cursor: pointer;
+}
+
+.data-table thead th.col-actions,
+.data-table thead th[data-no-sort="true"] {
+    cursor: default;
+}
+
+.data-table th.sortable {
+    user-select: none;
+    position: relative;
+    padding-right: 1.75rem;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.data-table th.sortable:hover {
+    color: var(--text-dark);
+    background-color: #f1f5f9;
+}
+
+.data-table th.sortable::after {
+    content: '⇅';
+    position: absolute;
+    right: 0.65rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.35;
+    font-size: 0.65rem;
+    line-height: 1;
+}
+
+.data-table th.sortable.sorted-asc::after {
+    content: '▲';
+    opacity: 1;
+    color: var(--primary);
+}
+
+.data-table th.sortable.sorted-desc::after {
+    content: '▼';
+    opacity: 1;
+    color: var(--primary);
+}
+
 .data-table td {
     padding: 1rem;
     border-bottom: 1px solid var(--border-color);

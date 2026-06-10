@@ -47,8 +47,8 @@
                 <th>IP Address</th>
                 <th>Location</th>
                 <th>Status</th>
-                @if($canAddDevice)<th style="text-align: center; width: 110px;">Add IP</th>@endif
-                <th style="text-align: right;">Actions</th>
+                @if($canAddDevice)<th class="col-actions" data-no-sort="true" style="text-align: center; width: 110px;">Add IP</th>@endif
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>

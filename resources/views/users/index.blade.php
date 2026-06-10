@@ -44,7 +44,7 @@
                 <th>Start Date</th>
                 <th>Expire Date</th>
                 <th>Services</th>
-                <th style="text-align: right;">Actions</th>
+                <th class="col-actions">Actions</th>
             </tr>
         </thead>
         <tbody>

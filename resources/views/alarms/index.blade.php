@@ -49,7 +49,7 @@
                 <th>Device</th>
                 <th>Description</th>
                 <th>Timestamp</th>
-                <th style="text-align: right; width: 150px;">Status / Action</th>
+                <th class="col-actions" style="text-align: right; width: 150px;">Status / Action</th>
             </tr>
         </thead>
         <tbody>

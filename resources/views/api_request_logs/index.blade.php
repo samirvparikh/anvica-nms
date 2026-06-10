@@ -23,7 +23,7 @@
     <table class="data-table" id="apiLogsTable">
         <thead>
             <tr>
-                <th style="text-align: center; width: 80px;">Actions</th>
+                <th class="col-actions" style="text-align: center; width: 80px;">Actions</th>
                 <th style="width: 60px;">Sr. No.</th>
                 <th>Method</th>
                 <th>URL</th>

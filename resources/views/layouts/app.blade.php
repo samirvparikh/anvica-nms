@@ -9,6 +9,7 @@
     <link rel="apple-touch-icon" href="{{ asset('favicon.png') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ asset('js/data-table-sort.js') }}" defer></script>
 </head>
 <body>
     @php

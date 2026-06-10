@@ -51,10 +51,12 @@
                     <div class="table-actions">
                         <button type="button" class="btn-action edit-btn editVendorBtn" title="Edit"
                             data-id="{{ $vendor->id }}"
+                            data-update-url="{{ route('vendors.update', $vendor) }}"
                             data-service-id="{{ $vendor->service_id }}"
                             data-name="{{ $vendor->name }}"
                             data-logo="{{ $vendor->logo }}"
-                            data-status="{{ $vendor->status }}">
+                            data-status="{{ $vendor->status }}"
+                            data-codes="{{ $vendor->servicePointCodes->map(fn ($c) => ['service_point_id' => $c->service_point_id, 'name' => $c->name, 'code' => $c->code])->values()->toJson() }}">
                             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                 <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -88,7 +90,7 @@
 </div>
 
 <div class="modal-overlay" id="vendorModal">
-    <div class="modal-card">
+    <div class="modal-card modal-card-wide">
         <div class="modal-header">
             <h3 id="vendorModalTitle">Add Vendor</h3>
             <button class="modal-close" id="closeVendorModal">&times;</button>
@@ -127,6 +129,18 @@
                         <option value="Inactive">Inactive</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Point &amp; Code</label>
+                    <div id="vendorCodesContainer" class="points-container vendor-codes-container">
+                        <div class="point-row-header vendor-code-row-header">
+                            <span>Point</span>
+                            <span>Code</span>
+                        </div>
+                        <p id="vendorCodesEmpty" class="vendor-codes-empty" style="display:none;color:var(--text-muted);font-size:0.85rem;margin:0;">
+                            Select a service to load service points.
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" id="cancelVendorModal">Cancel</button>
@@ -141,15 +155,84 @@ document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('vendorModal');
     const form = document.getElementById('vendorForm');
     const methodField = document.getElementById('vendorMethodField');
+    const codesContainer = document.getElementById('vendorCodesContainer');
+    const codesEmpty = document.getElementById('vendorCodesEmpty');
+    const serviceSelect = document.getElementById('vendor_service_id');
+    const servicePointsByService = @json($servicePointsByService);
+    let codeRowIndex = 0;
+
+    function escapeAttr(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;');
+    }
+
+    function clearCodeRows() {
+        codesContainer.querySelectorAll('.point-row').forEach(row => row.remove());
+        codeRowIndex = 0;
+    }
+
+    function createCodeRow(point, code = '') {
+        const row = document.createElement('div');
+        row.className = 'point-row vendor-code-row';
+        row.innerHTML = `
+            <input type="text" class="form-control" value="${escapeAttr(point.name)}" disabled readonly tabindex="-1">
+            <input type="hidden" name="codes[${codeRowIndex}][service_point_id]" value="${escapeAttr(point.id)}">
+            <input type="hidden" name="codes[${codeRowIndex}][name]" value="${escapeAttr(point.name)}">
+            <input type="text" name="codes[${codeRowIndex}][code]" class="form-control" placeholder="Code" value="${escapeAttr(code)}">
+        `;
+        codesContainer.appendChild(row);
+        codeRowIndex++;
+    }
+
+    function populateServicePoints(serviceId, existingCodes = []) {
+        clearCodeRows();
+
+        const points = servicePointsByService[String(serviceId)] || [];
+        const codeMap = {};
+        existingCodes.forEach(item => {
+            const key = item.service_point_id || item.name;
+            if (key) {
+                codeMap[key] = item.code || '';
+            }
+        });
+
+        if (! serviceId || points.length === 0) {
+            codesEmpty.style.display = 'block';
+            codesEmpty.textContent = serviceId
+                ? 'No service points found for this service.'
+                : 'Select a service to load service points.';
+            return;
+        }
+
+        codesEmpty.style.display = 'none';
+        points.forEach(point => createCodeRow(point, codeMap[point.id] || codeMap[point.name] || ''));
+    }
+
+    serviceSelect.addEventListener('change', function () {
+        populateServicePoints(this.value);
+    });
 
     function openModal(edit = false, data = {}) {
         document.getElementById('vendorModalTitle').textContent = edit ? 'Edit Vendor' : 'Add Vendor';
         methodField.innerHTML = edit ? '<input type="hidden" name="_method" value="PUT">' : '';
-        form.action = edit ? `/vendors/${data.id}` : '{{ route('vendors.store') }}';
-        document.getElementById('vendor_service_id').value = data.serviceId || '';
+        form.action = edit ? data.updateUrl : '{{ route('vendors.store') }}';
+        serviceSelect.value = data.serviceId || '';
         document.getElementById('vendor_name').value = data.name || '';
         document.getElementById('vendor_logo').value = data.logo || '';
         document.getElementById('vendor_status').value = data.status || 'Active';
+
+        let codes = [];
+        if (data.codes) {
+            try {
+                codes = typeof data.codes === 'string' ? JSON.parse(data.codes) : data.codes;
+            } catch (e) {
+                codes = [];
+            }
+        }
+
+        populateServicePoints(serviceSelect.value, codes);
         modal.classList.add('open');
     }
 
@@ -161,13 +244,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.editVendorBtn').forEach(btn => {
         btn.addEventListener('click', () => openModal(true, {
-            id: btn.dataset.id,
+            updateUrl: btn.dataset.updateUrl,
             serviceId: btn.dataset.serviceId,
             name: btn.dataset.name,
             logo: btn.dataset.logo,
             status: btn.dataset.status,
+            codes: btn.dataset.codes,
         }));
     });
 });
 </script>
+<style>
+.vendor-code-row-header,
+.vendor-code-row {
+    grid-template-columns: 1fr 1fr;
+}
+.vendor-codes-container input[disabled] {
+    background-color: #f1f5f9;
+    color: var(--text-dark);
+    cursor: not-allowed;
+}
+</style>
 @endsection

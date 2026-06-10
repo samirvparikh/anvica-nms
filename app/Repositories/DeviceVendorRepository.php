@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\DeviceVendor;
+use App\Models\ServicePoint;
 use Illuminate\Database\Eloquent\Collection;
 
 class DeviceVendorRepository
@@ -16,7 +17,7 @@ class DeviceVendorRepository
             }
         }
 
-        return DeviceVendor::with('service')
+        return DeviceVendor::with(['service', 'servicePointCodes'])
             ->when($serviceId, fn ($query) => $query->where('service_id', $serviceId))
             ->when($vendorId, fn ($query) => $query->where('id', $vendorId))
             ->orderBy('name')
@@ -44,20 +45,56 @@ class DeviceVendorRepository
             ->get();
     }
 
-    public function create(array $data): DeviceVendor
+    public function create(array $data, array $codes = []): DeviceVendor
     {
-        return DeviceVendor::create($data);
+        $vendor = DeviceVendor::create($data);
+        $this->syncPointCodes($vendor, $codes);
+
+        return $vendor->load('servicePointCodes');
     }
 
-    public function update(DeviceVendor $vendor, array $data): DeviceVendor
+    public function update(DeviceVendor $vendor, array $data, array $codes = []): DeviceVendor
     {
         $vendor->update($data);
+        $this->syncPointCodes($vendor, $codes);
 
-        return $vendor->fresh();
+        return $vendor->fresh(['servicePointCodes']);
     }
 
     public function delete(DeviceVendor $vendor): void
     {
         $vendor->delete();
+    }
+
+    /**
+     * @param  list<array{service_point_id?: int, name: string, code: string}>  $codes
+     */
+    public function syncPointCodes(DeviceVendor $vendor, array $codes): void
+    {
+        $vendor->servicePointCodes()->delete();
+
+        foreach ($codes as $row) {
+            $servicePointId = (int) ($row['service_point_id'] ?? 0);
+            $code = trim($row['code'] ?? '');
+
+            if ($servicePointId === 0 || $code === '') {
+                continue;
+            }
+
+            $name = trim($row['name'] ?? '');
+            if ($name === '') {
+                $name = ServicePoint::query()->whereKey($servicePointId)->value('name') ?? '';
+            }
+
+            if ($name === '') {
+                continue;
+            }
+
+            $vendor->servicePointCodes()->create([
+                'service_point_id' => $servicePointId,
+                'name' => $name,
+                'code' => $code,
+            ]);
+        }
     }
 }
