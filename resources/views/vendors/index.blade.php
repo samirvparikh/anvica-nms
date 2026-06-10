@@ -6,31 +6,44 @@
         <h1>Device Vendors</h1>
         <p>Manage vendors per device service type.</p>
     </div>
-    <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
-        <form method="GET" action="{{ route('vendors.index') }}" class="monitoring-user-filter" style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-            <select name="service_id" id="vendorFilterService" class="form-control" onchange="document.getElementById('vendorFilterVendor').value=''; this.form.submit();" style="min-width:180px;padding-left:1rem;">
-                <option value="">All Services</option>
-                @foreach($services as $service)
-                    <option value="{{ $service->id }}" {{ (int) $serviceId === $service->id ? 'selected' : '' }}>
-                        {{ $service->name }}
-                    </option>
-                @endforeach
-            </select>
-            <select name="vendor_id" id="vendorFilterVendor" class="form-control" onchange="this.form.submit()" style="min-width:180px;padding-left:1rem;">
-                <option value="">All Vendors</option>
-                @foreach($vendorOptions as $vendorOption)
-                    <option value="{{ $vendorOption->id }}" {{ (int) $vendorId === $vendorOption->id ? 'selected' : '' }}>
-                        {{ $vendorOption->name }}@if(! $serviceId) ({{ $vendorOption->service->name }})@endif
-                    </option>
-                @endforeach
-            </select>
-        </form>
+</div>
+
+<div class="list-toolbar">
+    <form method="GET" action="{{ route('vendors.index') }}" class="list-toolbar-filters monitoring-user-filter">
+        <select name="service_id" id="vendorFilterService" class="form-control" onchange="document.getElementById('vendorFilterVendor').value=''; this.form.submit();">
+            <option value="">All Services</option>
+            @foreach($services as $service)
+                <option value="{{ $service->id }}" {{ (int) $serviceId === $service->id ? 'selected' : '' }}>
+                    {{ $service->name }}
+                </option>
+            @endforeach
+        </select>
+        <select name="vendor_id" id="vendorFilterVendor" class="form-control" onchange="this.form.submit()">
+            <option value="">All Vendors</option>
+            @foreach($vendorOptions as $vendorOption)
+                <option value="{{ $vendorOption->id }}" {{ (int) $vendorId === $vendorOption->id ? 'selected' : '' }}>
+                    {{ $vendorOption->name }}@if(! $serviceId) ({{ $vendorOption->service->name }})@endif
+                </option>
+            @endforeach
+        </select>
+    </form>
+    <div class="list-toolbar-actions">
         <button class="btn-add" id="openAddVendorBtn">+ Add Vendor</button>
     </div>
 </div>
 
 <div class="card-table-container">
-    <table class="data-table">
+    <div class="table-toolbar">
+        <div class="table-search">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="vendorSearchInput" placeholder="Search vendors...">
+        </div>
+    </div>
+
+    <table class="data-table" id="vendorsTable">
         <thead>
             <tr>
                 <th>Vendor</th>
@@ -42,7 +55,11 @@
         </thead>
         <tbody>
             @forelse($vendors as $vendor)
-            <tr>
+            <tr class="vendor-row"
+                data-name="{{ strtolower($vendor->name) }}"
+                data-service="{{ strtolower($vendor->service->name) }}"
+                data-slug="{{ strtolower($vendor->slug) }}"
+                data-status="{{ strtolower($vendor->status) }}">
                 <td style="font-weight:700;">{{ $vendor->name }}</td>
                 <td>{{ $vendor->service->name }}</td>
                 <td>{{ $vendor->slug }}</td>
@@ -152,6 +169,24 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const searchInput = document.getElementById('vendorSearchInput');
+    const tableRows = document.querySelectorAll('.vendor-row');
+
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function (e) {
+            const query = e.target.value.toLowerCase().trim();
+            tableRows.forEach(function (row) {
+                const haystack = [
+                    row.getAttribute('data-name'),
+                    row.getAttribute('data-service'),
+                    row.getAttribute('data-slug'),
+                    row.getAttribute('data-status'),
+                ].join(' ');
+                row.style.display = haystack.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
     const modal = document.getElementById('vendorModal');
     const form = document.getElementById('vendorForm');
     const methodField = document.getElementById('vendorMethodField');

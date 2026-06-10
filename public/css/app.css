@@ -700,6 +700,37 @@ h1, h2, h3, h4, h5, h6 {
     font-size: 0.9rem;
 }
 
+.list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: nowrap;
+}
+
+.list-toolbar-filters {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+}
+
+.list-toolbar-filters .form-control {
+    min-width: 180px;
+    max-width: 240px;
+    padding-left: 1rem;
+}
+
+.list-toolbar-actions {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
 /* Dashboard Summary Cards Grid */
 .summary-grid {
     display: grid;
@@ -2170,6 +2201,35 @@ a.api-logs-pagination__btn:hover {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
+    }
+
+    .list-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    .list-toolbar-filters {
+        flex-direction: column;
+        align-items: stretch;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .list-toolbar-filters .form-control {
+        width: 100%;
+        min-width: 0;
+        max-width: none;
+    }
+
+    .list-toolbar-actions {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .list-toolbar-actions .btn-add {
+        width: 100%;
+        justify-content: center;
     }
 
     .summary-grid {
