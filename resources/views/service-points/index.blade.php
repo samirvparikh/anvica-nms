@@ -49,6 +49,7 @@
                     <div class="table-actions">
                         <button type="button" class="btn-action edit-btn editPointBtn" title="Edit"
                             data-id="{{ $point->id }}"
+                            data-update-url="{{ route('service-points.update', $point) }}"
                             data-service-id="{{ $point->service_id }}"
                             data-name="{{ $point->name }}"
                             data-method="{{ $point->method }}"
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal(edit = false, data = {}) {
         document.getElementById('pointModalTitle').textContent = edit ? 'Edit Service Point' : 'Add Service Point';
         methodField.innerHTML = edit ? '<input type="hidden" name="_method" value="PUT">' : '';
-        form.action = edit ? `/service-points/${data.id}` : '{{ route('service-points.store') }}';
+        form.action = edit ? data.updateUrl : '{{ route('service-points.store') }}';
         document.getElementById('point_service_id').value = data.serviceId || '';
         document.getElementById('point_name').value = data.name || '';
         document.getElementById('point_method').value = data.method || '';
@@ -170,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.editPointBtn').forEach(btn => {
         btn.addEventListener('click', () => openModal(true, {
-            id: btn.dataset.id,
+            updateUrl: btn.dataset.updateUrl,
             serviceId: btn.dataset.serviceId,
             name: btn.dataset.name,
             method: btn.dataset.method,
