@@ -177,7 +177,7 @@
                 <div class="form-group">
                     <label for="add_user_id">Customer (User)</label>
                     <select id="add_user_id" name="user_id" class="form-control">
-                        <!-- <option value="">Unassigned (Admin)</option> -->
+                        <option value="">Unassigned (Admin)</option>
                         @foreach($customers as $customer)
                             <option value="{{ $customer->id }}" {{ (string) old('user_id') === (string) $customer->id ? 'selected' : '' }}>
                                 {{ $customer->name }}
@@ -189,7 +189,7 @@
                     </select>
                 </div>
                 @endif
-
+                
                 <div class="form-group">
                     <label for="add_name">Device Name(identity)</label>
                     <input type="text" id="add_name" name="name" class="form-control" value="{{ old('name') }}" required>
