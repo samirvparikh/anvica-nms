@@ -4,7 +4,7 @@
 <div class="page-header">
     <div class="page-title">
         <h1>Network Maps</h1>
-        <p>Geographic overview of monitored sites.</p>
+        <p>Geographic overview of your monitored sites (from device locations).</p>
     </div>
 </div>
 
@@ -43,7 +43,7 @@
             </div>
         </div>
         @empty
-        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 2rem 0;">No sites defined.</p>
+        <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; padding: 2rem 0;">No devices with locations found.</p>
         @endforelse
     </div>
 </div>
