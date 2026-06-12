@@ -11,6 +11,19 @@ trait ParsesApiPayload
     {
         $all = $request->all();
 
+        if (isset($all['request_data'])) {
+            if (is_array($all['request_data'])) {
+                return $all['request_data'];
+            }
+
+            if (is_string($all['request_data']) && $all['request_data'] !== '') {
+                $decoded = json_decode($all['request_data'], true);
+                if (is_array($decoded)) {
+                    return $decoded;
+                }
+            }
+        }
+
         if (isset($all['SYSTEM'])) {
             return $all;
         }

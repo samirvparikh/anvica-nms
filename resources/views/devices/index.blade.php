@@ -172,10 +172,7 @@
                     {{ $errors->first('device_limit') ?: $errors->first('account') }}
                 </div>
                 @endif
-                <div class="form-group">
-                    <label for="add_name">Device Name</label>
-                    <input type="text" id="add_name" name="name" class="form-control" value="{{ old('name') }}" required>
-                </div>
+
                 @if($isAdmin)
                 <div class="form-group">
                     <label for="add_user_id">Customer (User)</label>
@@ -192,6 +189,16 @@
                     </select>
                 </div>
                 @endif
+                
+                <div class="form-group">
+                    <label for="add_name">Device Name(identity)</label>
+                    <input type="text" id="add_name" name="name" class="form-control" value="{{ old('name') }}" required>
+                </div>
+                <div class="form-group">
+                    <label for="add_hostname">Hostname</label>
+                    <input type="text" id="add_hostname" name="hostname" class="form-control" value="{{ old('hostname') }}">
+                </div>
+                
                 <div class="form-group">
                     <label for="add_service_id">Service</label>
                     <select id="add_service_id" name="service_id" class="form-control" required>
@@ -210,10 +217,7 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="add_hostname">Hostname</label>
-                    <input type="text" id="add_hostname" name="hostname" class="form-control" value="{{ old('hostname') }}">
-                </div>
+                
                 <input type="hidden" id="add_type" name="type" value="{{ old('type') }}">
                 <div class="form-group">
                     <label for="add_ip" style="margin-bottom:0.25rem;">IP Address</label>

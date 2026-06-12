@@ -52,6 +52,70 @@ class DevicePushApiController extends Controller
     /**
      * Device lookup for /api/device/metrics — requires both name and ip_address.
      */
+    /**
+     * MikroTik combined push: target_ip is the monitored device; Router is often the poller identity.
+     */
+    protected function resolveDeviceForCombinedPush(Request $request, ?array $payload = null): Device
+    {
+        $payload ??= $this->extractPayload($request);
+        $ip = $this->extractIpAddress($request, $payload);
+        $nameCandidates = $this->extractDeviceNameCandidates($payload);
+
+        abort_unless($ip || $nameCandidates !== [], 422, 'target_ip or device name (Router / Host_Name) is required.');
+
+        if ($ip) {
+            $device = Device::where('ip_address', $ip)->first();
+            if ($device) {
+                return $this->authorizeDeviceApiKey($request, $payload, $device);
+            }
+        }
+
+        foreach ($nameCandidates as $name) {
+            $query = Device::query()->where(function ($builder) use ($name) {
+                $builder->where('name', $name)->orWhere('hostname', $name);
+            });
+
+            if ($ip) {
+                $query->where('ip_address', $ip);
+            }
+
+            $device = $query->first();
+            if ($device) {
+                return $this->authorizeDeviceApiKey($request, $payload, $device);
+            }
+        }
+
+        if (! $ip && $nameCandidates !== []) {
+            foreach ($nameCandidates as $name) {
+                $device = Device::query()
+                    ->where(function ($builder) use ($name) {
+                        $builder->where('name', $name)->orWhere('hostname', $name);
+                    })
+                    ->first();
+                if ($device) {
+                    return $this->authorizeDeviceApiKey($request, $payload, $device);
+                }
+            }
+        }
+
+        abort(404, 'Device not registered in NMS. Add a device with IP '.($ip ?? 'matching name').' under Devices first.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function extractDeviceNameCandidates(array $payload): array
+    {
+        return array_values(array_unique(array_filter([
+            $payload['name'] ?? null,
+            $payload['Host_Name'] ?? null,
+            $payload['host_name'] ?? null,
+            $payload['hostname'] ?? null,
+            $payload['Router'] ?? null,
+            $payload['router'] ?? null,
+        ])));
+    }
+
     protected function resolveDeviceByNameAndIp(Request $request, ?array $payload = null): Device
     {
         $payload ??= $this->extractPayload($request);
@@ -137,7 +201,7 @@ class DevicePushApiController extends Controller
     public function pushMetricsAndInterfacesData(Request $request): JsonResponse
     {
         $payload = $this->extractPayload($request);
-        $device = $this->resolveDeviceByNameAndIp($request, $payload);
+        $device = $this->resolveDeviceForCombinedPush($request, $payload);
 
         validator($payload, [
             'interfaces' => 'nullable|array',
