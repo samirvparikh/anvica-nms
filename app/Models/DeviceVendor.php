@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DeviceVendor extends Model
 {
@@ -33,5 +34,10 @@ class DeviceVendor extends Model
     public function servicePointCodes(): HasMany
     {
         return $this->hasMany(ServicePointCode::class, 'vendor_id');
+    }
+
+    public function script(): HasOne
+    {
+        return $this->hasOne(VendorScript::class, 'vendor_id');
     }
 }

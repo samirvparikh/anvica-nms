@@ -17,7 +17,7 @@ class DeviceVendorRepository
             }
         }
 
-        return DeviceVendor::with(['service', 'servicePointCodes'])
+        return DeviceVendor::with(['service', 'servicePointCodes', 'script'])
             ->when($serviceId, fn ($query) => $query->where('service_id', $serviceId))
             ->when($vendorId, fn ($query) => $query->where('id', $vendorId))
             ->orderBy('name')

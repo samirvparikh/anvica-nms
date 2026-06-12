@@ -124,25 +124,6 @@
                 @if($isAdmin)
                 <div class="nav-section-title">Administration</div>
                 <ul class="nav-list">
-                    
-                    <li>
-                        <a href="{{ route('service-points.index') }}" class="nav-link {{ request()->is('service-points*') ? 'active' : '' }}" title="Service Points">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="3"/>
-                                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
-                            </svg>
-                            <span class="nav-link-text">Service Points</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('vendors.index') }}" class="nav-link {{ request()->is('vendors*') ? 'active' : '' }}" title="Vendors">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                                <polyline points="9 22 9 12 15 12 15 22"/>
-                            </svg>
-                            <span class="nav-link-text">Vendors</span>
-                        </a>
-                    </li>
                     <li>
                         <a href="{{ route('alerts.index') }}" class="nav-link {{ request()->is('alerts*') ? 'active' : '' }}" title="Alerts">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -152,6 +133,17 @@
                             <span class="nav-link-text">Alerts</span>
                         </a>
                     </li>
+                    
+                    <li>
+                        <a href="{{ route('vendors.index') }}" class="nav-link {{ request()->is('vendors*') ? 'active' : '' }}" title="Vendors">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span class="nav-link-text">Vendors</span>
+                        </a>
+                    </li>
+                    
                     <li>
                         <a href="{{ route('services.index') }}" class="nav-link {{ request()->is('services*') ? 'active' : '' }}" title="Services">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -161,6 +153,18 @@
                             <span class="nav-link-text">Services</span>
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ route('service-points.index') }}" class="nav-link {{ request()->is('service-points*') ? 'active' : '' }}" title="Service Points">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
+                            </svg>
+                            <span class="nav-link-text">Service Points</span>
+                        </a>
+                    </li>
+
+                    
+
                     <li>
                         <a href="{{ route('users.index') }}" class="nav-link {{ request()->is('users*') ? 'active' : '' }}" title="Users">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

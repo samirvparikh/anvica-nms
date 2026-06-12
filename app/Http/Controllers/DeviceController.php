@@ -21,7 +21,7 @@ class DeviceController extends Controller
         $user = $request->user();
 
         return view('devices.index', [
-            'devices' => $this->deviceRepository->allForUser($user),
+            'devices' => $this->deviceRepository->allForUser($user)->load('script'),
             'services' => Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get(),
             'vendors' => DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get(),
             'customers' => $user->isAdmin()

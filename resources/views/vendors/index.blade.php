@@ -50,6 +50,7 @@
                 <th>Service</th>
                 <th>Slug</th>
                 <th>Status</th>
+                <th class="col-actions" data-no-sort="true" style="text-align: center; width: 90px;">Script</th>
                 <th class="col-actions">Actions</th>
             </tr>
         </thead>
@@ -64,6 +65,19 @@
                 <td>{{ $vendor->service->name }}</td>
                 <td>{{ $vendor->slug }}</td>
                 <td><span class="status-badge {{ strtolower($vendor->status) }}">{{ $vendor->status }}</span></td>
+                <td style="text-align: center;">
+                    <a href="{{ route('vendors.script.edit', $vendor) }}"
+                       class="btn-action script-btn {{ $vendor->script ? 'script-btn-active' : '' }}"
+                       title="{{ $vendor->script ? 'Edit script template' : 'Create script template' }}">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                    </a>
+                </td>
                 <td class="col-actions">
                     <div class="table-actions">
                         <button type="button" class="btn-action edit-btn editVendorBtn" title="Edit"
@@ -100,7 +114,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No vendors found.</td></tr>
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No vendors found.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
+use App\Http\Controllers\DeviceScriptController;
 use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\MapController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\ServicePointController;
 use App\Http\Controllers\DeviceVendorController;
+use App\Http\Controllers\VendorScriptController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\MonitoringApiController;
 use App\Http\Controllers\MonitoringController;
@@ -80,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/vendors', [DeviceVendorController::class, 'store'])->name('vendors.store');
         Route::put('/vendors/{vendor}', [DeviceVendorController::class, 'update'])->name('vendors.update');
         Route::delete('/vendors/{vendor}', [DeviceVendorController::class, 'destroy'])->name('vendors.destroy');
+        Route::get('/vendors/{vendor}/script', [VendorScriptController::class, 'edit'])->name('vendors.script.edit');
+        Route::put('/vendors/{vendor}/script', [VendorScriptController::class, 'update'])->name('vendors.script.update');
 
         Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
         Route::post('/alerts', [AlertController::class, 'store'])->name('alerts.store');
@@ -90,5 +94,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail.update');
         Route::post('/settings/mail/test', [SettingsController::class, 'testMail'])->name('settings.mail.test');
+
+        Route::get('/devices/{device}/script', [DeviceScriptController::class, 'edit'])->name('devices.script.edit');
+        Route::put('/devices/{device}/script', [DeviceScriptController::class, 'update'])->name('devices.script.update');
+        Route::post('/devices/{device}/script/preview', [DeviceScriptController::class, 'preview'])->name('devices.script.preview');
     });
 });

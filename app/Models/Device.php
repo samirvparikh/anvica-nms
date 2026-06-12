@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\File;
 
 class Device extends Model
 {
@@ -21,6 +23,19 @@ class Device extends Model
 
     /** @use HasFactory<\Database\Factories\DeviceFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Device $device): void {
+            foreach (['.rsc', '.src'] as $extension) {
+                $scriptPath = public_path('scripts/device-'.$device->id.$extension);
+                if (File::exists($scriptPath)) {
+                    File::delete($scriptPath);
+                }
+            }
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'service_id',
@@ -92,6 +107,11 @@ class Device extends Model
     public function alerts(): HasMany
     {
         return $this->hasMany(Alert::class);
+    }
+
+    public function script(): HasOne
+    {
+        return $this->hasOne(DeviceScript::class);
     }
 
     public function driverSlug(): ?string
