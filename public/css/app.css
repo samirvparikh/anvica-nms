@@ -2050,7 +2050,8 @@ a.api-logs-pagination__btn:hover {
     box-shadow: var(--card-shadow);
     padding: 1.25rem 1.5rem;
     margin-bottom: 1.5rem;
-    max-width: 1200px;
+    /* max-width: 1200px; */
+    max-width: 100%;
 }
 
 .device-script-part-title {

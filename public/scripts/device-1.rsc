@@ -1,14 +1,10 @@
-:local targetIP "192.168.5.2"
+:local targetIP "192.168.5.1"
 :local router [/system identity get name]
 :local community "Anvica_NMS"
 :local nmsURL "http://localhost/api/device/data"
 
-# Interface indexes to monitor
+# Interface indexes to monitors...
 :local ifIndexes {"3";"5";"6";"8";"9"}
-
-# ------------------------------
-# PING CHECK
-# ------------------------------
 
 :local pingResult 0
 
@@ -32,56 +28,11 @@
     :log warning ("NMS: Device Down - " . $targetIP)
 
 } else={
-
     # ------------------------------
     # DEVICE METRICS
     # ------------------------------
 
     :local hostData ""
-    :local cpu "0"
-    :local uptime "0"
-    :local ram "0"
-    :local totalram "0"
-    :local cputemp "0"
-    :local mbtemp "0"
-    :local pw1 "0"
-    :local pw2 "0"
-
-    :do {
-        :set hostData (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.2.1.1.5.0 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set cpu (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.4.1.2021.11.10.0 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set uptime (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.2.1.1.3.0 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set ram (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.2.1.25.2.3.1.6.65536 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set totalram (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.2.1.25.2.3.1.5.65536 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set cputemp (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.4.1.14988.1.1.3.100.1.3.17 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set mbtemp (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.4.1.14988.1.1.3.100.1.3.7101 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set pw1 (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.4.1.14988.1.1.3.100.1.3.7401 as-value])->"value")
-    } on-error={}
-
-    :do {
-        :set pw2 (([/tool snmp-get address=$targetIP community=$community version=2c oid=1.3.6.1.4.1.14988.1.1.3.100.1.3.7402 as-value])->"value")
-    } on-error={}
 
     # ------------------------------
     # INTERFACE JSON ARRAY
@@ -137,15 +88,7 @@
 
     :set json ($json . "\"target_ip\":\"".$targetIP."\",")
     :set json ($json . "\"Router\":\"".$router."\",")
-    :set json ($json . "\"Host_Name\":\"".$hostData."\",")
-    :set json ($json . "\"CPU\":\"".$cpu."\",")
-    :set json ($json . "\"UP_Time\":\"".$uptime."\",")
-    :set json ($json . "\"Ram_Used\":\"".$ram."\",")
-    :set json ($json . "\"Total_Ram\":\"".$totalram."\",")
-    :set json ($json . "\"CPU_Temp\":\"".$cputemp."\",")
-    :set json ($json . "\"MB_Temp\":\"".$mbtemp."\",")
-    :set json ($json . "\"Power1_Status\":\"".$pw1."\",")
-    :set json ($json . "\"Power2_Status\":\"".$pw2."\",")
+
     :set json ($json . "\"Ping_Status\":\"UP\",")
     :set json ($json . "\"interfaces\":" . $interfaces)
 
