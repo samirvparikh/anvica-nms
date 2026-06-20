@@ -112,8 +112,8 @@
                     <th>IP Address</th>
                     <th>Interface</th>
                     <th>Status</th>
-                    <th>RX</th>
-                    <th>TX</th>
+                    <th>RX (MB)</th>
+                    <th>TX (MB)</th>
                     <th>RX Packets</th>
                     <th>TX Packets</th>
                     <th>Updated</th>
@@ -129,10 +129,10 @@
                     <td>{{ $iface->device->ip_address ?? '—' }}</td>
                     <td>{{ $iface->interface_name }}</td>
                     <td><span class="status-badge {{ strtolower($iface->status) }}">{{ ucfirst($iface->status) }}</span></td>
-                    <td>{{ number_format($iface->rx) }}</td>
-                    <td>{{ number_format($iface->tx) }}</td>
-                    <td>{{ number_format($iface->rx_packets) }}</td>
-                    <td>{{ number_format($iface->tx_packets) }}</td>
+                    <td>{{ \App\Support\ByteFormatter::toMegabytes($iface->rx) }}</td>
+                    <td>{{ \App\Support\ByteFormatter::toMegabytes($iface->tx) }}</td>
+                    <td title="{{ number_format($iface->rx_packets) }} packets">{{ \App\Support\ByteFormatter::formatPackets($iface->rx_packets) }}</td>
+                    <td title="{{ number_format($iface->tx_packets) }} packets">{{ \App\Support\ByteFormatter::formatPackets($iface->tx_packets) }}</td>
                     <td>{{ $iface->updated_at?->format('M d, H:i') ?? '—' }}</td>
                 </tr>
                 @empty
