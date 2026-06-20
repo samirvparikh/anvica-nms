@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('js/data-table-sort.js') }}" defer></script>
+    <script src="{{ asset('js/data-table-filter.js') }}" defer></script>
 </head>
 <body>
     @php
@@ -87,7 +88,7 @@
                     
                     
                     <li>
-                        <a href="#" class="nav-link" title="Reports">
+                        <a href="{{ route('reports.index') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" title="Reports">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                                 <polyline points="14 2 14 8 20 8"/>

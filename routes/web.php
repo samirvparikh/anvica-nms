@@ -18,6 +18,7 @@ use App\Http\Controllers\VendorScriptController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\MonitoringApiController;
 use App\Http\Controllers\MonitoringController;
+use App\Http\Controllers\ReportController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -45,6 +46,13 @@ Route::middleware('auth')->group(function () {
     // Monitoring data (user-scoped; admin sees all)
     Route::get('/monitoring', [MonitoringController::class, 'index'])->name('monitoring.index');
     Route::get('/monitoring/devices/{device}/metrics', [MonitoringController::class, 'deviceMetrics'])->name('monitoring.device.metrics');
+
+    // Reports
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/devices/{device}', [ReportController::class, 'show'])->name('reports.device.show');
+    Route::get('/reports/devices/{device}/logs', [ReportController::class, 'deviceLogs'])->name('reports.device.logs');
+    Route::get('/reports/devices/{device}/export/excel', [ReportController::class, 'exportExcel'])->name('reports.device.export.excel');
+    Route::get('/reports/devices/{device}/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.device.export.pdf');
 
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
