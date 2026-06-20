@@ -92,8 +92,8 @@
                     <span class="status-badge {{ strtolower($iface->status) }}">{{ ucfirst($iface->status) }}</span>
                 </div>
                 <div class="report-iface-stats">
-                    <span><strong>RX</strong> {{ \App\Support\ByteFormatter::toMegabytes($iface->rx) }}</span>
-                    <span><strong>TX</strong> {{ \App\Support\ByteFormatter::toMegabytes($iface->tx) }}</span>
+                    <span><strong>RX</strong> {{ \App\Support\ByteFormatter::formatBytes($iface->rx) }}</span>
+                    <span><strong>TX</strong> {{ \App\Support\ByteFormatter::formatBytes($iface->tx) }}</span>
                     <span title="{{ number_format($iface->rx_packets) }} packets"><strong>RX Pkts</strong> {{ \App\Support\ByteFormatter::formatPackets($iface->rx_packets) }}</span>
                     <span title="{{ number_format($iface->tx_packets) }} packets"><strong>TX Pkts</strong> {{ \App\Support\ByteFormatter::formatPackets($iface->tx_packets) }}</span>
                     <span class="report-iface-time">{{ $iface->updated_at?->format('M d, H:i') ?? '—' }}</span>

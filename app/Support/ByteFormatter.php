@@ -4,9 +4,12 @@ namespace App\Support;
 
 class ByteFormatter
 {
-    private const BYTES_PER_MB = 1048576;
+    private const UNIT = 1024;
 
-    public static function toMegabytes(int|float|string|null $bytes, int $decimals = 2): string
+    /**
+     * Auto-scale bytes: B → KB → MB → GB → TB (1024-based).
+     */
+    public static function formatBytes(int|float|string|null $bytes, int $decimals = 2): string
     {
         if ($bytes === null || $bytes === '') {
             return '—';
@@ -15,12 +18,25 @@ class ByteFormatter
         $bytes = (float) $bytes;
 
         if ($bytes <= 0) {
-            return '0 MB';
+            return '0 B';
         }
 
-        $megabytes = $bytes / self::BYTES_PER_MB;
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $unitIndex = 0;
+        $value = $bytes;
 
-        return number_format($megabytes, $decimals).' MB';
+        while ($value >= self::UNIT && $unitIndex < count($units) - 1) {
+            $value /= self::UNIT;
+            $unitIndex++;
+        }
+
+        return number_format($value, $decimals).' '.$units[$unitIndex];
+    }
+
+    /** @deprecated Use formatBytes() */
+    public static function toMegabytes(int|float|string|null $bytes, int $decimals = 2): string
+    {
+        return self::formatBytes($bytes, $decimals);
     }
 
     public static function formatPackets(int|float|string|null $packets, int $decimals = 2): string
