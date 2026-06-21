@@ -17,6 +17,13 @@ class AlertFactory extends Factory
     {
         return [
             'device_id' => Device::factory(),
+            'alarm_type' => fake()->randomElement([
+                Alert::ALARM_DEVICE_DOWN,
+                Alert::ALARM_HIGH_CPU,
+                Alert::ALARM_HIGH_RAM,
+                Alert::ALARM_DISK_USAGE,
+                Alert::ALARM_TEMPERATURE,
+            ]),
             'severity' => fake()->randomElement([
                 Alert::SEVERITY_CRITICAL,
                 Alert::SEVERITY_WARNING,
@@ -24,6 +31,7 @@ class AlertFactory extends Factory
             ]),
             'message' => fake()->sentence(),
             'status' => Alert::STATUS_OPEN,
+            'started_at' => now()->subMinutes(fake()->numberBetween(5, 5000)),
         ];
     }
 }

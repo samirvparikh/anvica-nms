@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Device;
 use App\Models\DeviceInterface;
+use App\Models\DeviceInterfaceLog;
 use App\Models\DeviceMetric;
 use App\Models\DeviceMetricLog;
 use App\Models\ServicePoint;
@@ -16,6 +17,7 @@ class MonitoringService
     public function __construct(
         protected MonitoringDriverFactory $driverFactory,
         protected AlertService $alertService,
+        protected DeviceDowntimeService $downtimeService,
     ) {}
 
     public function poll(Device $device): void
@@ -133,7 +135,8 @@ class MonitoringService
             ?? null;
 
         $pingStatus = $payload['Ping_Status'] ?? $payload['ping_status'] ?? null;
-        $healthStatus = $device->health_status;
+        $previousHealth = $device->health_status;
+        $healthStatus = $previousHealth;
 
         if ($pingStatus !== null && $pingStatus !== '') {
             $pingText = strtoupper(trim((string) $pingStatus));
@@ -145,6 +148,15 @@ class MonitoringService
             'hostname' => $hostname ?? $device->hostname,
             'health_status' => $healthStatus,
         ]);
+
+        $this->downtimeService->syncFromHealthChange(
+            $device->fresh(),
+            $previousHealth,
+            $healthStatus,
+            \App\Models\DeviceDowntimeEvent::SOURCE_PUSH,
+        );
+
+        $this->alertService->evaluateDevice($device->fresh(), []);
     }
 
     /**
@@ -189,19 +201,38 @@ class MonitoringService
                 continue;
             }
 
+            $status = $this->normalizeInterfaceStatus($iface['status'] ?? '1');
+            $rx = (int) ($iface['rx_bytes'] ?? $iface['rx'] ?? 0);
+            $tx = (int) ($iface['tx_bytes'] ?? $iface['tx'] ?? 0);
+            $rxPackets = (int) ($iface['rx_packets'] ?? 0);
+            $txPackets = (int) ($iface['tx_packets'] ?? 0);
+            $ifIndex = isset($iface['if_index']) ? (string) $iface['if_index'] : null;
+
             DeviceInterface::updateOrCreate(
                 [
                     'device_id' => $device->id,
                     'interface_name' => $interfaceName,
                 ],
                 [
-                    'status' => $this->normalizeInterfaceStatus($iface['status'] ?? '1'),
-                    'rx' => (int) ($iface['rx_bytes'] ?? $iface['rx'] ?? 0),
-                    'tx' => (int) ($iface['tx_bytes'] ?? $iface['tx'] ?? 0),
-                    'rx_packets' => (int) ($iface['rx_packets'] ?? 0),
-                    'tx_packets' => (int) ($iface['tx_packets'] ?? 0),
+                    'status' => $status,
+                    'rx' => $rx,
+                    'tx' => $tx,
+                    'rx_packets' => $rxPackets,
+                    'tx_packets' => $txPackets,
                 ]
             );
+
+            DeviceInterfaceLog::create([
+                'device_id' => $device->id,
+                'interface_name' => $interfaceName,
+                'if_index' => $ifIndex,
+                'status' => $status,
+                'rx' => $rx,
+                'tx' => $tx,
+                'rx_packets' => $rxPackets,
+                'tx_packets' => $txPackets,
+                'recorded_at' => $recordedAt,
+            ]);
 
             $count++;
         }
@@ -388,13 +419,23 @@ class MonitoringService
             );
         }
 
+        $previousHealth = $device->health_status;
+        $newHealth = isset($result['metrics']['ping_status'])
+            ? (((float) $result['metrics']['ping_status'] >= 1) ? 'Up' : 'Down')
+            : $this->resolveHealthStatus($result['metrics']);
+
         $device->update([
             'last_seen' => $recordedAt,
             'hostname' => $result['hostname'] ?? $device->hostname,
-            'health_status' => isset($result['metrics']['ping_status'])
-                ? (((float) $result['metrics']['ping_status'] >= 1) ? 'Up' : 'Down')
-                : $this->resolveHealthStatus($result['metrics']),
+            'health_status' => $newHealth,
         ]);
+
+        $this->downtimeService->syncFromHealthChange(
+            $device->fresh(),
+            $previousHealth,
+            $newHealth,
+            \App\Models\DeviceDowntimeEvent::SOURCE_POLL,
+        );
 
         $this->alertService->evaluateDevice($device->fresh(), $result['metrics']);
     }

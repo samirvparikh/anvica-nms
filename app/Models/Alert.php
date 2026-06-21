@@ -20,13 +20,42 @@ class Alert extends Model
 
     public const STATUS_CLOSED = 'closed';
 
+    public const ALARM_DEVICE_DOWN = 'Device Down';
+
+    public const ALARM_HIGH_CPU = 'High CPU';
+
+    public const ALARM_HIGH_RAM = 'High RAM';
+
+    public const ALARM_DISK_USAGE = 'Disk Usage';
+
+    public const ALARM_TEMPERATURE = 'Temperature';
+
+    public const ALARM_INTERFACE_DOWN = 'Interface Down';
+
+    public const ALARM_THRESHOLD = 'Threshold Violation';
+
     protected $fillable = [
         'device_id',
         'service_point_id',
+        'alarm_type',
         'severity',
         'message',
         'status',
+        'started_at',
+        'resolved_at',
+        'duration_seconds',
+        'acknowledged_at',
+        'acknowledged_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'started_at' => 'datetime',
+            'resolved_at' => 'datetime',
+            'acknowledged_at' => 'datetime',
+        ];
+    }
 
     public function device(): BelongsTo
     {
@@ -36,5 +65,10 @@ class Alert extends Model
     public function servicePoint(): BelongsTo
     {
         return $this->belongsTo(ServicePoint::class);
+    }
+
+    public function acknowledgedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'acknowledged_by');
     }
 }

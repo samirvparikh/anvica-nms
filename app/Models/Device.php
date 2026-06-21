@@ -104,9 +104,19 @@ class Device extends Model
         return $this->hasMany(DeviceInterface::class);
     }
 
+    public function interfaceLogs(): HasMany
+    {
+        return $this->hasMany(DeviceInterfaceLog::class);
+    }
+
     public function alerts(): HasMany
     {
         return $this->hasMany(Alert::class);
+    }
+
+    public function downtimeEvents(): HasMany
+    {
+        return $this->hasMany(DeviceDowntimeEvent::class);
     }
 
     public function script(): HasOne

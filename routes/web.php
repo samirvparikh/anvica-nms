@@ -51,11 +51,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/device-management', [ReportController::class, 'deviceManagement'])->name('reports.device-management');
     Route::get('/reports/fault-management', [ReportController::class, 'faultManagement'])->name('reports.fault-management');
+    Route::get('/reports/fault-management/data', [ReportController::class, 'faultManagementData'])->name('reports.fault-management.data');
     Route::get('/reports/performance-traffic', [ReportController::class, 'performanceTraffic'])->name('reports.performance-traffic');
     Route::get('/reports/inventory-sla', [ReportController::class, 'inventorySla'])->name('reports.inventory-sla');
     Route::get('/reports/sla-ticketing', [ReportController::class, 'slaTicketing'])->name('reports.sla-ticketing');
     Route::get('/reports/devices/{device}', [ReportController::class, 'show'])->name('reports.device.show');
     Route::get('/reports/devices/{device}/logs', [ReportController::class, 'deviceLogs'])->name('reports.device.logs');
+    Route::get('/reports/devices/{device}/interface-logs', [ReportController::class, 'interfaceLogs'])->name('reports.device.interface.logs');
+    Route::get('/reports/devices/{device}/interface-log', [ReportController::class, 'showInterfaceLog'])->name('reports.device.interface.log');
     Route::get('/reports/devices/{device}/export/excel', [ReportController::class, 'exportExcel'])->name('reports.device.export.excel');
     Route::get('/reports/devices/{device}/export/pdf', [ReportController::class, 'exportPdf'])->name('reports.device.export.pdf');
 

@@ -11,7 +11,7 @@
 <div class="reports-category-grid">
     <a href="{{ route('reports.device-management') }}" class="report-category-card">
         <div class="report-category-icon"><i class="fa-solid fa-server"></i></div>
-        <h3>Device Management Report</h3>
+        <h3>Device Monitoring Report</h3>
         <p>Monitor device health, interfaces, metrics history and performance logs for all registered network devices.</p>
         <span class="report-category-link">Open Report <i class="fa-solid fa-arrow-right"></i></span>
     </a>

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Alert;
 use App\Models\Device;
 use App\Models\DeviceInterface;
+use App\Models\DeviceInterfaceLog;
 use App\Models\DeviceMetric;
 use App\Models\DeviceMetricLog;
 use App\Models\User;
@@ -60,6 +61,13 @@ class UserScopeService
         $deviceIds = $this->deviceIds($user, $customerId);
 
         return DeviceMetricLog::query()->whereIn('device_id', $deviceIds ?: [-1]);
+    }
+
+    public function interfaceLogsQuery(User $user, ?int $customerId = null): Builder
+    {
+        $deviceIds = $this->deviceIds($user, $customerId);
+
+        return DeviceInterfaceLog::query()->whereIn('device_id', $deviceIds ?: [-1]);
     }
 
     public function interfacesQuery(User $user, ?int $customerId = null): Builder

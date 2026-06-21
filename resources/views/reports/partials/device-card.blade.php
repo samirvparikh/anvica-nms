@@ -86,10 +86,24 @@
         @else
         <div class="report-iface-list">
             @foreach($deviceInterfaces as $iface)
+            @php
+                $ifaceLogQuery = '?interface_name=' . urlencode($iface->interface_name);
+                if (! empty($customerId)) {
+                    $ifaceLogQuery .= '&user_id=' . $customerId;
+                }
+                $ifaceLogUrl = route('reports.device.interface.log', $device) . $ifaceLogQuery;
+            @endphp
             <div class="report-iface-item">
                 <div class="report-iface-main">
                     <span class="report-iface-name">{{ $iface->interface_name }}</span>
-                    <span class="status-badge {{ strtolower($iface->status) }}">{{ ucfirst($iface->status) }}</span>
+                    <div class="report-iface-status-actions">
+                        <span class="status-badge {{ strtolower($iface->status) }}">{{ ucfirst($iface->status) }}</span>
+                        <a href="{{ $ifaceLogUrl }}"
+                           class="report-iface-log-btn"
+                           target="_blank"
+                           rel="noopener noreferrer"
+                           title="View interface log in new tab">View Log</a>
+                    </div>
                 </div>
                 <div class="report-iface-stats">
                     <span><strong>RX</strong> {{ \App\Support\ByteFormatter::formatBytes($iface->rx) }}</span>
