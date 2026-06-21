@@ -16,7 +16,12 @@ class ReportController extends Controller
         protected UserScopeService $userScope,
     ) {}
 
-    public function index(Request $request)
+    public function index()
+    {
+        return view('reports.index');
+    }
+
+    public function deviceManagement(Request $request)
     {
         $user = $request->user();
         $isAdmin = (bool) $user->is_admin;
@@ -60,7 +65,7 @@ class ReportController extends Controller
         $latestMetrics = $this->userScope->latestMetricsByDevice($user, $isAdmin ? $customerId : null);
         $deviceHealth = $this->userScope->deviceHealthByRecentMetrics($user, $isAdmin ? $customerId : null);
 
-        return view('reports.index', compact(
+        return view('reports.device-management', compact(
             'devices',
             'scopedInterfaces',
             'latestMetrics',
@@ -70,6 +75,26 @@ class ReportController extends Controller
             'selectedCustomer',
             'isAdmin',
         ));
+    }
+
+    public function faultManagement()
+    {
+        return view('reports.fault-management');
+    }
+
+    public function performanceTraffic()
+    {
+        return view('reports.performance-traffic');
+    }
+
+    public function inventorySla()
+    {
+        return view('reports.inventory-sla');
+    }
+
+    public function slaTicketing()
+    {
+        return view('reports.sla-ticketing');
     }
 
     public function show(Request $request, Device $device)

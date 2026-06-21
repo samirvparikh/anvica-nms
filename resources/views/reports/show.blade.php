@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    $backUrl = route('reports.index') . ($customerId ? '?user_id=' . $customerId : '');
+    $backUrl = route('reports.device-management') . ($customerId ? '?user_id=' . $customerId : '');
     $exportQuery = $customerId ? '?user_id=' . $customerId : '';
 @endphp
 
