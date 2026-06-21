@@ -7,12 +7,16 @@ class LatencyFormatter
     /**
      * Format latency as milliseconds for display.
      */
-    public static function formatMilliseconds(int|float|string|null $value, ?string $text = null, ?string $metricSlug = null, int $decimals = 1): string
+    public static function formatMilliseconds(int|float|string|null $value, ?string $text = null, ?string $metricSlug = null, ?int $decimals = null): string
     {
         $ms = self::toMilliseconds($value, $text, $metricSlug);
 
         if ($ms === null) {
             return '—';
+        }
+
+        if ($decimals === null) {
+            $decimals = $ms < 10 ? 2 : 1;
         }
 
         return number_format($ms, $decimals).' ms';
@@ -77,13 +81,20 @@ class LatencyFormatter
 
     protected static function parseLatencyString(string $text): ?float
     {
-        $normalized = strtolower(trim($text));
+        $normalized = trim($text);
 
-        if ($normalized === '' || in_array($normalized, ['up', 'down', 'online', 'offline', 'n/a', 'na', '-'], true)) {
+        if ($normalized === '' || in_array(strtolower($normalized), ['up', 'down', 'online', 'offline', 'n/a', 'na', '-'], true)) {
             return null;
         }
 
-        if (preg_match('/^([\d.]+)\s*(ms|millisecond|milliseconds|s|sec|secs|second|seconds|us|µs|μs)?$/i', $normalized, $matches)) {
+        $timeSpanMs = self::parseTimeSpanToMilliseconds($normalized);
+        if ($timeSpanMs !== null) {
+            return $timeSpanMs;
+        }
+
+        $lower = strtolower($normalized);
+
+        if (preg_match('/^([\d.]+)\s*(ms|millisecond|milliseconds|s|sec|secs|second|seconds|us|µs|μs)?$/i', $lower, $matches)) {
             $number = (float) $matches[1];
             $unit = strtolower($matches[2] ?? '');
 
@@ -107,5 +118,25 @@ class LatencyFormatter
         }
 
         return null;
+    }
+
+    /**
+     * Parse duration strings such as 00:00:00.004726 (hh:mm:ss.ffffff).
+     */
+    protected static function parseTimeSpanToMilliseconds(string $text): ?float
+    {
+        if (! preg_match('/^(\d{1,2}):(\d{2}):(\d{2}(?:\.\d+)?)$/', trim($text), $matches)) {
+            return null;
+        }
+
+        $seconds = ((int) $matches[1] * 3600)
+            + ((int) $matches[2] * 60)
+            + (float) $matches[3];
+
+        if ($seconds <= 0) {
+            return null;
+        }
+
+        return $seconds * 1000;
     }
 }
