@@ -33,7 +33,7 @@
                     <th>Last Seen</th>
                     <th>CPU %</th>
                     <th>RAM %</th>
-                    <th>Latency</th>
+                    <th>Latency (ms)</th>
                     <th>Interfaces</th>
                     <th class="col-actions" data-no-sort="true" style="text-align:right;">Actions</th>
                 </tr>
@@ -49,18 +49,18 @@
                     $ramUsed = (float) (($m['Ram_Used'] ?? $m['ram_uses'] ?? null)?->metric_value ?? 0);
                     $ramTotal = (float) (($m['Total_Ram'] ?? $m['total_ram'] ?? null)?->metric_value ?? 0);
                     $ramPct = isset($m['ram']) ? (float) $m['ram']->metric_value : ($ramTotal > 0 ? round(($ramUsed / $ramTotal) * 100, 1) : null);
-                    $latencyMetric = $m['Latency'] ?? $m['latency'] ?? $m['Ping_Latency'] ?? $m['ping_latency'] ?? $m['Ping_Time'] ?? $m['ping_time'] ?? null;
-                    $latencyDisplay = '—';
-                    if ($latencyMetric) {
-                        $latencyText = trim((string) ($latencyMetric->metric_text ?? ''));
-                        if ($latencyText !== '' && $latencyText !== '—') {
-                            $latencyDisplay = str_ends_with(strtolower($latencyText), 'ms') ? $latencyText : $latencyText . ' ms';
-                        } elseif ((float) $latencyMetric->metric_value > 0) {
-                            $latencyDisplay = number_format((float) $latencyMetric->metric_value, 1) . ' ms';
-                        } elseif ($latencyText !== '') {
-                            $latencyDisplay = $latencyText;
+                    $latencyMetric = null;
+                    $latencySlug = null;
+                    foreach (['Latency', 'latency', 'Ping_Latency', 'ping_latency', 'Ping_Time', 'ping_time'] as $latencyKey) {
+                        if (isset($m[$latencyKey])) {
+                            $latencyMetric = $m[$latencyKey];
+                            $latencySlug = $latencyKey;
+                            break;
                         }
                     }
+                    $latencyDisplay = $latencyMetric
+                        ? \App\Support\LatencyFormatter::formatMilliseconds($latencyMetric->metric_value, $latencyMetric->metric_text, $latencySlug)
+                        : '—';
                     $deviceInterfaces = $scopedInterfaces->get($device->id, collect());
                     $reportUrl = route('reports.device.show', $device) . ($customerId ? '?user_id=' . $customerId : '');
                 @endphp
