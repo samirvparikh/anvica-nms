@@ -528,7 +528,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .notification-widget {
     position: relative;
-    cursor: pointer;
 }
 
 .notification-btn {
@@ -539,12 +538,19 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0.35rem;
+    border-radius: 6px;
+    transition: var(--transition);
+}
+
+.notification-btn:hover {
+    background-color: #f8fafc;
 }
 
 .notification-badge {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -3px;
+    right: -3px;
     background-color: var(--status-down);
     color: white;
     font-size: 0.65rem;
@@ -556,6 +562,167 @@ h1, h2, h3, h4, h5, h6 {
     align-items: center;
     justify-content: center;
     border: 2px solid white;
+    pointer-events: none;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    width: 320px;
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+    z-index: 30;
+    overflow: hidden;
+}
+
+.notification-widget.open .notification-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.notification-dropdown .dropdown-header {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+}
+
+.notification-dropdown .dropdown-header h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.notification-dropdown .dropdown-header .badge {
+    background-color: #fee2e2;
+    color: #ef4444;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+}
+
+.notification-dropdown .dropdown-body {
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #f1f5f9;
+    text-decoration: none;
+    color: var(--text-dark);
+    transition: var(--transition);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: #f8fafc;
+}
+
+.notification-item.critical {
+    border-left: 3px solid var(--status-down);
+}
+
+.notification-item.warning {
+    border-left: 3px solid var(--status-warning);
+}
+
+.notification-item.info {
+    border-left: 3px solid #3b82f6;
+}
+
+.notification-icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.15rem;
+}
+
+.notification-meta .device-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notification-meta .time {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.notification-message {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notification-dropdown .dropdown-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    background-color: #f8fafc;
+}
+
+.notification-dropdown .dropdown-footer a {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.notification-dropdown .dropdown-footer a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+.notification-dropdown .empty-state {
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.notification-dropdown .empty-state i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.notification-dropdown .empty-state p {
+    font-size: 0.8rem;
+    margin: 0;
 }
 
 .user-profile-menu {

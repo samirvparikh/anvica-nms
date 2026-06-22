@@ -255,8 +255,8 @@
 
                 <div class="header-right">
                     <!-- Notifications -->
-                    <div class="notification-widget" onclick="window.location.href='{{ route('alerts.index') }}'">
-                        <button class="notification-btn">
+                    <div class="notification-widget" id="notificationWidget">
+                        <button class="notification-btn" id="notificationTrigger" aria-expanded="false" aria-haspopup="true" aria-label="Toggle notifications">
                             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -265,6 +265,46 @@
                         @if(($activeAlertsCount ?? 0) > 0)
                             <span class="notification-badge">{{ $activeAlertsCount }}</span>
                         @endif
+
+                        <!-- Notifications Dropdown -->
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="dropdown-header">
+                                <h3>Notifications</h3>
+                                @if(($activeAlertsCount ?? 0) > 0)
+                                    <span class="badge">{{ $activeAlertsCount }} Active</span>
+                                @endif
+                            </div>
+                            <div class="dropdown-body">
+                                @forelse($headerNotifications ?? [] as $notification)
+                                    <a href="{{ $notification['url'] }}" class="notification-item {{ $notification['severity'] }}">
+                                        <div class="notification-icon">
+                                            @if($notification['severity'] === 'critical')
+                                                <i class="fa-solid fa-circle-exclamation text-danger" style="color: var(--status-down);"></i>
+                                            @elseif($notification['severity'] === 'warning')
+                                                <i class="fa-solid fa-triangle-exclamation text-warning" style="color: var(--status-warning);"></i>
+                                            @else
+                                                <i class="fa-solid fa-circle-info text-info" style="color: #3b82f6;"></i>
+                                            @endif
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-meta">
+                                                <span class="device-name">{{ $notification['device_name'] }}</span>
+                                                <span class="time">{{ $notification['created_at']->diffForHumans() }}</span>
+                                            </div>
+                                            <p class="notification-message">{{ $notification['message'] }}</p>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="empty-state">
+                                        <i class="fa-regular fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; color: var(--text-muted);"></i>
+                                        <p>No active notifications</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <div class="dropdown-footer">
+                                <a href="{{ route('alerts.index') }}">View All Alerts</a>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- User Profile Menu -->
@@ -384,17 +424,48 @@
                 }
             });
 
+            var notificationWidget = document.getElementById('notificationWidget');
+            var notificationTrigger = document.getElementById('notificationTrigger');
+            var notificationDropdown = document.getElementById('notificationDropdown');
+
             if (profileTrigger && profileDropdown) {
                 profileTrigger.addEventListener('click', function (e) {
                     e.stopPropagation();
                     var isOpen = profileMenu.classList.toggle('open');
                     profileTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                    // Close notification dropdown if it is open
+                    if (isOpen && notificationWidget) {
+                        notificationWidget.classList.remove('open');
+                        if (notificationTrigger) notificationTrigger.setAttribute('aria-expanded', 'false');
+                    }
                 });
 
                 document.addEventListener('click', function (e) {
                     if (!profileMenu.contains(e.target)) {
                         profileMenu.classList.remove('open');
                         profileTrigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            if (notificationTrigger && notificationDropdown) {
+                notificationTrigger.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var isOpen = notificationWidget.classList.toggle('open');
+                    notificationTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+
+                    // Close profile menu if it is open
+                    if (isOpen && profileMenu) {
+                        profileMenu.classList.remove('open');
+                        if (profileTrigger) profileTrigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (notificationWidget && !notificationWidget.contains(e.target)) {
+                        notificationWidget.classList.remove('open');
+                        notificationTrigger.setAttribute('aria-expanded', 'false');
                     }
                 });
             }
