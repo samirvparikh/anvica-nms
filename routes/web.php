@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceScriptController;
+use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\ApiRequestLogController;
@@ -35,8 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
-    Route::get('/alarms', [AlertController::class, 'userIndex'])->name('alarms.index');
-    Route::post('/alarms/{alert}/ack', [AlertController::class, 'acknowledge'])->name('alarms.ack');
+    Route::get('/alarms', [AlarmController::class, 'index'])->name('alarms.index');
+    Route::post('/alarms/{alarm}/ack', [AlarmController::class, 'acknowledge'])->name('alarms.ack');
+
+    Route::get('/alerts', [AlertController::class, 'userIndex'])->name('alerts.index');
+    Route::post('/alerts/{alert}/ack', [AlertController::class, 'acknowledge'])->name('alerts.ack');
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
@@ -100,8 +104,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/vendors/{vendor}/script', [VendorScriptController::class, 'edit'])->name('vendors.script.edit');
         Route::put('/vendors/{vendor}/script', [VendorScriptController::class, 'update'])->name('vendors.script.update');
 
-        Route::get('/alerts', [AlertController::class, 'index'])->name('alerts.index');
-        Route::post('/alerts', [AlertController::class, 'store'])->name('alerts.store');
+        Route::post('/alarms', [AlarmController::class, 'store'])->name('alarms.store');
+        Route::put('/alarms/{alarm}', [AlarmController::class, 'update'])->name('alarms.update');
+        Route::delete('/alarms/{alarm}', [AlarmController::class, 'destroy'])->name('alarms.destroy');
+
+        Route::get('/alerts/manage', [AlertController::class, 'index'])->name('alerts.manage');
+        Route::post('/alerts/manage', [AlertController::class, 'store'])->name('alerts.store');
         Route::put('/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
         Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
         Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->name('alerts.close');

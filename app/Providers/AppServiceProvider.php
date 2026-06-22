@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Alarm;
 use App\Repositories\AlertRepository;
 use App\Services\MailConfigService;
 use Illuminate\Support\Facades\Auth;
@@ -30,9 +31,9 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer('layouts.app', function ($view) {
             $user = Auth::user();
-            $view->with('activeAlertsCount', $user
-                ? app(AlertRepository::class)->openCount($user)
-                : 0);
+            $openAlerts = $user ? app(AlertRepository::class)->openCount($user) : 0;
+            $openAlarms = Alarm::where('status', 'Open')->count();
+            $view->with('activeAlertsCount', $openAlerts + $openAlarms);
         });
     }
 }

@@ -19,13 +19,13 @@ class AlertController extends Controller
     ) {}
 
     /**
-     * User-facing alerts page (replaces legacy /alarms).
+     * User-facing monitoring alerts (auto-generated from devices).
      */
     public function userIndex(Request $request)
     {
         $user = $request->user();
 
-        return view('alarms.index', [
+        return view('alerts.monitoring', [
             'criticalCount' => $this->alertRepository->openCountBySeverity(Alert::SEVERITY_CRITICAL, $user),
             'warningCount' => $this->alertRepository->scopedQuery($user)
                 ->where('status', Alert::STATUS_OPEN)
@@ -46,7 +46,7 @@ class AlertController extends Controller
         abort_unless($this->userScope->canAccessDevice($request->user(), $alert->device), 403);
 
         if ($alert->status !== Alert::STATUS_OPEN) {
-            return redirect()->route('alarms.index')->with('success', 'Alert is already closed.');
+            return redirect()->route('alerts.index')->with('success', 'Alert is already closed.');
         }
 
         $alert->update([
@@ -54,9 +54,12 @@ class AlertController extends Controller
             'acknowledged_by' => $request->user()->id,
         ]);
 
-        return redirect()->route('alarms.index')->with('success', 'Alert acknowledged successfully.');
+        return redirect()->route('alerts.index')->with('success', 'Alert acknowledged successfully.');
     }
 
+    /**
+     * Admin alert management (CRUD).
+     */
     public function index(Request $request)
     {
         $user = $request->user();
@@ -80,7 +83,7 @@ class AlertController extends Controller
 
         $this->alertRepository->create($validated);
 
-        return redirect()->route('alerts.index')->with('success', 'Alert created successfully.');
+        return redirect()->route('alerts.manage')->with('success', 'Alert created successfully.');
     }
 
     public function update(Request $request, Alert $alert)
@@ -95,20 +98,20 @@ class AlertController extends Controller
 
         $this->alertRepository->update($alert, $validated);
 
-        return redirect()->route('alerts.index')->with('success', 'Alert updated successfully.');
+        return redirect()->route('alerts.manage')->with('success', 'Alert updated successfully.');
     }
 
     public function destroy(Alert $alert)
     {
         $this->alertRepository->delete($alert);
 
-        return redirect()->route('alerts.index')->with('success', 'Alert deleted successfully.');
+        return redirect()->route('alerts.manage')->with('success', 'Alert deleted successfully.');
     }
 
     public function close(Alert $alert)
     {
         $this->alertService->closeAlert($alert);
 
-        return redirect()->route('alerts.index')->with('success', 'Alert closed successfully.');
+        return redirect()->route('alerts.manage')->with('success', 'Alert closed successfully.');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alert;
+use App\Models\Alarm;
 use App\Repositories\AlertRepository;
 use App\Models\Device;
 use App\Models\DeviceMetric;
@@ -30,11 +31,18 @@ class DashboardController extends Controller
         $deviceIds = $this->userScope->deviceIds($user);
 
         $alertQuery = $this->userScope->alertsQuery($user);
-        $totalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count();
-        $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count();
-        $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->whereIn('severity', [Alert::SEVERITY_WARNING, Alert::SEVERITY_INFO])->count();
+        $openAlerts = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count();
+        $openAlarms = Alarm::where('status', 'Open')->count();
+        $totalAlarms = $openAlerts + $openAlarms;
+        $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count()
+            + Alarm::where('status', 'Open')->where('severity', 'Critical')->count();
+        $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->whereIn('severity', [Alert::SEVERITY_WARNING, Alert::SEVERITY_INFO])->count()
+            + Alarm::where('status', 'Open')->where('severity', 'Warning')->count();
 
         $recentAlerts = $this->alertRepository->recent(4, $user);
+        if ($recentAlerts->isEmpty()) {
+            $recentAlerts = Alarm::orderByDesc('created_at')->take(4)->get();
+        }
 
         $cpuTrend = DeviceMetric::select('metric_value', 'recorded_at')
             ->whereIn('device_id', $deviceIds)

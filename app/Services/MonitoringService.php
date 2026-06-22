@@ -92,6 +92,7 @@ class MonitoringService
         $recordedAt = Carbon::now();
         $skipKeys = ['interfaces', 'metrics', 'SYSTEM', 'INTERFACE', 'data', 'api_key'];
         $storedMetricKeys = [];
+        $readings = [];
 
         foreach ($payload as $key => $value) {
             if (in_array($key, $skipKeys, true) || $value === null || $value === '') {
@@ -125,6 +126,11 @@ class MonitoringService
             );
 
             $storedMetricKeys[] = (string) $key;
+            $readings[] = [
+                'slug' => (string) $key,
+                'value' => $numericValue,
+                'text' => $textValue,
+            ];
         }
 
         $this->syncServicePointsFromMetricKeys($device, $storedMetricKeys);
@@ -156,7 +162,7 @@ class MonitoringService
             \App\Models\DeviceDowntimeEvent::SOURCE_PUSH,
         );
 
-        $this->alertService->evaluateDevice($device->fresh(), []);
+        $this->alertService->evaluateDeviceFromReadings($device->fresh(), $readings);
     }
 
     /**
