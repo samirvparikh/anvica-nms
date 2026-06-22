@@ -36,6 +36,23 @@
         </div>
     </div>
 
+    <div class="report-period-filter" role="group" aria-label="Time range">
+        @foreach($periodOptions as $option)
+        @php
+            $optionQuery = array_filter([
+                'interface_name' => $interfaceName,
+                'user_id' => $customerId,
+                'period' => $option['value'],
+            ]);
+        @endphp
+        <a href="{{ route('reports.device.interface.log', $device) }}?{{ http_build_query($optionQuery) }}"
+           class="report-period-btn {{ $period === $option['value'] ? 'is-active' : '' }}"
+           @if($period === $option['value']) aria-current="true" @endif>
+            {{ $option['label'] }}
+        </a>
+        @endforeach
+    </div>
+
     <div class="table-scroll">
         <table class="data-table data-table-filterable" id="interfaceReportLogsTable">
             <thead>

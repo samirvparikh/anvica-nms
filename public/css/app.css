@@ -3308,6 +3308,47 @@ a.btn-action.script-btn.script-btn-active {
     height: 16px;
 }
 
+.report-period-filter {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0 1.25rem 1rem;
+}
+
+.report-period-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    color: #475569;
+    background: #eef2ff;
+    border: 1px solid transparent;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.report-period-btn:hover {
+    color: #1e293b;
+    background: #e0e7ff;
+}
+
+.report-period-btn.is-active {
+    color: #fff;
+    background: #1e1b4b;
+    border-color: #1e1b4b;
+}
+
+.report-period-btn.is-active:hover {
+    color: #fff;
+    background: #312e81;
+    border-color: #312e81;
+}
+
 .report-logs-modal .modal-body {
     padding-top: 0.5rem;
 }

@@ -121,12 +121,15 @@ class ReportController extends Controller
         $context = $this->resolveDeviceReportContext($request, $device);
         $device->load(['user', 'service', 'vendor']);
         $logs = $this->getDeviceReportLogs($request, $device, $context);
+        $period = $this->resolveReportPeriod($request);
 
         return view('reports.show', [
             'device' => $device,
             'logs' => $logs,
             'customerId' => $context['customerId'],
             'isAdmin' => $context['isAdmin'],
+            'period' => $period,
+            'periodOptions' => $this->reportPeriodOptions(),
         ]);
     }
 
@@ -172,6 +175,7 @@ class ReportController extends Controller
 
         $device->load(['user', 'service', 'vendor']);
         $logs = $this->getDeviceInterfaceLogs($request, $device, $context, $interfaceName);
+        $period = $this->resolveReportPeriod($request);
 
         return view('reports.interface-log', [
             'device' => $device,
@@ -179,6 +183,8 @@ class ReportController extends Controller
             'logs' => $logs,
             'customerId' => $context['customerId'],
             'isAdmin' => $context['isAdmin'],
+            'period' => $period,
+            'periodOptions' => $this->reportPeriodOptions(),
         ]);
     }
 
@@ -253,9 +259,12 @@ class ReportController extends Controller
      */
     protected function getDeviceReportLogs(Request $request, Device $device, array $context)
     {
+        $since = $this->periodStartDate($this->resolveReportPeriod($request));
+
         return $this->userScope
             ->metricLogsQuery($request->user(), $context['isAdmin'] ? $context['customerId'] : null)
             ->where('device_id', $device->id)
+            ->where('recorded_at', '>=', $since)
             ->orderByDesc('recorded_at')
             ->orderBy('metric_slug')
             ->limit(2000)
@@ -263,14 +272,50 @@ class ReportController extends Controller
     }
 
     /**
+     * @return list<array{value: string, label: string}>
+     */
+    protected function reportPeriodOptions(): array
+    {
+        return [
+            ['value' => '1d', 'label' => '1 Day'],
+            ['value' => '1w', 'label' => '1 Week'],
+            ['value' => '1m', 'label' => '1 Month'],
+            ['value' => '6m', 'label' => '6 Month'],
+            ['value' => '1y', 'label' => '1 Year'],
+        ];
+    }
+
+    protected function resolveReportPeriod(Request $request): string
+    {
+        $period = (string) $request->query('period', '1d');
+        $allowed = array_column($this->reportPeriodOptions(), 'value');
+
+        return in_array($period, $allowed, true) ? $period : '1d';
+    }
+
+    protected function periodStartDate(string $period): Carbon
+    {
+        return match ($period) {
+            '1w' => now()->subWeek(),
+            '1m' => now()->subMonth(),
+            '6m' => now()->subMonths(6),
+            '1y' => now()->subYear(),
+            default => now()->subDay(),
+        };
+    }
+
+    /**
      * @param  array{isAdmin: bool, customerId: ?int}  $context
      */
     protected function getDeviceInterfaceLogs(Request $request, Device $device, array $context, string $interfaceName)
     {
+        $since = $this->periodStartDate($this->resolveReportPeriod($request));
+
         return $this->userScope
             ->interfaceLogsQuery($request->user(), $context['isAdmin'] ? $context['customerId'] : null)
             ->where('device_id', $device->id)
             ->where('interface_name', $interfaceName)
+            ->where('recorded_at', '>=', $since)
             ->orderByDesc('recorded_at')
             ->limit(2000)
             ->get();

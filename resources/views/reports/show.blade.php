@@ -3,7 +3,11 @@
 @section('content')
 @php
     $backUrl = route('reports.device-management') . ($customerId ? '?user_id=' . $customerId : '');
-    $exportQuery = $customerId ? '?user_id=' . $customerId : '';
+    $reportQuery = array_filter([
+        'user_id' => $customerId,
+        'period' => $period,
+    ]);
+    $exportQuery = $reportQuery ? '?' . http_build_query($reportQuery) : '';
 @endphp
 
 <div class="page-header">
@@ -54,6 +58,22 @@
                 {{ number_format($logs->count()) }} records · Click column headers to sort · Use filters below each column
             </p>
         </div>
+    </div>
+
+    <div class="report-period-filter" role="group" aria-label="Time range">
+        @foreach($periodOptions as $option)
+        @php
+            $optionQuery = array_filter([
+                'user_id' => $customerId,
+                'period' => $option['value'],
+            ]);
+        @endphp
+        <a href="{{ route('reports.device.show', $device) }}?{{ http_build_query($optionQuery) }}"
+           class="report-period-btn {{ $period === $option['value'] ? 'is-active' : '' }}"
+           @if($period === $option['value']) aria-current="true" @endif>
+            {{ $option['label'] }}
+        </a>
+        @endforeach
     </div>
 
     <div class="table-scroll">
