@@ -3,42 +3,41 @@
 @section('content')
 <div class="page-header">
     <div class="page-title">
-        <h1>Alarms</h1>
-        <p>Active alerts across your infrastructure.</p>
+        <h1>Alerts</h1>
+        <p>Monitoring alerts for your devices.</p>
     </div>
 </div>
 
-<!-- Alarm Summary Cards -->
+@if(session('success'))
+<div class="alert alert-success" style="margin-bottom:1rem;">{{ session('success') }}</div>
+@endif
+
 <div class="alarm-summary-cards">
-    <!-- Critical Alarms Card -->
     <div class="alarm-summary-card critical">
         <h4>Critical</h4>
         <div class="value">{{ $criticalCount }}</div>
     </div>
-    
-    <!-- Warning Alarms Card -->
+
     <div class="alarm-summary-card warning">
         <h4>Warning</h4>
         <div class="value">{{ $warningCount }}</div>
     </div>
-    
-    <!-- Acknowledged Card -->
+
     <div class="alarm-summary-card acknowledged">
         <h4>Acknowledged</h4>
         <div class="value">{{ $ackCount }}</div>
     </div>
 </div>
 
-<!-- Alarms Table Card -->
 <div class="card-table-container">
     <div class="table-toolbar">
-        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">Active & Acknowledged Alerts</h3>
+        <h3 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0;">Active &amp; Acknowledged Alerts</h3>
         <div class="table-search">
             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
-            <input type="text" id="alarmSearchInput" placeholder="Search alarms...">
+            <input type="text" id="alarmSearchInput" placeholder="Search alerts...">
         </div>
     </div>
 
@@ -46,6 +45,7 @@
         <thead>
             <tr>
                 <th style="width: 80px;">Severity</th>
+                <th>Type</th>
                 <th>Device</th>
                 <th>Description</th>
                 <th>Timestamp</th>
@@ -53,32 +53,43 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($alarms as $alarm)
-            <tr class="alarm-row" data-device="{{ strtolower($alarm->device_name) }}" data-msg="{{ strtolower($alarm->message) }}" data-sev="{{ strtolower($alarm->severity) }}" data-status="{{ strtolower($alarm->status) }}">
+            @forelse($alerts as $alert)
+            @php
+                $severityLabel = ucfirst($alert->severity);
+                $deviceName = $alert->device?->name ?? 'Unknown';
+                $isOpen = $alert->status === \App\Models\Alert::STATUS_OPEN;
+                $isAcknowledged = $alert->acknowledged_at !== null;
+            @endphp
+            <tr class="alarm-row"
+                data-device="{{ strtolower($deviceName) }}"
+                data-msg="{{ strtolower($alert->message) }}"
+                data-sev="{{ strtolower($alert->severity) }}"
+                data-status="{{ strtolower($alert->status) }}">
                 <td>
-                    <span class="status-badge {{ $alarm->severity == 'Critical' ? 'down' : 'warning' }}" style="padding: 0.2rem 0.5rem; border-radius: 4px;">
-                        {{ $alarm->severity }}
+                    <span class="status-badge {{ $alert->severity === 'critical' ? 'down' : 'warning' }}" style="padding: 0.2rem 0.5rem; border-radius: 4px;">
+                        {{ $severityLabel }}
                     </span>
                 </td>
-                <td style="font-weight: 700;">{{ $alarm->device_name }}</td>
-                <td style="color: var(--text-muted);">{{ $alarm->message }}</td>
-                <td>{{ $alarm->created_at->format('M d, Y h:i A') }}</td>
+                <td style="font-weight: 600;">{{ $alert->alarm_type ?? 'Alert' }}</td>
+                <td style="font-weight: 700;">{{ $deviceName }}</td>
+                <td style="color: var(--text-muted);">{{ $alert->message }}</td>
+                <td>{{ ($alert->started_at ?? $alert->created_at)->format('M d, Y h:i A') }}</td>
                 <td style="text-align: right;">
-                    @if($alarm->status == 'Open')
-                        <form action="{{ route('alarms.ack', $alarm->id) }}" method="POST" style="display: inline-block;">
+                    @if($isOpen && ! $isAcknowledged)
+                        <form action="{{ route('alarms.ack', $alert) }}" method="POST" style="display: inline-block;">
                             @csrf
                             <button type="submit" class="btn-action ack-btn">Acknowledge</button>
                         </form>
+                    @elseif($isOpen && $isAcknowledged)
+                        <span class="status-badge up">Acknowledged</span>
                     @else
-                        <span class="status-badge up">
-                            Acknowledged
-                        </span>
+                        <span class="status-badge up">Closed</span>
                     @endif
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No alarms recorded.</td>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No alerts recorded.</td>
             </tr>
             @endforelse
         </tbody>
@@ -87,13 +98,14 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Table search filtering logic for alarms
         const searchInput = document.getElementById('alarmSearchInput');
         const tableRows = document.querySelectorAll('.alarm-row');
 
+        if (!searchInput) return;
+
         searchInput.addEventListener('keyup', function(e) {
             const query = e.target.value.toLowerCase().trim();
-            
+
             tableRows.forEach(row => {
                 const device = row.getAttribute('data-device');
                 const message = row.getAttribute('data-msg');

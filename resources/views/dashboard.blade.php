@@ -136,19 +136,19 @@
                 <div class="alert-details">
                     <div class="alert-pulse-dot {{ strtolower($alert->severity) }}"></div>
                     <div class="alert-meta-text">
-                        <span class="device-name">{{ optional($alert->device)->name ?? $alert->device_name ?? 'Unknown' }}</span>
+                        <span class="device-name">{{ $alert->device?->name ?? 'Unknown' }}</span>
                         <span class="message">{{ $alert->message }}</span>
                     </div>
                 </div>
                 @php
-                    $isClosed = in_array($alert->status, ['Acknowledged', 'closed'], true);
+                    $isClosed = $alert->status === 'closed';
                     $severity = strtolower($alert->severity ?? 'warning');
                 @endphp
                 <span class="alert-time-badge {{ $isClosed ? 'ack' : $severity }}">
                     @if($isClosed)
                         CLOSED
                     @else
-                        {{ $alert->created_at->format('h:i A') }}
+                        {{ ($alert->started_at ?? $alert->created_at)->format('h:i A') }}
                     @endif
                 </span>
             </div>

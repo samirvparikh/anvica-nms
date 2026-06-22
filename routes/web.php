@@ -5,7 +5,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceScriptController;
-use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\ApiRequestLogController;
@@ -36,9 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
     Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
-    // Alarms (legacy view)
-    Route::get('/alarms', [AlarmController::class, 'index'])->name('alarms.index');
-    Route::post('/alarms/{alarm}/ack', [AlarmController::class, 'acknowledge'])->name('alarms.ack');
+    Route::get('/alarms', [AlertController::class, 'userIndex'])->name('alarms.index');
+    Route::post('/alarms/{alert}/ack', [AlertController::class, 'acknowledge'])->name('alarms.ack');
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
@@ -53,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/fault-management', [ReportController::class, 'faultManagement'])->name('reports.fault-management');
     Route::get('/reports/fault-management/data', [ReportController::class, 'faultManagementData'])->name('reports.fault-management.data');
     Route::get('/reports/performance-traffic', [ReportController::class, 'performanceTraffic'])->name('reports.performance-traffic');
+    Route::get('/reports/performance-traffic/data', [ReportController::class, 'performanceTrafficData'])->name('reports.performance-traffic.data');
     Route::get('/reports/inventory-sla', [ReportController::class, 'inventorySla'])->name('reports.inventory-sla');
     Route::get('/reports/sla-ticketing', [ReportController::class, 'slaTicketing'])->name('reports.sla-ticketing');
     Route::get('/reports/devices/{device}', [ReportController::class, 'show'])->name('reports.device.show');

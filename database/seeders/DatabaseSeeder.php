@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Device;
-use App\Models\Alarm;
 use App\Models\Site;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;

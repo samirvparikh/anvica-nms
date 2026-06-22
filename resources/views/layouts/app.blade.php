@@ -102,13 +102,13 @@
                     </li>
 
                     <li>
-                        <a href="{{ route('alarms.index') }}" class="nav-link {{ request()->is('alarms') ? 'active' : '' }}" title="Alarms">
+                        <a href="{{ route('alarms.index') }}" class="nav-link {{ request()->is('alarms') ? 'active' : '' }}" title="Alerts">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
                                 <line x1="12" y1="9" x2="12" y2="13"/>
                                 <line x1="12" y1="17" x2="12.01" y2="17"/>
                             </svg>
-                            <span class="nav-link-text">Alarms</span>
+                            <span class="nav-link-text">Alerts</span>
                         </a>
                     </li>
                     <li>
@@ -240,7 +240,7 @@
                             <circle cx="11" cy="11" r="8"/>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
-                        <input type="text" placeholder="Search devices, alarms...">
+                        <input type="text" placeholder="Search devices, alerts...">
                     </div>
                 </div>
 
@@ -253,11 +253,8 @@
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                             </svg>
                         </button>
-                        @php
-                            $activeAlarmsCount = \App\Models\Alarm::where('status', 'Open')->count();
-                        @endphp
-                        @if($activeAlarmsCount > 0)
-                            <span class="notification-badge">{{ $activeAlarmsCount }}</span>
+                        @if(($activeAlertsCount ?? 0) > 0)
+                            <span class="notification-badge">{{ $activeAlertsCount }}</span>
                         @endif
                     </div>
 

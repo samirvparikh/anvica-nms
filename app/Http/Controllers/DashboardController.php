@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Alert;
-use App\Models\Alarm;
+use App\Repositories\AlertRepository;
 use App\Models\Device;
 use App\Models\DeviceMetric;
 use App\Services\UserScopeService;
@@ -14,6 +14,7 @@ class DashboardController extends Controller
 {
     public function __construct(
         protected UserScopeService $userScope,
+        protected AlertRepository $alertRepository,
     ) {}
 
     public function index(Request $request)
@@ -29,17 +30,11 @@ class DashboardController extends Controller
         $deviceIds = $this->userScope->deviceIds($user);
 
         $alertQuery = $this->userScope->alertsQuery($user);
-        $totalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count()
-            + Alarm::where('status', 'Open')->count();
-        $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count()
-            + Alarm::where('status', 'Open')->where('severity', 'Critical')->count();
-        $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_WARNING)->count()
-            + Alarm::where('status', 'Open')->where('severity', 'Warning')->count();
+        $totalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count();
+        $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count();
+        $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->whereIn('severity', [Alert::SEVERITY_WARNING, Alert::SEVERITY_INFO])->count();
 
-        $recentAlerts = $this->userScope->alertsQuery($user)->with('device')->latest()->take(4)->get();
-        if ($recentAlerts->isEmpty()) {
-            $recentAlerts = Alarm::orderBy('created_at', 'desc')->take(4)->get();
-        }
+        $recentAlerts = $this->alertRepository->recent(4, $user);
 
         $cpuTrend = DeviceMetric::select('metric_value', 'recorded_at')
             ->whereIn('device_id', $deviceIds)

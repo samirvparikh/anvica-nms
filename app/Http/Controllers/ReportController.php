@@ -6,6 +6,7 @@ use App\Models\Device;
 use App\Models\User;
 use App\Support\ByteFormatter;
 use App\Services\FaultManagementReportService;
+use App\Services\PerformanceTrafficReportService;
 use App\Services\UserScopeService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -101,9 +102,25 @@ class ReportController extends Controller
         );
     }
 
-    public function performanceTraffic()
+    public function performanceTraffic(Request $request)
     {
-        return view('reports.performance-traffic');
+        $filters = $this->resolveReportFilters($request);
+
+        return view('reports.performance-traffic', $filters);
+    }
+
+    public function performanceTrafficData(Request $request, PerformanceTrafficReportService $reportService): JsonResponse
+    {
+        $filters = $this->resolveReportFilters($request);
+
+        return response()->json(
+            $reportService->build(
+                $request->user(),
+                $filters['customerId'],
+                $filters['from'],
+                $filters['to'],
+            )
+        );
     }
 
     public function inventorySla()

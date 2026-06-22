@@ -8,12 +8,12 @@
         <p>
             @if($isAdmin)
                 @if($selectedCustomer)
-                    Alerts and downtime for <strong>{{ $selectedCustomer->name }}</strong>.
+                    Faults derived from metric and interface logs for <strong>{{ $selectedCustomer->name }}</strong>.
                 @else
-                    Alerts and downtime across all customers.
+                    Faults derived from metric and interface logs across all customers.
                 @endif
             @else
-                Alerts and downtime for your assigned devices, {{ Auth::user()->name }}.
+                Faults derived from metric and interface logs for your assigned devices, {{ Auth::user()->name }}.
             @endif
         </p>
         <form method="GET" action="{{ route('reports.fault-management') }}" class="report-fault-date-filter">
