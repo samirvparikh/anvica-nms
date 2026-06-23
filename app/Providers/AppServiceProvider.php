@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Alarm;
 use App\Models\Alert;
+use App\Models\User;
 use App\Repositories\AlertRepository;
 use App\Services\MailConfigService;
 use Illuminate\Support\Facades\Auth;
@@ -77,6 +78,10 @@ class AppServiceProvider extends ServiceProvider
                 'activeAlertsCount' => $openAlerts + $openAlarms,
                 'headerNotifications' => $notifications,
             ]);
+
+            if ($user && $user->isAdmin() && (request()->is('/') || request()->is('dashboard*'))) {
+                $view->with('dashboardUsers', User::where('is_admin', false)->where('role', '!=', 'admin')->orderBy('name')->get(['id', 'name']));
+            }
         });
     }
 }

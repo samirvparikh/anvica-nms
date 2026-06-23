@@ -21,27 +21,53 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $deviceQuery = $this->userScope->devicesQuery($user);
+        $customerId = $request->query('user_id');
+        if (!$user->isAdmin()) {
+            $customerId = null;
+        }
+
+        $deviceQuery = $this->userScope->devicesQuery($user, $customerId);
 
         $totalDevices = (clone $deviceQuery)->count();
         $upDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_UP)->count();
         $downDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_DOWN)->count();
         $warningDevices = (clone $deviceQuery)->where('health_status', Device::HEALTH_WARNING)->count();
 
-        $deviceIds = $this->userScope->deviceIds($user);
+        $deviceIds = $this->userScope->deviceIds($user, $customerId);
 
-        $alertQuery = $this->userScope->alertsQuery($user);
+        $alertQuery = $this->userScope->alertsQuery($user, $customerId);
         $openAlerts = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count();
-        $openAlarms = Alarm::where('status', 'Open')->count();
+        
+        $deviceNames = (clone $deviceQuery)->pluck('name')->all();
+        $openAlarmsQuery = Alarm::where('status', 'Open');
+        $criticalAlarmsQuery = Alarm::where('status', 'Open')->where('severity', 'Critical');
+        $warningAlarmsQuery = Alarm::where('status', 'Open')->where('severity', 'Warning');
+
+        if (!$user->isAdmin() || $customerId) {
+            $openAlarmsQuery->whereIn('device_name', $deviceNames);
+            $criticalAlarmsQuery->whereIn('device_name', $deviceNames);
+            $warningAlarmsQuery->whereIn('device_name', $deviceNames);
+        }
+
+        $openAlarms = $openAlarmsQuery->count();
         $totalAlarms = $openAlerts + $openAlarms;
         $criticalAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->where('severity', Alert::SEVERITY_CRITICAL)->count()
-            + Alarm::where('status', 'Open')->where('severity', 'Critical')->count();
+            + $criticalAlarmsQuery->count();
         $warningAlarms = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->whereIn('severity', [Alert::SEVERITY_WARNING, Alert::SEVERITY_INFO])->count()
-            + Alarm::where('status', 'Open')->where('severity', 'Warning')->count();
+            + $warningAlarmsQuery->count();
 
-        $recentAlerts = $this->alertRepository->recent(4, $user);
+        $recentAlerts = (clone $alertQuery)
+            ->with('device')
+            ->latest()
+            ->take(4)
+            ->get();
+
         if ($recentAlerts->isEmpty()) {
-            $recentAlerts = Alarm::orderByDesc('created_at')->take(4)->get();
+            $recentAlarmsQuery = Alarm::orderByDesc('created_at');
+            if (!$user->isAdmin() || $customerId) {
+                $recentAlarmsQuery->whereIn('device_name', $deviceNames);
+            }
+            $recentAlerts = $recentAlarmsQuery->take(4)->get();
         }
 
         $cpuTrend = DeviceMetric::select('metric_value', 'recorded_at')

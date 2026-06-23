@@ -18,7 +18,9 @@ return new class extends Migration
             $table->foreignId('acknowledged_by')->nullable()->after('acknowledged_at')->constrained('users')->nullOnDelete();
         });
 
-        DB::statement("ALTER TABLE alerts MODIFY severity VARCHAR(20) NOT NULL DEFAULT 'warning'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE alerts MODIFY severity VARCHAR(20) NOT NULL DEFAULT 'warning'");
+        }
 
         DB::table('alerts')->whereNull('started_at')->update([
             'started_at' => DB::raw('created_at'),

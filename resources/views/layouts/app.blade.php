@@ -251,6 +251,29 @@
                         </svg>
                         <input type="text" placeholder="Search devices, alerts...">
                     </div>
+                    @if(Auth::user() && Auth::user()->isAdmin() && (request()->is('/') || request()->is('dashboard*')))
+                        <div class="header-user-filter">
+                            <select id="headerUserSelect" class="form-control-select" onchange="filterDashboardByUser(this.value)">
+                                <option value="">All Devices</option>
+                                @foreach($dashboardUsers ?? [] as $dbUser)
+                                    <option value="{{ $dbUser->id }}" {{ request()->query('user_id') == $dbUser->id ? 'selected' : '' }}>
+                                        {{ $dbUser->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <script>
+                            function filterDashboardByUser(userId) {
+                                const url = new URL(window.location.href);
+                                if (userId) {
+                                    url.searchParams.set('user_id', userId);
+                                } else {
+                                    url.searchParams.delete('user_id');
+                                }
+                                window.location.href = url.pathname + url.search;
+                            }
+                        </script>
+                    @endif
                 </div>
 
                 <div class="header-right">
