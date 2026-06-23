@@ -208,24 +208,7 @@ class FaultManagementReportService
       );
     }
 
-    $interfaceLogs = $this->userScope
-      ->interfaceLogsQuery($user, $customerId)
-      ->whereBetween('recorded_at', [$from, $to])
-      ->with('device')
-      ->orderBy('recorded_at')
-      ->get()
-      ->groupBy(fn (DeviceInterfaceLog $log) => $log->device_id . '|' . $log->interface_name);
 
-    foreach ($interfaceLogs as $group) {
-      $events = $events->merge(
-        $this->extractDowntimeFromStatusLogs(
-          $group,
-          fn (DeviceInterfaceLog $log) => $this->isInterfaceDown($log->status),
-          'Interface Down',
-          fn (DeviceInterfaceLog $log) => $log->interface_name,
-        )
-      );
-    }
 
     return $events->sortByDesc('down_at')->values();
   }

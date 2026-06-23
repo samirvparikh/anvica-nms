@@ -22,6 +22,9 @@ class DashboardFilterTest extends TestCase
         $response = $this->actingAs($user1)->get('/dashboard');
 
         $response->assertStatus(200);
+        $response->assertViewHas('bandwidthLabels');
+        $response->assertViewHas('bandwidthIn');
+        $response->assertViewHas('bandwidthOut');
         
         // Should see user1 device, but not user2 device
         $response->assertSee('User1-Device');
@@ -48,8 +51,9 @@ class DashboardFilterTest extends TestCase
         $response->assertSee('Alice-Router');
         $response->assertSee('Bob-Switch');
 
-        // Should see the dropdown filter
+        // Should see the dropdown filter and user tag icon
         $response->assertSee('id="headerUserSelect"', false);
+        $response->assertSee('class="fa-solid fa-user-tag select-icon"', false);
         $response->assertSee('Customer Alice');
         $response->assertSee('Customer Bob');
     }

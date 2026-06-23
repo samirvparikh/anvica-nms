@@ -253,6 +253,7 @@
                     </div>
                     @if(Auth::user() && Auth::user()->isAdmin() && (request()->is('/') || request()->is('dashboard*')))
                         <div class="header-user-filter">
+                            <i class="fa-solid fa-user-tag select-icon"></i>
                             <select id="headerUserSelect" class="form-control-select" onchange="filterDashboardByUser(this.value)">
                                 <option value="">All Devices</option>
                                 @foreach($dashboardUsers ?? [] as $dbUser)

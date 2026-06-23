@@ -197,11 +197,11 @@
         const bandwidthChart = new Chart(ctxBandwidth, {
             type: 'line',
             data: {
-                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
+                labels: @json($bandwidthLabels),
                 datasets: [
                     {
                         label: 'in',
-                        data: [35, 45, 78, 98, 92, 60, 48],
+                        data: @json($bandwidthIn),
                         borderColor: '#74C62B',
                         borderWidth: 2,
                         backgroundColor: gradientIn,
@@ -212,7 +212,7 @@
                     },
                     {
                         label: 'out',
-                        data: [20, 28, 60, 72, 68, 40, 30],
+                        data: @json($bandwidthOut),
                         borderColor: '#94a3b8',
                         borderWidth: 2,
                         backgroundColor: gradientOut,
@@ -248,10 +248,8 @@
                 },
                 scales: {
                     y: {
-                        min: 0,
-                        max: 100,
+                        beginAtZero: true,
                         ticks: {
-                            stepSize: 25,
                             color: '#64748b',
                             font: {
                                 family: 'Inter',
