@@ -63,7 +63,7 @@
 <div class="nms-report-grid nms-report-grid--2" id="nmsFaultTables" hidden>
     <div class="card-table-container">
         <div class="table-toolbar"><h3>Active Alarms</h3></div>
-        <div class="table-scroll">
+        <div class="table-scroll" style="max-height: 520px; overflow: auto;">
             <table class="data-table">
                 <thead id="activeAlarmsHead"></thead>
                 <tbody id="activeAlarmsBody"></tbody>
@@ -72,7 +72,7 @@
     </div>
     <div class="card-table-container">
         <div class="table-toolbar"><h3>Downtime Summary</h3></div>
-        <div class="table-scroll">
+        <div class="table-scroll" style="max-height: 520px; overflow: auto;">
             <table class="data-table">
                 <thead id="downtimeHead"></thead>
                 <tbody id="downtimeBody"></tbody>
