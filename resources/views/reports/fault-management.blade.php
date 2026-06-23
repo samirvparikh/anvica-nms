@@ -49,6 +49,17 @@
 
 <div id="nmsKpiGrid" class="nms-kpi-grid nms-kpi-grid--4" hidden></div>
 
+<div class="nms-report-grid nms-report-grid--2" id="nmsFaultCharts" hidden>
+    <div class="nms-chart-card">
+        <h3>Alarm Summary by Severity</h3>
+        <div class="nms-chart-wrap"><canvas id="severityChart"></canvas></div>
+    </div>
+    <div class="nms-chart-card">
+        <h3>Alarms Over Time</h3>
+        <div class="nms-chart-wrap nms-chart-wrap--tall"><canvas id="alarmsTrendChart"></canvas></div>
+    </div>
+</div>
+
 <div class="nms-report-grid nms-report-grid--2" id="nmsFaultTables" hidden>
     <div class="card-table-container">
         <div class="table-toolbar"><h3>Active Alarms</h3></div>
@@ -70,18 +81,9 @@
     </div>
 </div>
 
-<div class="nms-report-grid nms-report-grid--2" id="nmsFaultCharts" hidden>
-    <div class="nms-chart-card">
-        <h3>Alarm Summary by Severity</h3>
-        <div class="nms-chart-wrap"><canvas id="severityChart"></canvas></div>
-    </div>
-    <div class="nms-chart-card">
-        <h3>Alarms Over Time</h3>
-        <div class="nms-chart-wrap nms-chart-wrap--tall"><canvas id="alarmsTrendChart"></canvas></div>
-    </div>
-</div>
 
-<div id="nmsFeatureBanner" class="nms-feature-banner" hidden></div>
+
+<!-- <div id="nmsFeatureBanner" class="nms-feature-banner" hidden></div> -->
 
 <script>
 window.NmsFaultReportConfig = {
