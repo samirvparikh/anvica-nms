@@ -79,25 +79,12 @@ class FaultManagementReportService
       ->orderBy('recorded_at')
       ->get();
 
-    $interfaceLogs = $this->userScope
-      ->interfaceLogsQuery($user, $customerId)
-      ->whereBetween('recorded_at', [$from, $to])
-      ->with('device')
-      ->orderBy('recorded_at')
-      ->get();
-
     $faults = collect();
 
     foreach ($metricLogs as $log) {
       $fault = $this->evaluateMetricLog($log);
       if ($fault) {
         $faults->push($fault);
-      }
-    }
-
-    foreach ($interfaceLogs as $log) {
-      if ($this->isInterfaceDown($log->status)) {
-        $faults->push($this->mapInterfaceFault($log));
       }
     }
 
@@ -110,7 +97,6 @@ class FaultManagementReportService
   protected function collectActiveFaults(User $user, ?int $customerId): Collection
   {
     $latestMetricLogs = $this->latestMetricLogs($user, $customerId);
-    $latestInterfaceLogs = $this->latestInterfaceLogs($user, $customerId);
 
     $faults = collect();
 
@@ -118,12 +104,6 @@ class FaultManagementReportService
       $fault = $this->evaluateMetricLog($log);
       if ($fault) {
         $faults->push($fault);
-      }
-    }
-
-    foreach ($latestInterfaceLogs as $log) {
-      if ($this->isInterfaceDown($log->status)) {
-        $faults->push($this->mapInterfaceFault($log));
       }
     }
 
