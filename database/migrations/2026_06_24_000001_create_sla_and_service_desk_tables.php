@@ -96,7 +96,7 @@ return new class extends Migration
             $table->string('category')->default('Network');
             $table->foreignId('primary_device_id')->constrained('devices')->onDelete('cascade');
             $table->timestamp('start_time');
-            $table->timestamp('end_time');
+            $table->timestamp('end_time')->nullable();
             $table->integer('expected_downtime_minutes')->default(60);
             $table->boolean('exclude_sla')->default(true);
             $table->string('sla_impact')->default('No Breach (Maintenance)');
