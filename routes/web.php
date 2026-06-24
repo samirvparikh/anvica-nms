@@ -19,6 +19,10 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\Api\MonitoringApiController;
 use App\Http\Controllers\MonitoringController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TicketController;
+use App\Http\Controllers\SlaController;
+use App\Http\Controllers\MaintenanceController;
+use App\Http\Controllers\InventoryController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -122,4 +126,36 @@ Route::middleware('auth')->group(function () {
         Route::put('/devices/{device}/script', [DeviceScriptController::class, 'update'])->name('devices.script.update');
         Route::post('/devices/{device}/script/preview', [DeviceScriptController::class, 'preview'])->name('devices.script.preview');
     });
+
+    // Service Desk Routes
+    Route::get('/tickets', [TicketController::class, 'ticketsIndex'])->name('tickets.index');
+    Route::get('/incidents', [TicketController::class, 'incidentsIndex'])->name('incidents.index');
+    Route::get('/incidents/create', [TicketController::class, 'incidentsCreate'])->name('incidents.create');
+    Route::post('/incidents', [TicketController::class, 'incidentsStore'])->name('incidents.store');
+    Route::get('/problems', [TicketController::class, 'problemsIndex'])->name('problems.index');
+    Route::get('/changes', [TicketController::class, 'changesIndex'])->name('changes.index');
+    Route::get('/changes/create', [TicketController::class, 'changesCreate'])->name('changes.create');
+    Route::post('/changes', [TicketController::class, 'changesStore'])->name('changes.store');
+    Route::get('/knowledge-base', [TicketController::class, 'knowledgeBaseIndex'])->name('knowledge-base.index');
+
+    // Maintenance Routes
+    Route::get('/maintenance/preventive', [MaintenanceController::class, 'preventiveIndex'])->name('maintenance.preventive.index');
+    Route::get('/maintenance/preventive/create', [MaintenanceController::class, 'preventiveCreate'])->name('maintenance.preventive.create');
+    Route::post('/maintenance/preventive', [MaintenanceController::class, 'preventiveStore'])->name('maintenance.preventive.store');
+    Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendarIndex'])->name('maintenance.calendar.index');
+    Route::get('/maintenance/windows', [MaintenanceController::class, 'windowsIndex'])->name('maintenance.windows.index');
+
+    // Inventory Routes
+    Route::get('/inventory/assets', [InventoryController::class, 'assetsIndex'])->name('inventory.assets.index');
+    Route::get('/inventory/asset-groups', [InventoryController::class, 'assetGroupsIndex'])->name('inventory.asset-groups.index');
+    Route::get('/inventory/software', [InventoryController::class, 'softwareIndex'])->name('inventory.software.index');
+    Route::get('/inventory/warranty', [InventoryController::class, 'warrantyIndex'])->name('inventory.warranty.index');
+    Route::post('/inventory/warranty', [InventoryController::class, 'warrantyStore'])->name('inventory.warranty.store');
+
+    // SLA Management Routes
+    Route::get('/sla/dashboard', [SlaController::class, 'dashboard'])->name('sla.dashboard');
+    Route::get('/sla/reports', [SlaController::class, 'reports'])->name('sla.reports');
+    Route::get('/sla/targets', [SlaController::class, 'targets'])->name('sla.targets');
+    Route::get('/sla/maintenance', [SlaController::class, 'maintenance'])->name('sla.maintenance');
 });
+

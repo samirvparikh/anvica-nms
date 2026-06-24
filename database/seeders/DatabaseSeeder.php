@@ -102,5 +102,6 @@ class DatabaseSeeder extends Seeder
         
 
         $this->call(MonitoringSeeder::class);
+        $this->call(SlaSeeder::class);
     }
 }

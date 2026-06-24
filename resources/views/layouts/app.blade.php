@@ -52,7 +52,7 @@
             </div>
             
             <nav class="sidebar-nav">
-                <div class="nav-section-title">Main</div>
+                <div class="nav-section-title">MONITORING</div>
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->is('/') || request()->is('dashboard') ? 'active' : '' }}" title="Dashboard">
@@ -67,14 +67,6 @@
                     </li>
                     
                     <li>
-                        <a href="{{ route('monitoring.index') }}" class="nav-link {{ request()->is('monitoring*') ? 'active' : '' }}" title="Monitoring">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                            </svg>
-                            <span class="nav-link-text">Monitoring</span>
-                        </a>
-                    </li>
-                    <li>
                         <a href="{{ route('devices.index') }}" class="nav-link {{ request()->is('devices') ? 'active' : '' }}" title="Devices">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
@@ -83,21 +75,6 @@
                                 <line x1="6" y1="18" x2="6.01" y2="18"/>
                             </svg>
                             <span class="nav-link-text">Devices</span>
-                        </a>
-                    </li>
-
-                    
-                    
-                    <li>
-                        <a href="{{ route('reports.index') }}" class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" title="Reports">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                                <line x1="16" y1="13" x2="8" y2="13"/>
-                                <line x1="16" y1="17" x2="8" y2="17"/>
-                                <polyline points="10 9 9 9 8 9"/>
-                            </svg>
-                            <span class="nav-link-text">Reports</span>
                         </a>
                     </li>
 
@@ -111,15 +88,7 @@
                             <span class="nav-link-text">Alarms</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="{{ route('alerts.index') }}" class="nav-link {{ request()->is('alerts') && ! request()->is('alerts/manage') ? 'active' : '' }}" title="Alerts">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                            </svg>
-                            <span class="nav-link-text">Alerts</span>
-                        </a>
-                    </li>
+
                     <li>
                         <a href="{{ route('maps.index') }}" class="nav-link {{ request()->is('maps') ? 'active' : '' }}" title="Maps">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -128,6 +97,127 @@
                                 <line x1="15" y1="6" x2="15" y2="21"/>
                             </svg>
                             <span class="nav-link-text">Maps</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="{{ route('reports.performance-traffic') }}" class="nav-link {{ request()->is('reports/performance-traffic*') ? 'active' : '' }}" title="Performance">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                            </svg>
+                            <span class="nav-link-text">Performance</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="nav-section-title">SERVICE DESK</div>
+                <ul class="nav-list">
+                    <li>
+                        <a href="{{ route('tickets.index') }}" class="nav-link {{ request()->is('tickets*') ? 'active' : '' }}" title="Tickets">
+                            <i class="fa-solid fa-ticket" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Tickets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('incidents.index') }}" class="nav-link {{ request()->is('incidents*') ? 'active' : '' }}" title="Incidents">
+                            <i class="fa-solid fa-circle-exclamation" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Incidents</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('problems.index') }}" class="nav-link {{ request()->is('problems*') ? 'active' : '' }}" title="Problems">
+                            <i class="fa-solid fa-bug" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Problems</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('changes.index') }}" class="nav-link {{ request()->is('changes*') ? 'active' : '' }}" title="Changes">
+                            <i class="fa-solid fa-code-branch" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Changes</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('knowledge-base.index') }}" class="nav-link {{ request()->is('knowledge-base*') ? 'active' : '' }}" title="Knowledge Base">
+                            <i class="fa-solid fa-book" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Knowledge Base</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="nav-section-title">MAINTENANCE</div>
+                <ul class="nav-list">
+                    <li>
+                        <a href="{{ route('maintenance.preventive.index') }}" class="nav-link {{ request()->is('maintenance/preventive*') ? 'active' : '' }}" title="Preventive Downtime">
+                            <i class="fa-solid fa-screwdriver-wrench" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Preventive Downtime</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('maintenance.calendar.index') }}" class="nav-link {{ request()->is('maintenance/calendar*') ? 'active' : '' }}" title="Maintenance Calendar">
+                            <i class="fa-solid fa-calendar-days" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Maintenance Calendar</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('maintenance.windows.index') }}" class="nav-link {{ request()->is('maintenance/windows*') ? 'active' : '' }}" title="Maintenance Windows">
+                            <i class="fa-solid fa-window-restore" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Maintenance Windows</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="nav-section-title">INVENTORY</div>
+                <ul class="nav-list">
+                    <li>
+                        <a href="{{ route('inventory.assets.index') }}" class="nav-link {{ request()->is('inventory/assets*') ? 'active' : '' }}" title="Assets">
+                            <i class="fa-solid fa-server" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Assets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('inventory.asset-groups.index') }}" class="nav-link {{ request()->is('inventory/asset-groups*') ? 'active' : '' }}" title="Asset Groups">
+                            <i class="fa-solid fa-network-wired" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Asset Groups</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('inventory.software.index') }}" class="nav-link {{ request()->is('inventory/software*') ? 'active' : '' }}" title="Software">
+                            <i class="fa-solid fa-paste" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Software</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('inventory.warranty.index') }}" class="nav-link {{ request()->is('inventory/warranty*') ? 'active' : '' }}" title="Warranty">
+                            <i class="fa-solid fa-file-shield" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Warranty</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="nav-section-title">SLA MANAGEMENT</div>
+                <ul class="nav-list">
+                    <li>
+                        <a href="{{ route('sla.dashboard') }}" class="nav-link {{ request()->is('sla/dashboard*') ? 'active' : '' }}" title="SLA Dashboard">
+                            <i class="fa-solid fa-chart-line" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">SLA Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('sla.reports') }}" class="nav-link {{ request()->is('sla/reports*') ? 'active' : '' }}" title="SLA Reports">
+                            <i class="fa-solid fa-file-invoice" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">SLA Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('sla.targets') }}" class="nav-link {{ request()->is('sla/targets*') ? 'active' : '' }}" title="SLA Targets">
+                            <i class="fa-solid fa-bullseye" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">SLA Targets</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('sla.maintenance') }}" class="nav-link {{ request()->is('sla/maintenance*') ? 'active' : '' }}" title="Maintenance">
+                            <i class="fa-solid fa-business-time" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Maintenance</span>
                         </a>
                     </li>
                 </ul>
@@ -206,11 +296,6 @@
                         </a>
                     </li>
                 </ul>
-
-
-
-                    
-
                 @endif
 
                 <div class="nav-section-title">Account</div>
