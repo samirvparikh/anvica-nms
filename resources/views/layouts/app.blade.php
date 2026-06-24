@@ -23,6 +23,11 @@
             ->join('');
         $isProfileActive = request()->is('profile*');
         $isAdmin = $authUser->isAdmin();
+        $navSectionServiceDesk = request()->is('tickets*') || request()->is('incidents*') || request()->is('problems*') || request()->is('changes*') || request()->is('knowledge-base*');
+        $navSectionMaintenance = request()->is('maintenance/preventive*') || request()->is('maintenance/calendar*') || request()->is('maintenance/windows*');
+        $navSectionInventory = request()->is('inventory*');
+        $navSectionSla = request()->is('sla*');
+        $navSectionAdmin = request()->is('alerts/manage') || request()->is('vendors*') || request()->is('services*') || request()->is('service-points*') || request()->is('users*') || request()->is('settings*') || request()->is('api-request-logs*');
     @endphp
 
     <div class="app-wrapper" id="appWrapper">
@@ -123,7 +128,14 @@
                     </li>
                 </ul>
 
-                <div class="nav-section-title">SERVICE DESK</div>
+                <div class="nav-section {{ $navSectionServiceDesk ? 'is-expanded' : '' }}" data-section="service-desk">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionServiceDesk ? 'true' : 'false' }}">
+                        <span class="nav-section-title">SERVICE DESK</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('tickets.index') }}" class="nav-link {{ request()->is('tickets*') ? 'active' : '' }}" title="Tickets">
@@ -156,8 +168,17 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
 
-                <div class="nav-section-title">MAINTENANCE</div>
+                <div class="nav-section {{ $navSectionMaintenance ? 'is-expanded' : '' }}" data-section="maintenance">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionMaintenance ? 'true' : 'false' }}">
+                        <span class="nav-section-title">MAINTENANCE</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('maintenance.preventive.index') }}" class="nav-link {{ request()->is('maintenance/preventive*') ? 'active' : '' }}" title="Preventive Downtime">
@@ -178,8 +199,17 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
 
-                <div class="nav-section-title">INVENTORY</div>
+                <div class="nav-section {{ $navSectionInventory ? 'is-expanded' : '' }}" data-section="inventory">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionInventory ? 'true' : 'false' }}">
+                        <span class="nav-section-title">INVENTORY</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('inventory.assets.index') }}" class="nav-link {{ request()->is('inventory/assets*') ? 'active' : '' }}" title="Assets">
@@ -206,8 +236,17 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
 
-                <div class="nav-section-title">SLA MANAGEMENT</div>
+                <div class="nav-section {{ $navSectionSla ? 'is-expanded' : '' }}" data-section="sla-management">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionSla ? 'true' : 'false' }}">
+                        <span class="nav-section-title">SLA MANAGEMENT</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('sla.dashboard') }}" class="nav-link {{ request()->is('sla/dashboard*') ? 'active' : '' }}" title="SLA Dashboard">
@@ -234,9 +273,18 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
 
                 @if($isAdmin)
-                <div class="nav-section-title">Administration</div>
+                <div class="nav-section {{ $navSectionAdmin ? 'is-expanded' : '' }}" data-section="administration">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionAdmin ? 'true' : 'false' }}">
+                        <span class="nav-section-title">Administration</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('alerts.manage') }}" class="nav-link {{ request()->is('alerts/manage') ? 'active' : '' }}" title="Manage Alerts">
@@ -309,6 +357,8 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
                 @endif
 
                 <div class="nav-section-title">Account</div>
@@ -591,6 +641,44 @@
                     }
                 });
             }
+
+            var navSections = document.querySelectorAll('.nav-section[data-section]');
+            var navSectionsStorageKey = 'navSectionsState';
+
+            function getNavSectionsState() {
+                try {
+                    return JSON.parse(localStorage.getItem(navSectionsStorageKey) || '{}');
+                } catch (e) {
+                    return {};
+                }
+            }
+
+            function saveNavSectionState(sectionId, expanded) {
+                var state = getNavSectionsState();
+                state[sectionId] = expanded;
+                localStorage.setItem(navSectionsStorageKey, JSON.stringify(state));
+            }
+
+            navSections.forEach(function (section) {
+                var sectionId = section.getAttribute('data-section');
+                var toggle = section.querySelector('.nav-section-toggle');
+                var hasActive = section.querySelector('.nav-link.active');
+                var stored = getNavSectionsState()[sectionId];
+                var expanded = !!hasActive || stored === true;
+
+                section.classList.toggle('is-expanded', expanded);
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+                }
+
+                if (toggle) {
+                    toggle.addEventListener('click', function () {
+                        var isExpanded = section.classList.toggle('is-expanded');
+                        toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                        saveNavSectionState(sectionId, isExpanded);
+                    });
+                }
+            });
         })();
     </script>
 </body>
