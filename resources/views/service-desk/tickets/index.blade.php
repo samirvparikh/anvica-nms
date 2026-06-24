@@ -8,10 +8,10 @@
     </div>
     <div class="page-actions" style="display: flex; gap: 0.75rem;">
         <a href="{{ route('incidents.create') }}" class="btn-add">
-            <i class="fa-solid fa-circle-plus" style="margin-right: 0.5rem;"></i> + Create Incident
+            <i class="fa-solid fa-circle-plus" style="margin-right: 0.5rem;"></i>Create Incident
         </a>
         <a href="{{ route('changes.create') }}" class="btn-add" style="background-color: #3b82f6; border-color: #2563eb;">
-            <i class="fa-solid fa-code-branch" style="margin-right: 0.5rem;"></i> + Raise Change Request
+            <i class="fa-solid fa-code-branch" style="margin-right: 0.5rem;"></i> Raise Change Request
         </a>
     </div>
 </div>
