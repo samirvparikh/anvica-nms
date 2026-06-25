@@ -12,13 +12,22 @@
         <h1>Users</h1>
         <p>Manage admin and user accounts, device limits, and service access.</p>
     </div>
-    <button class="btn-add" id="openAddUserModalBtn">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Add User / Admin
-    </button>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ route('users.create') }}" class="btn-add" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add User
+        </a>
+        <button class="btn-add" id="openAddAdminModalBtn" style="background-color: var(--text-dark); color: white; display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Add Admin
+        </button>
+    </div>
 </div>
 
 <div class="card-table-container">
@@ -93,6 +102,7 @@
                     @endif
                 </td>
                 <td style="text-align: right;">
+                    @if($user->isAdmin())
                     <button class="btn-action edit-btn editUserBtn"
                             data-id="{{ $user->id }}"
                             data-update-url="{{ route('users.update', $user) }}"
@@ -101,15 +111,23 @@
                             data-mobile="{{ $user->mobile }}"
                             data-role="{{ $user->role }}"
                             data-status="{{ $user->status ?? 'Active' }}"
-                            data-device-limit="{{ $user->device_limit }}"
-                            data-start-date="{{ $user->start_date?->format('Y-m-d') }}"
-                            data-expire-date="{{ $user->expire_date?->format('Y-m-d') }}"
-                            data-services="{{ $user->services->pluck('id')->join(',') }}">
+                            data-device-limit=""
+                            data-start-date=""
+                            data-expire-date=""
+                            data-services="">
                         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline-block; vertical-align:middle;">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                             <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                         </svg>
                     </button>
+                    @else
+                    <a href="{{ route('users.edit', $user) }}" class="btn-action edit-btn" style="display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </a>
+                    @endif
                     @if($user->id !== auth()->id())
                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this account?');">
                         @csrf
@@ -135,83 +153,46 @@
     </table>
 </div>
 
-<!-- Add User Modal -->
-<div class="modal-overlay" id="addUserModal">
-    <div class="modal-card modal-card-wide">
+<!-- Add Admin Modal -->
+<div class="modal-overlay" id="addAdminModal">
+    <div class="modal-card">
         <div class="modal-header">
-            <h3>Add User / Admin</h3>
-            <button class="modal-close" id="closeAddUserModalBtn">&times;</button>
+            <h3>Add Admin Account</h3>
+            <button class="modal-close" id="closeAddAdminModalBtn">&times;</button>
         </div>
         <form action="{{ route('users.store') }}" method="POST">
             @csrf
             <div class="modal-body">
                 <input type="hidden" name="status" value="Active">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="add_user_role">Role</label>
-                        <select id="add_user_role" name="role" class="form-control role-select" required>
-                            <option value="user" selected>User</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div class="form-group user-device-limit-field" id="addDeviceLimitField">
-                        <label for="add_user_device_limit">Device Limit</label>
-                        <input type="number" id="add_user_device_limit" name="device_limit" class="form-control user-only-input" min="1" value="10">
-                    </div>
-                </div>
+                <input type="hidden" name="role" value="admin">
                 <div class="form-group">
-                    <label for="add_user_name">Name</label>
-                    <input type="text" id="add_user_name" name="name" class="form-control" required>
+                    <label for="add_admin_name">Name</label>
+                    <input type="text" id="add_admin_name" name="name" class="form-control" required>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="add_user_email">Email</label>
-                        <input type="email" id="add_user_email" name="email" class="form-control" required>
+                        <label for="add_admin_email">Email</label>
+                        <input type="email" id="add_admin_email" name="email" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="add_user_mobile">Mobile</label>
-                        <input type="text" id="add_user_mobile" name="mobile" class="form-control">
-                    </div>
-                </div>
-                <div class="user-only-fields" id="addUserOnlyFields">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="add_user_start_date">Start Date</label>
-                            <input type="date" id="add_user_start_date" name="start_date" class="form-control user-only-input" value="{{ $today }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="add_user_expire_date">Expire Date</label>
-                            <input type="date" id="add_user_expire_date" name="expire_date" class="form-control user-only-input" value="{{ $oneYearLater }}">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Services</label>
-                        <div class="checkbox-group">
-                            @forelse($services as $service)
-                                <label class="checkbox-label">
-                                    <input type="checkbox" name="services[]" value="{{ $service->id }}" class="user-only-input">
-                                    {{ $service->name }}
-                                </label>
-                            @empty
-                                <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
-                            @endforelse
-                        </div>
+                        <label for="add_admin_mobile">Mobile</label>
+                        <input type="text" id="add_admin_mobile" name="mobile" class="form-control">
                     </div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="add_user_password">Password</label>
-                        <input type="password" id="add_user_password" name="password" class="form-control" required>
+                        <label for="add_admin_password">Password</label>
+                        <input type="password" id="add_admin_password" name="password" class="form-control" required>
                     </div>
                     <div class="form-group">
-                        <label for="add_user_password_confirmation">Confirm Password</label>
-                        <input type="password" id="add_user_password_confirmation" name="password_confirmation" class="form-control" required>
+                        <label for="add_admin_password_confirmation">Confirm Password</label>
+                        <input type="password" id="add_admin_password_confirmation" name="password_confirmation" class="form-control" required>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelAddUserModalBtn">Cancel</button>
-                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Create Account</button>
+                <button type="button" class="btn-secondary" id="cancelAddAdminModalBtn">Cancel</button>
+                <button type="submit" class="btn-primary" style="width:auto; padding: 0.5rem 1.5rem;">Create Admin</button>
             </div>
         </form>
     </div>
@@ -353,21 +334,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    const addRoleSelect = document.getElementById('add_user_role');
-    const addUserOnlyFields = document.getElementById('addUserOnlyFields');
-    const addDeviceLimitField = document.getElementById('addDeviceLimitField');
-    addRoleSelect.addEventListener('change', () => toggleUserFields(addRoleSelect, addUserOnlyFields, addDeviceLimitField));
-    toggleUserFields(addRoleSelect, addUserOnlyFields, addDeviceLimitField);
-
     const editRoleSelect = document.getElementById('edit_user_role');
     const editUserOnlyFields = document.getElementById('editUserOnlyFields');
     const editDeviceLimitField = document.getElementById('editDeviceLimitField');
     editRoleSelect.addEventListener('change', () => toggleUserFields(editRoleSelect, editUserOnlyFields, editDeviceLimitField));
 
-    const addModal = document.getElementById('addUserModal');
-    document.getElementById('openAddUserModalBtn').addEventListener('click', () => addModal.classList.add('open'));
-    document.getElementById('closeAddUserModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
-    document.getElementById('cancelAddUserModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
+    const addAdminModal = document.getElementById('addAdminModal');
+    document.getElementById('openAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.add('open'));
+    document.getElementById('closeAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.remove('open'));
+    document.getElementById('cancelAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.remove('open'));
 
     const editModal = document.getElementById('editUserModal');
     const editForm = document.getElementById('editUserForm');

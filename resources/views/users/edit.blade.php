@@ -1,0 +1,1131 @@
+@extends('layouts.app')
+
+@section('content')
+@php
+    $today = now()->format('Y-m-d');
+    $oneYearLater = now()->addYear()->format('Y-m-d');
+@endphp
+
+<!-- Load Custom Form Styles -->
+<link rel="stylesheet" href="{{ asset('css/user-form.css') }}">
+
+<div class="page-header" style="margin-bottom: 1.5rem;">
+    <div class="page-title">
+        <div class="breadcrumb" style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">
+            <a href="{{ route('dashboard') }}" style="color: var(--text-muted);">Administration</a> &gt; 
+            <a href="{{ route('users.index') }}" style="color: var(--text-muted);">Users</a> &gt; 
+            <span style="color: var(--text-dark); font-weight: 500;">Edit Engineer User</span>
+        </div>
+        <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 0.5rem;">
+            Edit Engineer User: {{ $user->name }}
+        </h1>
+    </div>
+</div>
+
+<form action="{{ route('users.update', $user) }}" method="POST" enctype="multipart/form-data" id="engineerUserForm">
+    @csrf
+    @method('PUT')
+    <input type="hidden" name="role" value="user">
+    <input type="hidden" name="start_date" value="{{ old('start_date', $user->start_date?->format('Y-m-d') ?? $today) }}">
+    <input type="hidden" name="expire_date" value="{{ old('expire_date', $user->expire_date?->format('Y-m-d') ?? $oneYearLater) }}">
+
+    <div class="user-form-container">
+        
+        <!-- Left Side: Main Form Sections -->
+        <div class="form-scroll-area">
+            
+            <!-- Section 1: Personal Information -->
+            <div class="form-section">
+                <h3 class="form-section-title">1. Personal Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name" class="required">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Vijay Kumar" required value="{{ old('name', $user->name) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="username" class="required">User ID</label>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. vijay.kumar" required value="{{ old('username', $user->username) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="employee_id">Employee ID</label>
+                        <input type="text" id="employee_id" name="employee_id" class="form-control" placeholder="e.g. EMP-1025" value="{{ old('employee_id', $user->employee_id) }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email" class="required">Email ID</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="e.g. vijay.kumar@westernrail.in" required value="{{ old('email', $user->email) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile" class="required">Mobile Number</label>
+                        <input type="text" id="mobile" name="mobile" class="form-control" placeholder="e.g. +91 98765 43210" required value="{{ old('mobile', $user->mobile) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="alternate_number">Alternate Number</label>
+                        <input type="text" id="alternate_number" name="alternate_number" class="form-control" placeholder="e.g. +91 91234 56789" value="{{ old('alternate_number', $user->alternate_number) }}">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dob">Date of Birth</label>
+                        <input type="date" id="dob" name="dob" class="form-control" value="{{ old('dob', $user->dob?->format('Y-m-d')) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="">Select Gender</option>
+                            <option value="Male" {{ old('gender', $user->gender) === 'Male' ? 'selected' : '' }}>Male</option>
+                            <option value="Female" {{ old('gender', $user->gender) === 'Female' ? 'selected' : '' }}>Female</option>
+                            <option value="Other" {{ old('gender', $user->gender) === 'Other' ? 'selected' : '' }}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="language">Language Preference</label>
+                        <select id="language" name="language" class="form-control">
+                            <option value="English" {{ old('language', $user->language) === 'English' ? 'selected' : '' }}>English</option>
+                            <option value="Hindi" {{ old('language', $user->language) === 'Hindi' ? 'selected' : '' }}>Hindi</option>
+                            <option value="Gujarati" {{ old('language', $user->language) === 'Gujarati' ? 'selected' : '' }}>Gujarati</option>
+                            <option value="Spanish" {{ old('language', $user->language) === 'Spanish' ? 'selected' : '' }}>Spanish</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Profile Photo</label>
+                        <div class="file-upload-wrapper">
+                            <div class="file-upload-preview" id="photoPreviewContainer">
+                                @if($user->profile_photo)
+                                    <img src="{{ asset($user->profile_photo) }}" alt="Preview">
+                                @else
+                                    <i class="fa-solid fa-user-tie fa-lg"></i>
+                                @endif
+                            </div>
+                            <div class="file-upload-info">
+                                <label for="profile_photo">Choose File</label>
+                                <span id="photoFilename">{{ $user->profile_photo ? basename($user->profile_photo) : 'No file chosen' }}</span>
+                                <span>(Max file size: 2MB)</span>
+                            </div>
+                            <input type="file" id="profile_photo" name="profile_photo" class="file-upload-input" accept="image/*">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Signature (Optional)</label>
+                        <div class="file-upload-wrapper">
+                            <div class="file-upload-preview" id="signaturePreviewContainer">
+                                @if($user->signature)
+                                    <img src="{{ asset($user->signature) }}" alt="Preview">
+                                @else
+                                    <i class="fa-solid fa-signature fa-lg"></i>
+                                @endif
+                            </div>
+                            <div class="file-upload-info">
+                                <label for="signature">Choose File</label>
+                                <span id="signatureFilename">{{ $user->signature ? basename($user->signature) : 'No file chosen' }}</span>
+                                <span>(Max file size: 2MB)</span>
+                            </div>
+                            <input type="file" id="signature" name="signature" class="file-upload-input" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Organization & Contact Information -->
+            <div class="form-section">
+                <h3 class="form-section-title">2. Organization & Contact Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department" class="required">Department</label>
+                        <select id="department" name="department" class="form-control" required>
+                            <option value="">Select Department</option>
+                            <option value="Network Operations" {{ old('department', $user->department) === 'Network Operations' ? 'selected' : '' }}>Network Operations</option>
+                            <option value="Security Operations" {{ old('department', $user->department) === 'Security Operations' ? 'selected' : '' }}>Security Operations</option>
+                            <option value="System Administration" {{ old('department', $user->department) === 'System Administration' ? 'selected' : '' }}>System Administration</option>
+                            <option value="IT Service Desk" {{ old('department', $user->department) === 'IT Service Desk' ? 'selected' : '' }}>IT Service Desk</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="designation" class="required">Designation</label>
+                        <select id="designation" name="designation" class="form-control" required>
+                            <option value="">Select Designation</option>
+                            <option value="Network Engineer" {{ old('designation', $user->designation) === 'Network Engineer' ? 'selected' : '' }}>Network Engineer</option>
+                            <option value="Security Analyst" {{ old('designation', $user->designation) === 'Security Analyst' ? 'selected' : '' }}>Security Analyst</option>
+                            <option value="Systems Administrator" {{ old('designation', $user->designation) === 'Systems Administrator' ? 'selected' : '' }}>Systems Administrator</option>
+                            <option value="Support Desk Lead" {{ old('designation', $user->designation) === 'Support Desk Lead' ? 'selected' : '' }}>Support Desk Lead</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="reporting_manager" class="required">Reporting Manager</label>
+                        <select id="reporting_manager" name="reporting_manager" class="form-control" required>
+                            <option value="">Select Manager</option>
+                            <option value="Rakesh Singh" {{ old('reporting_manager', $user->reporting_manager) === 'Rakesh Singh' ? 'selected' : '' }}>Rakesh Singh</option>
+                            <option value="Sanjay Patel" {{ old('reporting_manager', $user->reporting_manager) === 'Sanjay Patel' ? 'selected' : '' }}>Sanjay Patel</option>
+                            <option value="Amisha Mehta" {{ old('reporting_manager', $user->reporting_manager) === 'Amisha Mehta' ? 'selected' : '' }}>Amisha Mehta</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="office_location" class="required">Office Location</label>
+                        <select id="office_location" name="office_location" class="form-control" required>
+                            <option value="">Select Location</option>
+                            <option value="Ahmedabad DC" {{ old('office_location', $user->office_location) === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
+                            <option value="Mumbai DC" {{ old('office_location', $user->office_location) === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
+                            <option value="Delhi Head Office" {{ old('office_location', $user->office_location) === 'Delhi Head Office' ? 'selected' : '' }}>Delhi Head Office</option>
+                            <option value="Bangalore Branch" {{ old('office_location', $user->office_location) === 'Bangalore Branch' ? 'selected' : '' }}>Bangalore Branch</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="work_location">Work Location / Site</label>
+                        <select id="work_location" name="work_location" class="form-control">
+                            <option value="">Select Work Location</option>
+                            <option value="Ahmedabad DC" {{ old('work_location', $user->work_location) === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
+                            <option value="Mumbai DC" {{ old('work_location', $user->work_location) === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
+                            <option value="On-Site Support" {{ old('work_location', $user->work_location) === 'On-Site Support' ? 'selected' : '' }}>On-Site Support</option>
+                            <option value="Remote Work" {{ old('work_location', $user->work_location) === 'Remote Work' ? 'selected' : '' }}>Remote Work</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="timezone" class="required">Time Zone</label>
+                        <select id="timezone" name="timezone" class="form-control" required>
+                            <option value="Asia/Kolkata" {{ old('timezone', $user->timezone) === 'Asia/Kolkata' ? 'selected' : '' }}>Asia/Kolkata (IST)</option>
+                            <option value="UTC" {{ old('timezone', $user->timezone) === 'UTC' ? 'selected' : '' }}>UTC</option>
+                            <option value="Europe/London" {{ old('timezone', $user->timezone) === 'Europe/London' ? 'selected' : '' }}>Europe/London (GMT)</option>
+                            <option value="America/New_York" {{ old('timezone', $user->timezone) === 'America/New_York' ? 'selected' : '' }}>America/New_York (EST)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
+                    <div class="form-group">
+                        <label for="address">Address</label>
+                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="e.g. Ahmedabad Data Center, Near Kalupur Station, Ahmedabad, Gujarat - 380001">{{ old('address', $user->address) }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="landline">Landline Number</label>
+                        <input type="text" id="landline" name="landline" class="form-control" placeholder="e.g. 079-26876543" value="{{ old('landline', $user->landline) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="extension">Extension</label>
+                        <input type="text" id="extension" name="extension" class="form-control" placeholder="e.g. 1025" value="{{ old('extension', $user->extension) }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Login & Access Information -->
+            <div class="form-section">
+                <h3 class="form-section-title">3. Login & Access Information</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="auth_type" class="required">Authentication Type</label>
+                        <select id="auth_type" name="auth_type" class="form-control" required>
+                            <option value="Local Authentication" {{ old('auth_type', $user->auth_type) === 'Local Authentication' ? 'selected' : '' }}>Local Authentication</option>
+                            <option value="Active Directory" {{ old('auth_type', $user->auth_type) === 'Active Directory' ? 'selected' : '' }}>Active Directory</option>
+                            <option value="LDAP" {{ old('auth_type', $user->auth_type) === 'LDAP' ? 'selected' : '' }}>LDAP</option>
+                            <option value="OAuth" {{ old('auth_type', $user->auth_type) === 'OAuth' ? 'selected' : '' }}>OAuth 2.0</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="access_level" class="required">Access Level</label>
+                        <select id="access_level" name="access_level" class="form-control" required>
+                            <option value="Engineer" {{ old('access_level', $user->access_level) === 'Engineer' ? 'selected' : '' }}>Engineer</option>
+                            <option value="Operator" {{ old('access_level', $user->access_level) === 'Operator' ? 'selected' : '' }}>Operator</option>
+                            <option value="Manager" {{ old('access_level', $user->access_level) === 'Manager' ? 'selected' : '' }}>Manager</option>
+                            <option value="Viewer" {{ old('access_level', $user->access_level) === 'Viewer' ? 'selected' : '' }}>Viewer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Account Status</label>
+                        <select id="status" name="status" class="form-control" required>
+                            <option value="Active" {{ old('status', $user->status) === 'Active' ? 'selected' : '' }}>Active</option>
+                            <option value="Inactive" {{ old('status', $user->status) === 'Inactive' ? 'selected' : '' }}>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password <span style="font-weight: normal; color: var(--text-muted);">(leave blank to keep)</span></label>
+                        <div style="position: relative;">
+                            <input type="password" id="password" name="password" class="form-control" style="padding-right: 2.5rem;">
+                            <i class="fa-regular fa-eye-slash show-password-toggle" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);" onclick="togglePasswordVisibility('password', this)"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password_confirmation">Confirm Password</label>
+                        <div style="position: relative;">
+                            <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" style="padding-right: 2.5rem;">
+                            <i class="fa-regular fa-eye-slash show-password-toggle" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--text-muted);" onclick="togglePasswordVisibility('password_confirmation', this)"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password_expiry_days">Password Expiry (Days)</label>
+                        <input type="number" id="password_expiry_days" name="password_expiry_days" class="form-control" min="0" value="{{ old('password_expiry_days', $user->password_expiry_days ?? 90) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="failed_login_attempts">Failed Login Attempts</label>
+                        <input type="number" id="failed_login_attempts" name="failed_login_attempts" class="form-control" min="0" value="{{ old('failed_login_attempts', $user->failed_login_attempts ?? 5) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="lockout_minutes">Account Lockout (Minutes)</label>
+                        <input type="number" id="lockout_minutes" name="lockout_minutes" class="form-control" min="0" value="{{ old('lockout_minutes', $user->lockout_minutes ?? 30) }}">
+                    </div>
+                </div>
+
+                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <div class="toggle-switch-wrapper">
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="two_factor" value="1" {{ old('two_factor', $user->two_factor) ? 'checked' : '' }} id="two_factor">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-switch-label">Two Factor Authentication (2FA)</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="toggle-switch-wrapper">
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="force_password_change" value="1" {{ old('force_password_change', $user->force_password_change) ? 'checked' : '' }} id="force_password_change">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="toggle-switch-label">Force Password Change on First Login</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Roles & Permissions -->
+            <div class="form-section">
+                <h3 class="form-section-title">4. Roles & Permissions</h3>
+                
+                <div class="form-row" style="grid-template-columns: 1fr 3fr; align-items: start;">
+                    <div class="form-group">
+                        <label class="required">Assign Roles</label>
+                        <div class="checkbox-grid" style="grid-template-columns: 1fr;">
+                            @php
+                                $rolesList = ['Super Admin', 'NMS Admin', 'NOC Engineer', 'Network Engineer', 'Field Engineer', 'Helpdesk Engineer', 'Read Only User', 'Vendor Engineer'];
+                                $userRoles = old('assigned_roles', $user->assigned_roles ?? ['Network Engineer']);
+                            @endphp
+                            @foreach($rolesList as $rItem)
+                                <label class="checkbox-card">
+                                    <input type="checkbox" name="assigned_roles[]" value="{{ $rItem }}" class="role-checkbox" {{ in_array($rItem, $userRoles) ? 'checked' : '' }}>
+                                    {{ $rItem }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Module Access</label>
+                        <div class="module-access-table-wrapper">
+                            <table class="module-access-table">
+                                <thead>
+                                    <tr>
+                                        <th>Module</th>
+                                        <th style="text-align: center;">View</th>
+                                        <th style="text-align: center;">Create</th>
+                                        <th style="text-align: center;">Edit</th>
+                                        <th style="text-align: center;">Delete</th>
+                                        <th style="text-align: center;">Approve</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $modulesList = [
+                                            'Dashboard' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                            'Devices' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                            'Alarms' => ['view' => true, 'create' => false, 'edit' => true, 'delete' => false, 'approve' => false],
+                                            'Tickets' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => false, 'approve' => false],
+                                            'Incidents' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => false, 'approve' => false],
+                                            'Problems' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => true],
+                                            'Changes' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => true],
+                                            'Assets' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                            'Reports' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                            'SLA' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                            'Administration' => ['view' => false, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
+                                        ];
+                                    @endphp
+                                    @foreach($modulesList as $mName => $permissions)
+                                        <tr class="module-row">
+                                            <td style="font-weight: 600;">{{ $mName }}</td>
+                                            @foreach(['view', 'create', 'edit', 'delete', 'approve'] as $permKey)
+                                                @php
+                                                    $hasPermission = false;
+                                                    if (old('module_access')) {
+                                                        $hasPermission = isset(old('module_access')[$mName][$permKey]);
+                                                    } else {
+                                                        $hasPermission = isset($user->module_access[$mName][$permKey]) && $user->module_access[$mName][$permKey] == 1;
+                                                    }
+                                                @endphp
+                                                <td style="text-align: center;">
+                                                    <input type="checkbox" name="module_access[{{ $mName }}][{{ $permKey }}]" value="1" class="permission-checkbox" {{ $hasPermission ? 'checked' : '' }}>
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: SLA Association -->
+            <div class="form-section">
+                <h3 class="form-section-title">5. SLA Association</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="sla_policy_id" class="required">SLA Policy</label>
+                        <select id="sla_policy_id" name="sla_policy_id" class="form-control" required>
+                            <option value="">Select SLA Policy</option>
+                            @foreach($slaPolicies as $policy)
+                                <option value="{{ $policy->id }}" 
+                                        data-desc="{{ $policy->description }}"
+                                        data-response="{{ $policy->response_time_minutes }} Minutes"
+                                        data-resolution="{{ $policy->resolution_time_minutes }} Hours"
+                                        data-escalation="{{ $policy->escalation_time_minutes }} Minutes"
+                                        data-tickets="{{ $policy->max_tickets_per_day }}"
+                                        data-changes="{{ $policy->max_changes_per_week }}"
+                                        {{ old('sla_policy_id', $user->sla_policy_id) == $policy->id ? 'selected' : '' }}>
+                                    {{ $policy->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="business_unit">Business Unit</label>
+                        <select id="business_unit" name="business_unit" class="form-control">
+                            <option value="IT Operations" {{ old('business_unit', $user->business_unit) === 'IT Operations' ? 'selected' : '' }}>IT Operations</option>
+                            <option value="Network Infrastructure" {{ old('business_unit', $user->business_unit) === 'Network Infrastructure' ? 'selected' : '' }}>Network Infrastructure</option>
+                            <option value="Security Management" {{ old('business_unit', $user->business_unit) === 'Security Management' ? 'selected' : '' }}>Security Management</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Service Categories (Allowed)</label>
+                        <div class="tags-input-container" id="serviceCategoriesContainer">
+                            @php
+                                $categories = old('service_categories', $user->service_categories ?? ['Network', 'Connectivity', 'Security']);
+                            @endphp
+                            @foreach($categories as $category)
+                                <span class="tag-badge">{{ $category }} <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
+                            @endforeach
+                            <input type="text" class="tags-input-field" placeholder="+ Add category" onkeydown="handleTagInput(event, 'service_categories[]', this)">
+                        </div>
+                        <!-- Hidden inputs generated dynamically -->
+                        <div id="serviceCategoriesHiddenInputs">
+                            @foreach($categories as $category)
+                                <input type="hidden" name="service_categories[]" value="{{ $category }}">
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="max_tickets_per_day">Max Tickets / Day</label>
+                        <input type="number" id="max_tickets_per_day" name="max_tickets_per_day" class="form-control" min="0" value="{{ old('max_tickets_per_day', $user->max_tickets_per_day ?? 50) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="max_changes_per_week">Max Changes / Week</label>
+                        <input type="number" id="max_changes_per_week" name="max_changes_per_week" class="form-control" min="0" value="{{ old('max_changes_per_week', $user->max_changes_per_week ?? 10) }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 6: Notifications & Preferences -->
+            <div class="form-section">
+                <h3 class="form-section-title">6. Notifications & Preferences</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">Notification Method</label>
+                        <div style="display: flex; gap: 1.5rem; margin-top: 0.5rem;">
+                            @php
+                                $notifMethods = old('notification_methods', $user->notification_methods ?? ['Email', 'SMS', 'In-App']);
+                            @endphp
+                            <label class="checkbox-card">
+                                <input type="checkbox" name="notification_methods[]" value="Email" {{ in_array('Email', $notifMethods) ? 'checked' : '' }}>
+                                Email
+                            </label>
+                            <label class="checkbox-card">
+                                <input type="checkbox" name="notification_methods[]" value="SMS" {{ in_array('SMS', $notifMethods) ? 'checked' : '' }}>
+                                SMS
+                            </label>
+                            <label class="checkbox-card">
+                                <input type="checkbox" name="notification_methods[]" value="In-App" {{ in_array('In-App', $notifMethods) ? 'checked' : '' }}>
+                                In-App
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="working_hours">Working Hours</label>
+                        <select id="working_hours" name="working_hours" class="form-control">
+                            <option value="24 x 7" {{ old('working_hours', $user->working_hours) === '24 x 7' ? 'selected' : '' }}>24 x 7</option>
+                            <option value="8 x 5" {{ old('working_hours', $user->working_hours) === '8 x 5' ? 'selected' : '' }}>8 x 5 (Standard Business)</option>
+                            <option value="12 x 5" {{ old('working_hours', $user->working_hours) === '12 x 5' ? 'selected' : '' }}>12 x 5</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">Email for Alerts</label>
+                        <div class="tags-input-container" id="alertEmailsContainer">
+                            @php
+                                $alertEmails = old('alert_emails', $user->alert_emails ?? [$user->email]);
+                            @endphp
+                            @foreach($alertEmails as $aEmail)
+                                <span class="tag-badge">{{ $aEmail }} <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
+                            @endforeach
+                            <input type="text" class="tags-input-field" placeholder="+ Add email" onkeydown="handleTagInput(event, 'alert_emails[]', this, true)">
+                        </div>
+                        <div id="alertEmailsHiddenInputs">
+                            @foreach($alertEmails as $aEmail)
+                                <input type="hidden" name="alert_emails[]" value="{{ $aEmail }}">
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="escalation_group">Escalation Group</label>
+                        <select id="escalation_group" name="escalation_group" class="form-control">
+                            <option value="Network Operations Team" {{ old('escalation_group', $user->escalation_group) === 'Network Operations Team' ? 'selected' : '' }}>Network Operations Team</option>
+                            <option value="Security Operations Team" {{ old('escalation_group', $user->escalation_group) === 'Security Operations Team' ? 'selected' : '' }}>Security Operations Team</option>
+                            <option value="Systems Ops Group" {{ old('escalation_group', $user->escalation_group) === 'Systems Ops Group' ? 'selected' : '' }}>Systems Ops Group</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="preferred_dashboard">Preferred Dashboard</label>
+                        <select id="preferred_dashboard" name="preferred_dashboard" class="form-control">
+                            <option value="Engineer Dashboard" {{ old('preferred_dashboard', $user->preferred_dashboard) === 'Engineer Dashboard' ? 'selected' : '' }}>Engineer Dashboard</option>
+                            <option value="NMS Main Dashboard" {{ old('preferred_dashboard', $user->preferred_dashboard) === 'NMS Main Dashboard' ? 'selected' : '' }}>NMS Main Dashboard</option>
+                            <option value="Service Desk View" {{ old('preferred_dashboard', $user->preferred_dashboard) === 'Service Desk View' ? 'selected' : '' }}>Service Desk View</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 7: Additional Information -->
+            <div class="form-section">
+                <h3 class="form-section-title">7. Additional Information</h3>
+                
+                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                    <div class="form-group">
+                        <label>Skills / Expertise</label>
+                        <div class="tags-input-container" id="skillsContainer">
+                            @php
+                                $skills = old('skills', $user->skills ?? ['Routing', 'Switching', 'WAN', 'VPN']);
+                            @endphp
+                            @foreach($skills as $skill)
+                                <span class="tag-badge">{{ $skill }} <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
+                            @endforeach
+                            <input type="text" class="tags-input-field" placeholder="+ Add skill" onkeydown="handleTagInput(event, 'skills[]', this)">
+                        </div>
+                        <div id="skillsHiddenInputs">
+                            @foreach($skills as $skill)
+                                <input type="hidden" name="skills[]" value="{{ $skill }}">
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="certifications">Certifications (Optional)</label>
+                        <input type="text" id="certifications" name="certifications" class="form-control" placeholder="e.g. CCNA, CCNP, CISSP" value="{{ old('certifications', $user->certifications) }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="e.g. Engineer for core network operations and incidents handling.">{{ old('notes', $user->notes) }}</textarea>
+                </div>
+            </div>
+
+            <!-- Section 8: Attachments -->
+            <div class="form-section">
+                <h3 class="form-section-title">8. Attachments</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ID Proof</label>
+                        <div class="file-upload-wrapper">
+                            <div class="file-upload-preview" id="idProofPreview">
+                                <i class="fa-solid fa-file-pdf fa-lg"></i>
+                            </div>
+                            <div class="file-upload-info">
+                                <label for="id_proof">Choose New File</label>
+                                <span id="idProofFilename">{{ $user->id_proof ? basename($user->id_proof) : 'No file chosen' }}</span>
+                                <span>(Max file size: 5MB)</span>
+                            </div>
+                            <input type="file" id="id_proof" name="id_proof" class="file-upload-input" accept=".pdf,.doc,.docx,.jpg,.png">
+                        </div>
+                        @if($user->id_proof)
+                            <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                                <span style="color: var(--text-muted);">Current:</span>
+                                <a href="{{ asset($user->id_proof) }}" target="_blank" style="color: var(--primary); font-weight: 600;">
+                                    <i class="fa-solid fa-file-arrow-down"></i> View ID Proof
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label>Offer Letter / Appointment Letter</label>
+                        <div class="file-upload-wrapper">
+                            <div class="file-upload-preview" id="offerLetterPreview">
+                                <i class="fa-solid fa-file-pdf fa-lg"></i>
+                            </div>
+                            <div class="file-upload-info">
+                                <label for="offer_letter">Choose New File</label>
+                                <span id="offerLetterFilename">{{ $user->offer_letter ? basename($user->offer_letter) : 'No file chosen' }}</span>
+                                <span>(Max file size: 5MB)</span>
+                            </div>
+                            <input type="file" id="offer_letter" name="offer_letter" class="file-upload-input" accept=".pdf,.doc,.docx,.jpg,.png">
+                        </div>
+                        @if($user->offer_letter)
+                            <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                                <span style="color: var(--text-muted);">Current:</span>
+                                <a href="{{ asset($user->offer_letter) }}" target="_blank" style="color: var(--primary); font-weight: 600;">
+                                    <i class="fa-solid fa-file-arrow-down"></i> View Offer Letter
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="form-group">
+                        <label>Other Documents (Optional)</label>
+                        <div class="file-upload-wrapper">
+                            <div class="file-upload-preview" id="otherDocPreview">
+                                <i class="fa-solid fa-file-pdf fa-lg"></i>
+                            </div>
+                            <div class="file-upload-info">
+                                <label for="other_document">Choose New File</label>
+                                <span id="otherDocFilename">{{ $user->other_document ? basename($user->other_document) : 'No file chosen' }}</span>
+                                <span>(Max file size: 5MB)</span>
+                            </div>
+                            <input type="file" id="other_document" name="other_document" class="file-upload-input" accept=".pdf,.doc,.docx,.jpg,.png">
+                        </div>
+                        @if($user->other_document)
+                            <div style="margin-top: 0.5rem; font-size: 0.8rem;">
+                                <span style="color: var(--text-muted);">Current:</span>
+                                <a href="{{ asset($user->other_document) }}" target="_blank" style="color: var(--primary); font-weight: 600;">
+                                    <i class="fa-solid fa-file-arrow-down"></i> View Document
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services Association Section -->
+            <div class="form-section">
+                <h3 class="form-section-title">NMS Services Access</h3>
+                <div class="form-group">
+                    <label>Assign Services</label>
+                    <div class="checkbox-grid">
+                        @php
+                            $userServiceIds = old('services', $user->services->pluck('id')->toArray());
+                        @endphp
+                        @forelse($services as $service)
+                            <label class="checkbox-card">
+                                <input type="checkbox" name="services[]" value="{{ $service->id }}" {{ in_array($service->id, $userServiceIds) ? 'checked' : '' }}>
+                                {{ $service->name }}
+                            </label>
+                        @empty
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save and update actions -->
+            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+                <a href="{{ route('users.index') }}" class="btn-secondary" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 8px;">Cancel</a>
+                <button type="submit" class="btn-primary" style="width: auto; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 700;">Update User</button>
+            </div>
+
+        </div>
+
+        <!-- Right Side: Sticky User Summary Sidebar -->
+        <div class="sticky-summary">
+            
+            <!-- Card 1: User Summary -->
+            <div class="summary-card">
+                <h3>User Summary</h3>
+                <div class="summary-profile-header">
+                    <div class="summary-avatar" id="summaryAvatar">
+                        @if($user->profile_photo)
+                            <img src="{{ asset($user->profile_photo) }}" alt="Preview">
+                        @else
+                            <i class="fa-solid fa-user-tie fa-2xl" style="color: #94a3b8;"></i>
+                        @endif
+                    </div>
+                    <div class="summary-profile-info">
+                        <h4 id="sidebarName">{{ $user->name }}</h4>
+                        <p id="sidebarDesignation">{{ $user->designation ?? '—' }}</p>
+                    </div>
+                    <div style="margin-left: auto;">
+                        <span class="{{ $user->status === 'Active' ? 'badge-active' : 'badge-inactive' }}" id="sidebarStatus">{{ $user->status }}</span>
+                    </div>
+                </div>
+                
+                <div class="summary-details-list">
+                    <div class="summary-detail-item">
+                        <span class="label">User ID</span>
+                        <span class="value" id="sidebarUserId">{{ $user->username ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Full Name</span>
+                        <span class="value" id="sidebarFullName">{{ $user->name }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Designation</span>
+                        <span class="value" id="sidebarDesignationDetail">{{ $user->designation ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Department</span>
+                        <span class="value" id="sidebarDepartment">{{ $user->department ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Email ID</span>
+                        <span class="value" id="sidebarEmail">{{ $user->email }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Mobile</span>
+                        <span class="value" id="sidebarMobile">{{ $user->mobile ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Location</span>
+                        <span class="value" id="sidebarLocation">{{ $user->office_location ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Role</span>
+                        <span class="value" id="sidebarRole">{{ $user->designation ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Access Level</span>
+                        <span class="value" id="sidebarAccessLevel">{{ $user->access_level ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Time Zone</span>
+                        <span class="value" id="sidebarTimezone">{{ $user->timezone ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Status</span>
+                        <span class="value {{ $user->status === 'Active' ? 'badge-active' : 'badge-inactive' }}" style="display:inline-block;" id="sidebarStatusDetail">{{ $user->status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Roles Assigned -->
+            <div class="summary-card">
+                <h3>Roles Assigned</h3>
+                <div class="assigned-roles-list" id="sidebarRolesList">
+                    @foreach($userRoles as $uRole)
+                        <span class="role-badge">{{ $uRole }}</span>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Card 3: SLA Overview -->
+            <div class="summary-card">
+                <h3>SLA Overview <span style="float: right; font-size: 0.75rem; font-weight: normal; margin-top: 0.15rem;"><a href="#" style="color: var(--primary);">View SLA Policy</a></span></h3>
+                <div class="summary-details-list" id="sidebarSlaDetails">
+                    <div class="summary-detail-item">
+                        <span class="label">SLA Policy</span>
+                        <span class="value" id="sidebarSlaPolicy">{{ $user->slaPolicy?->name ?? '—' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Response SLA</span>
+                        <span class="value" id="sidebarSlaResponse">{{ $user->slaPolicy?->response_time_minutes ?? '—' }} Minutes</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Resolution SLA</span>
+                        <span class="value" id="sidebarSlaResolution">{{ $user->slaPolicy?->resolution_time_minutes ?? '—' }} Hours</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Escalation SLA</span>
+                        <span class="value" id="sidebarSlaEscalation">{{ $user->slaPolicy?->escalation_time_minutes ?? '—' }} Minutes</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Max Tickets / Day</span>
+                        <span class="value" id="sidebarSlaMaxTickets">{{ $user->max_tickets_per_day ?? '50' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Max Changes / Week</span>
+                        <span class="value" id="sidebarSlaMaxChanges">{{ $user->max_changes_per_week ?? '10' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 4: Module Access Summary -->
+            <div class="summary-card">
+                <h3>Module Access Summary</h3>
+                <div class="progress-widget-list">
+                    <div class="progress-widget-item">
+                        <div class="progress-widget-header">
+                            <span>Total Modules</span>
+                            <span id="pbTotalCount">11</span>
+                        </div>
+                        <div class="progress-widget-bar-bg">
+                            <div class="progress-widget-bar-fill bar-blue" style="width: 100%;" id="pbTotalFill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-widget-item">
+                        <div class="progress-widget-header">
+                            <span>Full Access</span>
+                            <span id="pbFullCount">0</span>
+                        </div>
+                        <div class="progress-widget-bar-bg">
+                            <div class="progress-widget-bar-fill bar-green" style="width: 0%;" id="pbFullFill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-widget-item">
+                        <div class="progress-widget-header">
+                            <span>Limited Access</span>
+                            <span id="pbLimitedCount">0</span>
+                        </div>
+                        <div class="progress-widget-bar-bg">
+                            <div class="progress-widget-bar-fill bar-orange" style="width: 0%;" id="pbLimitedFill"></div>
+                        </div>
+                    </div>
+                    <div class="progress-widget-item">
+                        <div class="progress-widget-header">
+                            <span>No Access</span>
+                            <span id="pbNoCount">11</span>
+                        </div>
+                        <div class="progress-widget-bar-bg">
+                            <div class="progress-widget-bar-fill bar-red" style="width: 100%;" id="pbNoFill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 5: Account Status -->
+            <div class="summary-card">
+                <h3>Account Status</h3>
+                <div class="summary-details-list">
+                    <div class="summary-detail-item">
+                        <span class="label">Status</span>
+                        <span class="value" id="sidebarAccountStatus">{{ $user->status }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">2FA Enabled</span>
+                        <span class="value" id="sidebarAccount2FA">{{ $user->two_factor ? 'Yes' : 'No' }}</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Password Expiry</span>
+                        <span class="value" id="sidebarAccountExpiry">{{ $user->password_expiry_days ?? 90 }} Days</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Last Login</span>
+                        <span class="value">—</span>
+                    </div>
+                    <div class="summary-detail-item">
+                        <span class="label">Failed Attempts</span>
+                        <span class="value" id="sidebarAccountFailed">{{ $user->failed_login_attempts ?? 0 }}</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</form>
+
+<script>
+    // Toggle Password Visibility
+    function togglePasswordVisibility(fieldId, iconEl) {
+        const input = document.getElementById(fieldId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            iconEl.classList.remove('fa-eye-slash');
+            iconEl.classList.add('fa-eye');
+        } else {
+            input.type = 'password';
+            iconEl.classList.remove('fa-eye');
+            iconEl.classList.add('fa-eye-slash');
+        }
+    }
+
+    // Dynamic File Uploads Previewing & Filenames
+    function setupFileUploader(inputId, previewId, filenameId, defaultIconHtml) {
+        const fileInput = document.getElementById(inputId);
+        const previewEl = document.getElementById(previewId);
+        const filenameEl = document.getElementById(filenameId);
+
+        if (!fileInput) return;
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                filenameEl.textContent = file.name;
+                
+                // If it is an image, render preview
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        previewEl.innerHTML = `<img src="${evt.target.result}" alt="Preview">`;
+                        
+                        // If profile photo uploader, also update sidebar avatar preview
+                        if (inputId === 'profile_photo') {
+                            document.getElementById('summaryAvatar').innerHTML = `<img src="${evt.target.result}" alt="Preview">`;
+                        }
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    // Document icons based on extension
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    let iconClass = 'fa-file-pdf';
+                    if (['doc', 'docx'].includes(ext)) iconClass = 'fa-file-word';
+                    previewEl.innerHTML = `<i class="fa-solid ${iconClass} fa-lg" style="color: var(--primary);"></i>`;
+                }
+            } else {
+                // If no file chosen, keep existing state
+            }
+        });
+    }
+
+    // Dynamic Tag Handling for Service Categories, Alert Emails, Skills, etc.
+    function handleTagInput(e, name, inputEl, isEmail = false) {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            let val = inputEl.value.trim().replace(/,/g, '');
+            if (val === '') return;
+
+            if (isEmail && !validateEmail(val)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+
+            const container = inputEl.parentElement;
+            const hiddenInputsContainer = document.getElementById(container.id.replace('Container', 'HiddenInputs'));
+
+            // Create Badge
+            const badge = document.createElement('span');
+            badge.className = 'tag-badge';
+            badge.innerHTML = `${val} <span class="remove-tag" onclick="removeTag(this)">&times;</span>`;
+            container.insertBefore(badge, inputEl);
+
+            // Create Hidden Input
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = name;
+            hiddenInput.value = val;
+            hiddenInputsContainer.appendChild(hiddenInput);
+
+            inputEl.value = '';
+        }
+    }
+
+    function removeTag(spanEl) {
+        const badge = spanEl.parentElement;
+        const container = badge.parentElement;
+        const val = badge.textContent.trim().slice(0, -1).trim(); // Remove the 'x' character
+        const hiddenInputsContainer = document.getElementById(container.id.replace('Container', 'HiddenInputs'));
+
+        // Remove badge
+        badge.remove();
+
+        // Remove hidden input
+        const inputs = hiddenInputsContainer.querySelectorAll('input');
+        for (let input of inputs) {
+            if (input.value === val) {
+                input.remove();
+                break;
+            }
+        }
+    }
+
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+
+    // Core Real-Time Summary Syncing
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup File Uploaders
+        setupFileUploader('profile_photo', 'photoPreviewContainer', 'photoFilename', '<i class="fa-solid fa-user-tie fa-lg"></i>');
+        setupFileUploader('signature', 'signaturePreviewContainer', 'signatureFilename', '<i class="fa-solid fa-signature fa-lg"></i>');
+        setupFileUploader('id_proof', 'idProofPreview', 'idProofFilename', '<i class="fa-solid fa-file-pdf fa-lg"></i>');
+        setupFileUploader('offer_letter', 'offerLetterPreview', 'offerLetterFilename', '<i class="fa-solid fa-file-pdf fa-lg"></i>');
+        setupFileUploader('other_document', 'otherDocPreview', 'otherDocFilename', '<i class="fa-solid fa-file-pdf fa-lg"></i>');
+
+        // Inputs to monitor for simple textual changes
+        const binds = [
+            { sourceId: 'name', targetIds: ['sidebarName', 'sidebarFullName'] },
+            { sourceId: 'username', targetIds: ['sidebarUserId'] },
+            { sourceId: 'email', targetIds: ['sidebarEmail'] },
+            { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
+            { sourceId: 'department', targetIds: ['sidebarDepartment'] },
+            { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail', 'sidebarRole'] },
+            { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
+            { sourceId: 'access_level', targetIds: ['sidebarAccessLevel'] },
+            { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
+        ];
+
+        binds.forEach(bind => {
+            const input = document.getElementById(bind.sourceId);
+            if (input) {
+                input.addEventListener('input', function() {
+                    const val = input.value || '—';
+                    bind.targetIds.forEach(targetId => {
+                        const target = document.getElementById(targetId);
+                        if (target) target.textContent = val;
+                    });
+                });
+            }
+        });
+
+        // Account status monitoring
+        const statusSelect = document.getElementById('status');
+        if (statusSelect) {
+            statusSelect.addEventListener('change', function() {
+                const val = statusSelect.value;
+                const badges = [document.getElementById('sidebarStatus'), document.getElementById('sidebarStatusDetail'), document.getElementById('sidebarAccountStatus')];
+                badges.forEach(badge => {
+                    if (badge) {
+                        badge.textContent = val;
+                        badge.className = val === 'Active' ? 'badge-active' : 'badge-inactive';
+                    }
+                });
+            });
+        }
+
+        // SLA Expiry / 2FA monitoring
+        const twoFaCheckbox = document.getElementById('two_factor');
+        if (twoFaCheckbox) {
+            twoFaCheckbox.addEventListener('change', function() {
+                const text = twoFaCheckbox.checked ? 'Yes' : 'No';
+                const el = document.getElementById('sidebarAccount2FA');
+                if (el) el.textContent = text;
+            });
+        }
+
+        const passExpiry = document.getElementById('password_expiry_days');
+        if (passExpiry) {
+            passExpiry.addEventListener('input', function() {
+                const val = passExpiry.value ? `${passExpiry.value} Days` : 'Never';
+                const el = document.getElementById('sidebarAccountExpiry');
+                if (el) el.textContent = val;
+            });
+        }
+
+        const failedAttempts = document.getElementById('failed_login_attempts');
+        if (failedAttempts) {
+            failedAttempts.addEventListener('input', function() {
+                const val = failedAttempts.value || '0';
+                const el = document.getElementById('sidebarAccountFailed');
+                if (el) el.textContent = val;
+            });
+        }
+
+        // SLA Policy dropdown changes
+        const slaSelect = document.getElementById('sla_policy_id');
+        if (slaSelect) {
+            function updateSlaOverview() {
+                const opt = slaSelect.options[slaSelect.selectedIndex];
+                if (opt && opt.value) {
+                    document.getElementById('sidebarSlaPolicy').textContent = opt.textContent.trim();
+                    document.getElementById('sidebarSlaResponse').textContent = opt.getAttribute('data-response') || '—';
+                    document.getElementById('sidebarSlaResolution').textContent = opt.getAttribute('data-resolution') || '—';
+                    document.getElementById('sidebarSlaEscalation').textContent = opt.getAttribute('data-escalation') || '—';
+                    
+                    const maxTickets = opt.getAttribute('data-tickets') || '—';
+                    const maxChanges = opt.getAttribute('data-changes') || '—';
+                    document.getElementById('sidebarSlaMaxTickets').textContent = maxTickets;
+                    document.getElementById('sidebarSlaMaxChanges').textContent = maxChanges;
+
+                    // Sync values to form inputs in SLA section
+                    if (maxTickets !== '—') document.getElementById('max_tickets_per_day').value = maxTickets;
+                    if (maxChanges !== '—') document.getElementById('max_changes_per_week').value = maxChanges;
+                } else {
+                    document.getElementById('sidebarSlaPolicy').textContent = '—';
+                    document.getElementById('sidebarSlaResponse').textContent = '—';
+                    document.getElementById('sidebarSlaResolution').textContent = '—';
+                    document.getElementById('sidebarSlaEscalation').textContent = '—';
+                    document.getElementById('sidebarSlaMaxTickets').textContent = '—';
+                    document.getElementById('sidebarSlaMaxChanges').textContent = '—';
+                }
+            }
+            slaSelect.addEventListener('change', updateSlaOverview);
+            // Don't auto-override initial DB values unless the user selects a new option
+        }
+
+        // Roles Assigned checkboxes syncing
+        const roleCbs = document.querySelectorAll('.role-checkbox');
+        function syncRolesSidebar() {
+            const listEl = document.getElementById('sidebarRolesList');
+            listEl.innerHTML = '';
+            let checkedCount = 0;
+            roleCbs.forEach(cb => {
+                if (cb.checked) {
+                    checkedCount++;
+                    const badge = document.createElement('span');
+                    badge.className = 'role-badge';
+                    badge.textContent = cb.value;
+                    listEl.appendChild(badge);
+                }
+            });
+            if (checkedCount === 0) {
+                listEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.8rem;">No roles assigned</span>';
+            }
+        }
+        roleCbs.forEach(cb => cb.addEventListener('change', syncRolesSidebar));
+        syncRolesSidebar();
+
+        // Module Access progress bar calculations
+        const permissionCbs = document.querySelectorAll('.permission-checkbox');
+        const rows = document.querySelectorAll('.module-row');
+
+        function calculatePermissions() {
+            const totalModules = rows.length;
+            let fullAccess = 0;
+            let limitedAccess = 0;
+            let noAccess = 0;
+
+            rows.forEach(row => {
+                const cbs = row.querySelectorAll('.permission-checkbox');
+                let checkedCount = 0;
+                cbs.forEach(cb => {
+                    if (cb.checked) checkedCount++;
+                });
+
+                if (checkedCount === cbs.length) {
+                    fullAccess++;
+                } else if (checkedCount === 0) {
+                    noAccess++;
+                } else {
+                    limitedAccess++;
+                }
+            });
+
+            // Update textual counts
+            document.getElementById('pbTotalCount').textContent = totalModules;
+            document.getElementById('pbFullCount').textContent = fullAccess;
+            document.getElementById('pbLimitedCount').textContent = limitedAccess;
+            document.getElementById('pbNoCount').textContent = noAccess;
+
+            // Update Progress Bar Fill Widths
+            const fullPct = totalModules > 0 ? (fullAccess / totalModules) * 100 : 0;
+            const limitedPct = totalModules > 0 ? (limitedAccess / totalModules) * 100 : 0;
+            const noPct = totalModules > 0 ? (noAccess / totalModules) * 100 : 0;
+
+            document.getElementById('pbFullFill').style.width = `${fullPct}%`;
+            document.getElementById('pbLimitedFill').style.width = `${limitedPct}%`;
+            document.getElementById('pbNoFill').style.width = `${noPct}%`;
+        }
+
+        permissionCbs.forEach(cb => cb.addEventListener('change', calculatePermissions));
+        calculatePermissions();
+    });
+</script>
+@endsection

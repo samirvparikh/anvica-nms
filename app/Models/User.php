@@ -13,7 +13,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'mobile', 'password', 'role', 'is_admin', 'status', 'device_limit', 'start_date', 'expire_date', 'created_by'])]
+#[Fillable([
+    'name', 'email', 'username', 'mobile', 'password', 'role', 'is_admin', 'status', 'device_limit', 'start_date', 'expire_date', 'created_by',
+    'employee_id', 'alternate_number', 'alternate_email', 'dob', 'gender', 'language', 'profile_photo', 'signature',
+    'department', 'designation', 'reporting_manager', 'office_location', 'work_location', 'timezone', 'address', 'landline', 'extension',
+    'auth_type', 'failed_login_attempts', 'lockout_minutes', 'two_factor', 'force_password_change', 'password_expiry_days',
+    'skills', 'certifications', 'notes', 'assigned_roles', 'module_access', 'sla_policy_id',
+    'business_unit', 'service_categories', 'max_tickets_per_day', 'max_changes_per_week',
+    'notification_methods', 'alert_emails', 'working_hours', 'escalation_group', 'preferred_dashboard',
+    'id_proof', 'offer_letter', 'other_document'
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -41,6 +50,15 @@ class User extends Authenticatable
             'is_admin' => 'boolean',
             'start_date' => 'date',
             'expire_date' => 'date',
+            'dob' => 'date',
+            'two_factor' => 'boolean',
+            'force_password_change' => 'boolean',
+            'assigned_roles' => 'array',
+            'module_access' => 'array',
+            'service_categories' => 'array',
+            'notification_methods' => 'array',
+            'alert_emails' => 'array',
+            'skills' => 'array',
         ];
     }
 
@@ -110,5 +128,10 @@ class User extends Authenticatable
     public function services(): BelongsToMany
     {
         return $this->belongsToMany(Service::class);
+    }
+
+    public function slaPolicy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class);
     }
 }
