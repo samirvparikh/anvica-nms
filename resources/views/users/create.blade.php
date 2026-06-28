@@ -43,27 +43,12 @@
                         <input type="text" id="name" name="name" class="form-control" placeholder="Enter Full Name" required value="{{ old('name') }}">
                     </div>
                     <div class="form-group">
-                        <label for="username" class="required">User ID</label>
-                        <input type="text" id="username" name="username" class="form-control" placeholder="Enter User ID" required value="{{ old('username') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="employee_id">Employee ID</label>
-                        <input type="text" id="employee_id" name="employee_id" class="form-control" placeholder="e.g. EMP-1025" value="{{ old('employee_id') }}">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label for="email" class="required">Email ID</label>
                         <input type="email" id="email" name="email" class="form-control" placeholder="e.g. vijay.kumar@westernrail.in" required value="{{ old('email') }}">
                     </div>
                     <div class="form-group">
                         <label for="mobile" class="required">Mobile Number</label>
                         <input type="text" id="mobile" name="mobile" class="form-control" placeholder="Enter Mobile Number" required value="{{ old('mobile') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="alternate_number">Alternate Number</label>
-                        <input type="text" id="alternate_number" name="alternate_number" class="form-control" placeholder="Enter Alternate Number" value="{{ old('alternate_number') }}">
                     </div>
                 </div>
 
@@ -79,15 +64,6 @@
                             <option value="Male" {{ old('gender') === 'Male' ? 'selected' : '' }}>Male</option>
                             <option value="Female" {{ old('gender') === 'Female' ? 'selected' : '' }}>Female</option>
                             <option value="Other" {{ old('gender') === 'Other' ? 'selected' : '' }}>Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="language">Language Preference</label>
-                        <select id="language" name="language" class="form-control">
-                            <option value="English" {{ old('language') === 'English' ? 'selected' : '' }}>English</option>
-                            <option value="Hindi" {{ old('language') === 'Hindi' ? 'selected' : '' }}>Hindi</option>
-                            <option value="Gujarati" {{ old('language') === 'Gujarati' ? 'selected' : '' }}>Gujarati</option>
-                            <option value="Spanish" {{ old('language') === 'Spanish' ? 'selected' : '' }}>Spanish</option>
                         </select>
                     </div>
                 </div>
@@ -125,93 +101,9 @@
                 </div>
             </div>
 
-            <!-- Section 2: Organization & Contact Information -->
+            <!-- Section 2: Login & Access Information -->
             <div class="form-section">
-                <h3 class="form-section-title">2. Organization & Contact Information</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="department" class="required">Department</label>
-                        <select id="department" name="department" class="form-control" required>
-                            <option value="">Select Department</option>
-                            <option value="Network Operations" {{ old('department') === 'Network Operations' ? 'selected' : '' }}>Network Operations</option>
-                            <option value="Security Operations" {{ old('department') === 'Security Operations' ? 'selected' : '' }}>Security Operations</option>
-                            <option value="System Administration" {{ old('department') === 'System Administration' ? 'selected' : '' }}>System Administration</option>
-                            <option value="IT Service Desk" {{ old('department') === 'IT Service Desk' ? 'selected' : '' }}>IT Service Desk</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="designation" class="required">Designation</label>
-                        <select id="designation" name="designation" class="form-control" required>
-                            <option value="">Select Designation</option>
-                            <option value="Network Engineer" {{ old('designation') === 'Network Engineer' ? 'selected' : '' }}>Network Engineer</option>
-                            <option value="Security Analyst" {{ old('designation') === 'Security Analyst' ? 'selected' : '' }}>Security Analyst</option>
-                            <option value="Systems Administrator" {{ old('designation') === 'Systems Administrator' ? 'selected' : '' }}>Systems Administrator</option>
-                            <option value="Support Desk Lead" {{ old('designation') === 'Support Desk Lead' ? 'selected' : '' }}>Support Desk Lead</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="reporting_manager" class="required">Reporting Manager</label>
-                        <select id="reporting_manager" name="reporting_manager" class="form-control" required>
-                            <option value="">Select Manager</option>
-                            <option value="Rakesh Singh" {{ old('reporting_manager') === 'Rakesh Singh' ? 'selected' : '' }}>Rakesh Singh</option>
-                            <option value="Sanjay Patel" {{ old('reporting_manager') === 'Sanjay Patel' ? 'selected' : '' }}>Sanjay Patel</option>
-                            <option value="Amisha Mehta" {{ old('reporting_manager') === 'Amisha Mehta' ? 'selected' : '' }}>Amisha Mehta</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="office_location" class="required">Office Location</label>
-                        <select id="office_location" name="office_location" class="form-control" required>
-                            <option value="">Select Location</option>
-                            <option value="Ahmedabad DC" {{ old('office_location') === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
-                            <option value="Mumbai DC" {{ old('office_location') === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
-                            <option value="Delhi Head Office" {{ old('office_location') === 'Delhi Head Office' ? 'selected' : '' }}>Delhi Head Office</option>
-                            <option value="Bangalore Branch" {{ old('office_location') === 'Bangalore Branch' ? 'selected' : '' }}>Bangalore Branch</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="work_location">Work Location / Site</label>
-                        <select id="work_location" name="work_location" class="form-control">
-                            <option value="">Select Work Location</option>
-                            <option value="Ahmedabad DC" {{ old('work_location') === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
-                            <option value="Mumbai DC" {{ old('work_location') === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
-                            <option value="On-Site Support" {{ old('work_location') === 'On-Site Support' ? 'selected' : '' }}>On-Site Support</option>
-                            <option value="Remote Work" {{ old('work_location') === 'Remote Work' ? 'selected' : '' }}>Remote Work</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="timezone" class="required">Time Zone</label>
-                        <select id="timezone" name="timezone" class="form-control" required>
-                            <option value="Asia/Kolkata" {{ old('timezone') === 'Asia/Kolkata' ? 'selected' : '' }}>Asia/Kolkata (IST)</option>
-                            <option value="UTC" {{ old('timezone') === 'UTC' ? 'selected' : '' }}>UTC</option>
-                            <option value="Europe/London" {{ old('timezone') === 'Europe/London' ? 'selected' : '' }}>Europe/London (GMT)</option>
-                            <option value="America/New_York" {{ old('timezone') === 'America/New_York' ? 'selected' : '' }}>America/New_York (EST)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="Enter Address">{{ old('address') }}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="landline">Landline Number</label>
-                        <input type="text" id="landline" name="landline" class="form-control" placeholder="Enter Landline Number" value="{{ old('landline') }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="extension">Extension</label>
-                        <input type="text" id="extension" name="extension" class="form-control" placeholder="Enter Extension" value="{{ old('extension') }}">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Login & Access Information -->
-            <div class="form-section">
-                <h3 class="form-section-title">3. Login & Access Information</h3>
+                <h3 class="form-section-title">2. Login & Access Information</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -290,7 +182,7 @@
 
             <!-- Section 4: SLA Association -->
             <div class="form-section">
-                <h3 class="form-section-title">4. SLA Association</h3>
+                <h3 class="form-section-title">3. SLA Association</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -335,7 +227,7 @@
 
             <!-- Section 6: Notifications & Preferences -->
             <div class="form-section">
-                <h3 class="form-section-title">5. Notifications & Preferences</h3>
+                <h3 class="form-section-title">4. Notifications & Preferences</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -387,7 +279,7 @@
 
             <!-- Section 7: Additional Information -->
             <div class="form-section">
-                <h3 class="form-section-title">6. Additional Information</h3>
+                <h3 class="form-section-title">5. Additional Information</h3>
                 
                 <div class="form-row" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
@@ -420,7 +312,7 @@
 
             <!-- Section 8: Attachments -->
             <div class="form-section">
-                <h3 class="form-section-title">7. Attachments</h3>
+                <h3 class="form-section-title">6. Attachments</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -803,14 +695,9 @@
         // Inputs to monitor for simple textual changes
         const binds = [
             { sourceId: 'name', targetIds: ['sidebarName', 'sidebarFullName'] },
-            { sourceId: 'username', targetIds: ['sidebarUserId'] },
             { sourceId: 'email', targetIds: ['sidebarEmail'] },
             { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
-            { sourceId: 'department', targetIds: ['sidebarDepartment'] },
-            { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail'] },
             { sourceId: 'role_id', targetIds: ['sidebarRole', 'sidebarAccessLevel'] },
-            { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
-            { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
         ];
 
         binds.forEach(bind => {
@@ -908,7 +795,7 @@
 
         const roleSelect = document.getElementById('role_id');
         const staffRoleIds = @json($staffRoleIds);
-        const staffSectionPrefixes = ['2.', '4.', '5.', '6.', '7.'];
+        const staffSectionPrefixes = ['3.', '4.', '5.', '6.'];
 
         function toggleCreateStaffSections() {
             if (!roleSelect) {

@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -65,8 +66,10 @@ class UserController extends Controller
             'created_by' => $request->user()->id,
         ];
 
-        if ($isStaffRole && ($request->isMethod('post') || $request->has('username'))) {
+        if ($isStaffRole) {
             $data = array_merge($data, $this->staffProfileData($validated, $request, $role));
+            $data['username'] = $this->generateUsername($validated['email']);
+            $data['language'] = 'English';
         }
 
         $user = User::create($data);
@@ -133,8 +136,12 @@ class UserController extends Controller
             'expire_date' => $isAdminRole ? null : ($validated['expire_date'] ?? null),
         ]);
 
-        if ($isStaffRole && ($request->isMethod('put') || $request->isMethod('patch') || $request->has('username'))) {
+        if ($isStaffRole) {
             $user->fill($this->staffProfileData($validated, $request, $role));
+            $user->username = $this->generateUsername($validated['email'], $user->id);
+            if (! $user->language) {
+                $user->language = 'English';
+            }
             $this->handleStaffUploads($request, $user);
         }
 
@@ -198,30 +205,12 @@ class UserController extends Controller
             $rules['start_date'] = 'required|date';
             $rules['expire_date'] = 'required|date|after_or_equal:start_date';
 
-            if ($isStore || $request->has('username')) {
-                $rules['username'] = [
-                    'required',
-                    'string',
-                    'max:191',
-                    Rule::unique('users', 'username')->ignore($user?->id),
-                ];
-                $rules['department'] = 'required|string|max:191';
-                $rules['designation'] = 'required|string|max:191';
-                $rules['reporting_manager'] = 'required|string|max:191';
-                $rules['office_location'] = 'required|string|max:191';
-                $rules['timezone'] = 'required|string|max:191';
+            if ($isStore || $request->has('sla_policy_id')) {
                 $rules['sla_policy_id'] = 'required|exists:sla_policies,id';
-                $rules['employee_id'] = 'nullable|string|max:191';
-                $rules['alternate_number'] = 'nullable|string|max:20';
                 $rules['dob'] = 'nullable|date';
                 $rules['gender'] = 'nullable|string|max:50';
-                $rules['language'] = 'nullable|string|max:50';
                 $rules['profile_photo'] = 'nullable|image|max:2048';
                 $rules['signature'] = 'nullable|image|max:2048';
-                $rules['work_location'] = 'nullable|string|max:191';
-                $rules['address'] = 'nullable|string';
-                $rules['landline'] = 'nullable|string|max:20';
-                $rules['extension'] = 'nullable|string|max:20';
                 $rules['password_expiry_days'] = 'nullable|integer|min:0';
                 $rules['failed_login_attempts'] = 'nullable|integer|min:0';
                 $rules['lockout_minutes'] = 'nullable|integer|min:0';
@@ -250,22 +239,10 @@ class UserController extends Controller
     private function staffProfileData(array $validated, Request $request, ?Role $role = null): array
     {
         return [
-            'username' => $validated['username'] ?? null,
             'access_level' => $role?->name,
-            'employee_id' => $validated['employee_id'] ?? null,
-            'alternate_number' => $validated['alternate_number'] ?? null,
             'dob' => $validated['dob'] ?? null,
             'gender' => $validated['gender'] ?? null,
-            'language' => $validated['language'] ?? null,
-            'department' => $validated['department'] ?? null,
-            'designation' => $validated['designation'] ?? null,
-            'reporting_manager' => $validated['reporting_manager'] ?? null,
-            'office_location' => $validated['office_location'] ?? null,
-            'work_location' => $validated['work_location'] ?? null,
-            'timezone' => $validated['timezone'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'landline' => $validated['landline'] ?? null,
-            'extension' => $validated['extension'] ?? null,
+            'designation' => $role?->name,
             'auth_type' => 'Local Authentication',
             'password_expiry_days' => $validated['password_expiry_days'] ?? null,
             'failed_login_attempts' => $validated['failed_login_attempts'] ?? 0,
@@ -285,6 +262,28 @@ class UserController extends Controller
             'certifications' => $validated['certifications'] ?? null,
             'notes' => $validated['notes'] ?? null,
         ];
+    }
+
+    private function generateUsername(string $email, ?int $ignoreUserId = null): string
+    {
+        $localPart = Str::before($email, '@');
+        $base = Str::slug(str_replace(['.', '+'], '-', $localPart), '.');
+        if ($base === '') {
+            $base = 'user';
+        }
+
+        $username = $base;
+        $counter = 1;
+
+        while (User::query()
+            ->where('username', $username)
+            ->when($ignoreUserId, fn ($query) => $query->where('id', '!=', $ignoreUserId))
+            ->exists()) {
+            $username = $base.$counter;
+            $counter++;
+        }
+
+        return $username;
     }
 
     /** @return list<int> */

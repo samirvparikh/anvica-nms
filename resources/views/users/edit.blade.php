@@ -43,27 +43,12 @@
                         <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Vijay Kumar" required value="{{ old('name', $user->name) }}">
                     </div>
                     <div class="form-group">
-                        <label for="username" class="required">User ID</label>
-                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. vijay.kumar" required value="{{ old('username', $user->username) }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="employee_id">Employee ID</label>
-                        <input type="text" id="employee_id" name="employee_id" class="form-control" placeholder="e.g. EMP-1025" value="{{ old('employee_id', $user->employee_id) }}">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
                         <label for="email" class="required">Email ID</label>
                         <input type="email" id="email" name="email" class="form-control" placeholder="e.g. vijay.kumar@westernrail.in" required value="{{ old('email', $user->email) }}">
                     </div>
                     <div class="form-group">
                         <label for="mobile" class="required">Mobile Number</label>
                         <input type="text" id="mobile" name="mobile" class="form-control" placeholder="e.g. +91 98765 43210" required value="{{ old('mobile', $user->mobile) }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="alternate_number">Alternate Number</label>
-                        <input type="text" id="alternate_number" name="alternate_number" class="form-control" placeholder="e.g. +91 91234 56789" value="{{ old('alternate_number', $user->alternate_number) }}">
                     </div>
                 </div>
 
@@ -79,15 +64,6 @@
                             <option value="Male" {{ old('gender', $user->gender) === 'Male' ? 'selected' : '' }}>Male</option>
                             <option value="Female" {{ old('gender', $user->gender) === 'Female' ? 'selected' : '' }}>Female</option>
                             <option value="Other" {{ old('gender', $user->gender) === 'Other' ? 'selected' : '' }}>Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="language">Language Preference</label>
-                        <select id="language" name="language" class="form-control">
-                            <option value="English" {{ old('language', $user->language) === 'English' ? 'selected' : '' }}>English</option>
-                            <option value="Hindi" {{ old('language', $user->language) === 'Hindi' ? 'selected' : '' }}>Hindi</option>
-                            <option value="Gujarati" {{ old('language', $user->language) === 'Gujarati' ? 'selected' : '' }}>Gujarati</option>
-                            <option value="Spanish" {{ old('language', $user->language) === 'Spanish' ? 'selected' : '' }}>Spanish</option>
                         </select>
                     </div>
                 </div>
@@ -133,93 +109,9 @@
                 </div>
             </div>
 
-            <!-- Section 2: Organization & Contact Information -->
+            <!-- Section 2: Login & Access Information -->
             <div class="form-section">
-                <h3 class="form-section-title">2. Organization & Contact Information</h3>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="department" class="required">Department</label>
-                        <select id="department" name="department" class="form-control" required>
-                            <option value="">Select Department</option>
-                            <option value="Network Operations" {{ old('department', $user->department) === 'Network Operations' ? 'selected' : '' }}>Network Operations</option>
-                            <option value="Security Operations" {{ old('department', $user->department) === 'Security Operations' ? 'selected' : '' }}>Security Operations</option>
-                            <option value="System Administration" {{ old('department', $user->department) === 'System Administration' ? 'selected' : '' }}>System Administration</option>
-                            <option value="IT Service Desk" {{ old('department', $user->department) === 'IT Service Desk' ? 'selected' : '' }}>IT Service Desk</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="designation" class="required">Designation</label>
-                        <select id="designation" name="designation" class="form-control" required>
-                            <option value="">Select Designation</option>
-                            <option value="Network Engineer" {{ old('designation', $user->designation) === 'Network Engineer' ? 'selected' : '' }}>Network Engineer</option>
-                            <option value="Security Analyst" {{ old('designation', $user->designation) === 'Security Analyst' ? 'selected' : '' }}>Security Analyst</option>
-                            <option value="Systems Administrator" {{ old('designation', $user->designation) === 'Systems Administrator' ? 'selected' : '' }}>Systems Administrator</option>
-                            <option value="Support Desk Lead" {{ old('designation', $user->designation) === 'Support Desk Lead' ? 'selected' : '' }}>Support Desk Lead</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="reporting_manager" class="required">Reporting Manager</label>
-                        <select id="reporting_manager" name="reporting_manager" class="form-control" required>
-                            <option value="">Select Manager</option>
-                            <option value="Rakesh Singh" {{ old('reporting_manager', $user->reporting_manager) === 'Rakesh Singh' ? 'selected' : '' }}>Rakesh Singh</option>
-                            <option value="Sanjay Patel" {{ old('reporting_manager', $user->reporting_manager) === 'Sanjay Patel' ? 'selected' : '' }}>Sanjay Patel</option>
-                            <option value="Amisha Mehta" {{ old('reporting_manager', $user->reporting_manager) === 'Amisha Mehta' ? 'selected' : '' }}>Amisha Mehta</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="office_location" class="required">Office Location</label>
-                        <select id="office_location" name="office_location" class="form-control" required>
-                            <option value="">Select Location</option>
-                            <option value="Ahmedabad DC" {{ old('office_location', $user->office_location) === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
-                            <option value="Mumbai DC" {{ old('office_location', $user->office_location) === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
-                            <option value="Delhi Head Office" {{ old('office_location', $user->office_location) === 'Delhi Head Office' ? 'selected' : '' }}>Delhi Head Office</option>
-                            <option value="Bangalore Branch" {{ old('office_location', $user->office_location) === 'Bangalore Branch' ? 'selected' : '' }}>Bangalore Branch</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="work_location">Work Location / Site</label>
-                        <select id="work_location" name="work_location" class="form-control">
-                            <option value="">Select Work Location</option>
-                            <option value="Ahmedabad DC" {{ old('work_location', $user->work_location) === 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
-                            <option value="Mumbai DC" {{ old('work_location', $user->work_location) === 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
-                            <option value="On-Site Support" {{ old('work_location', $user->work_location) === 'On-Site Support' ? 'selected' : '' }}>On-Site Support</option>
-                            <option value="Remote Work" {{ old('work_location', $user->work_location) === 'Remote Work' ? 'selected' : '' }}>Remote Work</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="timezone" class="required">Time Zone</label>
-                        <select id="timezone" name="timezone" class="form-control" required>
-                            <option value="Asia/Kolkata" {{ old('timezone', $user->timezone) === 'Asia/Kolkata' ? 'selected' : '' }}>Asia/Kolkata (IST)</option>
-                            <option value="UTC" {{ old('timezone', $user->timezone) === 'UTC' ? 'selected' : '' }}>UTC</option>
-                            <option value="Europe/London" {{ old('timezone', $user->timezone) === 'Europe/London' ? 'selected' : '' }}>Europe/London (GMT)</option>
-                            <option value="America/New_York" {{ old('timezone', $user->timezone) === 'America/New_York' ? 'selected' : '' }}>America/New_York (EST)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
-                    <div class="form-group">
-                        <label for="address">Address</label>
-                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="e.g. Ahmedabad Data Center, Near Kalupur Station, Ahmedabad, Gujarat - 380001">{{ old('address', $user->address) }}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="landline">Landline Number</label>
-                        <input type="text" id="landline" name="landline" class="form-control" placeholder="e.g. 079-26876543" value="{{ old('landline', $user->landline) }}">
-                    </div>
-                    <div class="form-group">
-                        <label for="extension">Extension</label>
-                        <input type="text" id="extension" name="extension" class="form-control" placeholder="e.g. 1025" value="{{ old('extension', $user->extension) }}">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 3: Login & Access Information -->
-            <div class="form-section">
-                <h3 class="form-section-title">3. Login & Access Information</h3>
+                <h3 class="form-section-title">2. Login & Access Information</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -300,7 +192,7 @@
 
             <!-- Section 4: SLA Association -->
             <div class="form-section">
-                <h3 class="form-section-title">4. SLA Association</h3>
+                <h3 class="form-section-title">3. SLA Association</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -345,7 +237,7 @@
 
             <!-- Section 6: Notifications & Preferences -->
             <div class="form-section">
-                <h3 class="form-section-title">5. Notifications & Preferences</h3>
+                <h3 class="form-section-title">4. Notifications & Preferences</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -400,7 +292,7 @@
 
             <!-- Section 7: Additional Information -->
             <div class="form-section">
-                <h3 class="form-section-title">6. Additional Information</h3>
+                <h3 class="form-section-title">5. Additional Information</h3>
                 
                 <div class="form-row" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
@@ -434,7 +326,7 @@
 
             <!-- Section 8: Attachments -->
             <div class="form-section">
-                <h3 class="form-section-title">7. Attachments</h3>
+                <h3 class="form-section-title">6. Attachments</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -532,7 +424,7 @@
                     </div>
                     <div class="summary-profile-info">
                         <h4 id="sidebarName">{{ $user->name }}</h4>
-                        <p id="sidebarDesignation">{{ $user->designation ?? '—' }}</p>
+                        <p id="sidebarDesignation">{{ $user->roleLabel() }}</p>
                     </div>
                     <div style="margin-left: auto;">
                         <span class="{{ $user->status === 'Active' ? 'badge-active' : 'badge-inactive' }}" id="sidebarStatus">{{ $user->status }}</span>
@@ -541,20 +433,8 @@
                 
                 <div class="summary-details-list">
                     <div class="summary-detail-item">
-                        <span class="label">User ID</span>
-                        <span class="value" id="sidebarUserId">{{ $user->username ?? '—' }}</span>
-                    </div>
-                    <div class="summary-detail-item">
                         <span class="label">Full Name</span>
                         <span class="value" id="sidebarFullName">{{ $user->name }}</span>
-                    </div>
-                    <div class="summary-detail-item">
-                        <span class="label">Designation</span>
-                        <span class="value" id="sidebarDesignationDetail">{{ $user->designation ?? '—' }}</span>
-                    </div>
-                    <div class="summary-detail-item">
-                        <span class="label">Department</span>
-                        <span class="value" id="sidebarDepartment">{{ $user->department ?? '—' }}</span>
                     </div>
                     <div class="summary-detail-item">
                         <span class="label">Email ID</span>
@@ -565,20 +445,12 @@
                         <span class="value" id="sidebarMobile">{{ $user->mobile ?? '—' }}</span>
                     </div>
                     <div class="summary-detail-item">
-                        <span class="label">Location</span>
-                        <span class="value" id="sidebarLocation">{{ $user->office_location ?? '—' }}</span>
-                    </div>
-                    <div class="summary-detail-item">
                         <span class="label">Role</span>
-                        <span class="value" id="sidebarRole">{{ $user->designation ?? '—' }}</span>
+                        <span class="value" id="sidebarRole">{{ $user->roleLabel() }}</span>
                     </div>
                     <div class="summary-detail-item">
                         <span class="label">Access Level</span>
                         <span class="value" id="sidebarAccessLevel">{{ $user->roleLabel() }}</span>
-                    </div>
-                    <div class="summary-detail-item">
-                        <span class="label">Time Zone</span>
-                        <span class="value" id="sidebarTimezone">{{ $user->timezone ?? '—' }}</span>
                     </div>
                     <div class="summary-detail-item">
                         <span class="label">Status</span>
@@ -824,14 +696,9 @@
         // Inputs to monitor for simple textual changes
         const binds = [
             { sourceId: 'name', targetIds: ['sidebarName', 'sidebarFullName'] },
-            { sourceId: 'username', targetIds: ['sidebarUserId'] },
             { sourceId: 'email', targetIds: ['sidebarEmail'] },
             { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
-            { sourceId: 'department', targetIds: ['sidebarDepartment'] },
-            { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail'] },
-            { sourceId: 'role_id', targetIds: ['sidebarRole', 'sidebarAccessLevel'] },
-            { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
-            { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
+            { sourceId: 'role_id', targetIds: ['sidebarRole', 'sidebarAccessLevel', 'sidebarDesignation'] },
         ];
 
         binds.forEach(bind => {
