@@ -315,9 +315,30 @@ class Device extends Asset
         return $this->hasOne(DeviceScript::class, 'device_id');
     }
 
+    public function resolvedDeviceVendor(): ?DeviceVendor
+    {
+        foreach (['deviceVendor', 'vendor'] as $relation) {
+            if ($this->relationLoaded($relation)) {
+                $vendor = $this->getRelation($relation);
+
+                if ($vendor instanceof DeviceVendor) {
+                    return $vendor;
+                }
+            }
+        }
+
+        return $this->vendor_id ? $this->deviceVendor : null;
+    }
+
+    public function vendorDisplayName(): ?string
+    {
+        return $this->resolvedDeviceVendor()?->name
+            ?? (filled($this->attributes['vendor'] ?? null) ? (string) $this->attributes['vendor'] : null);
+    }
+
     public function driverSlug(): ?string
     {
-        return $this->vendor?->slug;
+        return $this->resolvedDeviceVendor()?->slug;
     }
 
     public function healthScore(): int

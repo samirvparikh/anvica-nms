@@ -58,7 +58,7 @@
                 <td style="font-weight: 700;">{{ $device->name }}</td>
                 @if($isAdmin)<td>{{ $device->user?->name ?? 'Unassigned' }}</td>@endif
                 <td>{{ $device->service?->name ?? $device->type }}</td>
-                <td>{{ $device->vendor?->name ?? '—' }}</td>
+                <td>{{ $device->vendorDisplayName() ?? '—' }}</td>
                 <td>{{ $device->ip_address }}</td>
                 <td>{{ $device->location }}</td>
                 <td>

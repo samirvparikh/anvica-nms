@@ -9,10 +9,10 @@
     <a href="{{ route('inventory.assets.index') }}" class="btn-secondary">Back to Assets</a>
 </div>
 
-@if($device->vendor)
+@if($deviceVendor = $device->resolvedDeviceVendor())
 <div class="device-script-vendor-link">
     <span>Vendor template:</span>
-    <a href="{{ route('vendors.script.edit', $device->vendor) }}">{{ $device->vendor->name }}</a>
+    <a href="{{ route('vendors.script.edit', $deviceVendor) }}">{{ $deviceVendor->name }}</a>
 </div>
 @endif
 
@@ -103,13 +103,13 @@
                 <span class="form-hint">
                     @if(!empty($templateIsDefault))
                         Default vendor template — not saved yet.
-                        @if($device->vendor)
-                            <a href="{{ route('vendors.script.edit', $device->vendor) }}">Save on vendor script page</a>.
+                        @if($deviceVendor = $device->resolvedDeviceVendor())
+                            <a href="{{ route('vendors.script.edit', $deviceVendor) }}">Save on vendor script page</a>.
                         @endif
                     @else
                         Vendor template with chunk placeholders.
-                        @if($device->vendor)
-                            Edit on the <a href="{{ route('vendors.script.edit', $device->vendor) }}">vendor script page</a>.
+                        @if($deviceVendor = $device->resolvedDeviceVendor())
+                            Edit on the <a href="{{ route('vendors.script.edit', $deviceVendor) }}">vendor script page</a>.
                         @endif
                     @endif
                 </span>

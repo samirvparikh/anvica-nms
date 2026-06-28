@@ -423,7 +423,7 @@ class DevicePushApiController extends Controller
             'hostname' => $device->hostname,
             'ip_address' => $device->ip_address,
             'service' => $device->service?->name,
-            'vendor' => $device->vendor?->name,
+            'vendor' => $device->vendorDisplayName(),
             'status' => $device->status,
             'health_status' => $device->health_status,
             'last_seen' => $device->last_seen,

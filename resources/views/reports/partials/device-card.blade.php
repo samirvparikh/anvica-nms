@@ -18,8 +18,9 @@
                 </div>
                 <p class="report-card-subtitle">
                     {{ $device->service?->name ?? $device->type ?? 'Unknown service' }}
-                    @if($device->vendor?->name)
-                        <span class="report-card-dot">•</span> {{ $device->vendor->name }}
+                    @php $vendorName = $device->vendorDisplayName(); @endphp
+                    @if($vendorName)
+                        <span class="report-card-dot">•</span> {{ $vendorName }}
                     @endif
                 </p>
             </div>
