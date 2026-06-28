@@ -11,11 +11,29 @@
     </a>
 </div>
 
+<style>
+    .form-grid-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    @media (max-width: 1024px) {
+        .form-grid-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
 <form action="{{ route('inventory.assets.update', $asset->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
-    <div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 1200px; margin: 0 auto;">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 1400px; margin: 0 auto; width: 100%;">
+
+        <div class="form-grid-layout">
+            <!-- Column 1: General & Purchase Details -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
         
         <!-- 1. Asset Information -->
         <div style="background: white; border-radius: 12px; padding: 1.75rem; box-shadow: var(--card-shadow);">
@@ -27,65 +45,18 @@
                     <label for="asset_name" style="font-weight: 600;">Asset Name <span style="color: var(--status-down);">*</span></label>
                     <input type="text" name="asset_name" id="asset_name" class="form-control" placeholder="e.g. Core-Router-01" required value="{{ old('asset_name', $asset->asset_name) }}">
                 </div>
-                <div class="form-group">
-                    <label for="asset_type" style="font-weight: 600;">Asset Type <span style="color: var(--status-down);">*</span></label>
-                    <select name="asset_type" id="asset_type" class="form-control" required>
-                        <option value="">Select Type</option>
-                        <option value="Router" {{ old('asset_type', $asset->asset_type) == 'Router' ? 'selected' : '' }}>Router</option>
-                        <option value="Switch" {{ old('asset_type', $asset->asset_type) == 'Switch' ? 'selected' : '' }}>Switch</option>
-                        <option value="Server" {{ old('asset_type', $asset->asset_type) == 'Server' ? 'selected' : '' }}>Server</option>
-                        <option value="Firewall" {{ old('asset_type', $asset->asset_type) == 'Firewall' ? 'selected' : '' }}>Firewall</option>
-                        <option value="Access Point" {{ old('asset_type', $asset->asset_type) == 'Access Point' ? 'selected' : '' }}>Access Point</option>
-                        <option value="Controller" {{ old('asset_type', $asset->asset_type) == 'Controller' ? 'selected' : '' }}>Controller</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="asset_category" style="font-weight: 600;">Asset Category <span style="color: var(--status-down);">*</span></label>
-                    <select name="asset_category" id="asset_category" class="form-control" required>
-                        <option value="">Select Category</option>
-                        <option value="Network Infrastructure" {{ old('asset_category', $asset->asset_category) == 'Network Infrastructure' ? 'selected' : '' }}>Network Infrastructure</option>
-                        <option value="Security Infrastructure" {{ old('asset_category', $asset->asset_category) == 'Security Infrastructure' ? 'selected' : '' }}>Security Infrastructure</option>
-                        <option value="Server Infrastructure" {{ old('asset_category', $asset->asset_category) == 'Server Infrastructure' ? 'selected' : '' }}>Server Infrastructure</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="status" style="font-weight: 600;">Status <span style="color: var(--status-down);">*</span></label>
-                    <select name="status" id="status" class="form-control" required>
-                        <option value="Active" {{ old('status', $asset->status) == 'Active' ? 'selected' : '' }}>Active</option>
-                        <option value="Inactive" {{ old('status', $asset->status) == 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                        <option value="Maintenance" {{ old('status', $asset->status) == 'Maintenance' ? 'selected' : '' }}>Maintenance</option>
-                    </select>
-                </div>
+                <x-master-select name="asset_type_id" type="asset_type" label="Asset Type" :required="true" :selected="old('asset_type_id', $asset->asset_type_id)" />
+                <x-master-select name="asset_category_id" type="asset_category" label="Asset Category" :required="true" :selected="old('asset_category_id', $asset->asset_category_id)" />
+                <x-master-select name="status_id" type="asset_status" label="Status" :required="true" :selected="old('status_id', $asset->status_id)" />
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 1.25rem;">
                 <div class="form-group">
                     <label style="font-weight: 600;">Asset ID (Auto)</label>
                     <input type="text" class="form-control" readonly disabled value="{{ $asset->asset_id_auto }}" style="background-color: var(--border-color); cursor: not-allowed;">
                 </div>
-                <div class="form-group">
-                    <label for="asset_group" style="font-weight: 600;">Asset Group</label>
-                    <select name="asset_group" id="asset_group" class="form-control">
-                        <option value="Core Network" {{ old('asset_group', $asset->asset_group) == 'Core Network' ? 'selected' : '' }}>Core Network</option>
-                        <option value="Distribution Network" {{ old('asset_group', $asset->asset_group) == 'Distribution Network' ? 'selected' : '' }}>Distribution Network</option>
-                        <option value="Access Network" {{ old('asset_group', $asset->asset_group) == 'Access Network' ? 'selected' : '' }}>Access Network</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="criticality" style="font-weight: 600;">Criticality <span style="color: var(--status-down);">*</span></label>
-                    <select name="criticality" id="criticality" class="form-control" required>
-                        <option value="Critical" {{ old('criticality', $asset->criticality) == 'Critical' ? 'selected' : '' }}>Critical</option>
-                        <option value="High" {{ old('criticality', $asset->criticality) == 'High' ? 'selected' : '' }}>High</option>
-                        <option value="Medium" {{ old('criticality', $asset->criticality) == 'Medium' ? 'selected' : '' }}>Medium</option>
-                        <option value="Low" {{ old('criticality', $asset->criticality) == 'Low' ? 'selected' : '' }}>Low</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="availability_requirement" style="font-weight: 600;">Availability Requirement</label>
-                    <select name="availability_requirement" id="availability_requirement" class="form-control">
-                        <option value="24 x 7" {{ old('availability_requirement', $asset->availability_requirement) == '24 x 7' ? 'selected' : '' }}>24 x 7</option>
-                        <option value="9 x 5" {{ old('availability_requirement', $asset->availability_requirement) == '9 x 5' ? 'selected' : '' }}>9 x 5</option>
-                    </select>
-                </div>
+                <x-master-select name="asset_group_id" type="asset_group" label="Asset Group" :selected="old('asset_group_id', $asset->asset_group_id)" />
+                <x-master-select name="criticality_id" type="criticality" label="Criticality" :required="true" :selected="old('criticality_id', $asset->criticality_id)" />
+                <x-master-select name="availability_requirement_id" type="availability_requirement" label="Availability Requirement" :selected="old('availability_requirement_id', $asset->availability_requirement_id)" />
             </div>
         </div>
 
@@ -95,18 +66,7 @@
                 <i class="fa-solid fa-id-card" style="color: #3b82f6;"></i> 2. Asset Identification
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
-                <div class="form-group">
-                    <label for="manufacturer" style="font-weight: 600;">Manufacturer <span style="color: var(--status-down);">*</span></label>
-                    <select name="manufacturer" id="manufacturer" class="form-control" required>
-                        <option value="">Select Manufacturer</option>
-                        <option value="Cisco" {{ old('manufacturer', $asset->manufacturer) == 'Cisco' ? 'selected' : '' }}>Cisco</option>
-                        <option value="HP" {{ old('manufacturer', $asset->manufacturer) == 'HP' ? 'selected' : '' }}>HP</option>
-                        <option value="Dell" {{ old('manufacturer', $asset->manufacturer) == 'Dell' ? 'selected' : '' }}>Dell</option>
-                        <option value="Palo Alto" {{ old('manufacturer', $asset->manufacturer) == 'Palo Alto' ? 'selected' : '' }}>Palo Alto</option>
-                        <option value="Fortinet" {{ old('manufacturer', $asset->manufacturer) == 'Fortinet' ? 'selected' : '' }}>Fortinet</option>
-                        <option value="Juniper" {{ old('manufacturer', $asset->manufacturer) == 'Juniper' ? 'selected' : '' }}>Juniper</option>
-                    </select>
-                </div>
+                <x-master-select name="manufacturer_id" type="manufacturer" label="Manufacturer" :required="true" :selected="old('manufacturer_id', $asset->manufacturer_id)" />
                 <div class="form-group">
                     <label for="model_number" style="font-weight: 600;">Model Number <span style="color: var(--status-down);">*</span></label>
                     <input type="text" name="model_number" id="model_number" class="form-control" placeholder="e.g. ISR 4331" required value="{{ old('model_number', $asset->model_number) }}">
@@ -154,15 +114,7 @@
                     <label for="hostname" style="font-weight: 600;">Hostname</label>
                     <input type="text" name="hostname" id="hostname" class="form-control" placeholder="e.g. Core-Router-01" value="{{ old('hostname', $asset->hostname) }}">
                 </div>
-                <div class="form-group">
-                    <label for="snmp_version" style="font-weight: 600;">SNMP Version</label>
-                    <select name="snmp_version" id="snmp_version" class="form-control">
-                        <option value="">Select SNMP Version</option>
-                        <option value="v1" {{ old('snmp_version', $asset->snmp_version) == 'v1' ? 'selected' : '' }}>v1</option>
-                        <option value="v2c" {{ old('snmp_version', $asset->snmp_version) == 'v2c' ? 'selected' : '' }}>v2c</option>
-                        <option value="v3" {{ old('snmp_version', $asset->snmp_version) == 'v3' ? 'selected' : '' }}>v3</option>
-                    </select>
-                </div>
+                <x-master-select name="snmp_version_id" type="snmp_version" label="SNMP Version" empty-label="Select SNMP Version" :selected="old('snmp_version_id', $asset->snmp_version_id)" />
                 <div class="form-group">
                     <label for="snmp_community_user" style="font-weight: 600;">SNMP Community / User</label>
                     <input type="text" name="snmp_community_user" id="snmp_community_user" class="form-control" placeholder="e.g. Anvica_NMS" value="{{ old('snmp_community_user', $asset->snmp_community_user) }}">
@@ -239,64 +191,18 @@
                         <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly disabled style="cursor: not-allowed; background-color: var(--border-color); opacity: 0.85;">
                     @endif
                 </div>
-                <div class="form-group">
-                    <label for="region" style="font-weight: 600;">Region</label>
-                    <select name="region" id="region" class="form-control">
-                        <option value="West Zone" {{ old('region', $asset->region) == 'West Zone' ? 'selected' : '' }}>West Zone</option>
-                        <option value="East Zone" {{ old('region', $asset->region) == 'East Zone' ? 'selected' : '' }}>East Zone</option>
-                        <option value="North Zone" {{ old('region', $asset->region) == 'North Zone' ? 'selected' : '' }}>North Zone</option>
-                        <option value="South Zone" {{ old('region', $asset->region) == 'South Zone' ? 'selected' : '' }}>South Zone</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="state" style="font-weight: 600;">State</label>
-                    <select name="state" id="state" class="form-control">
-                        <option value="Gujarat" {{ old('state', $asset->state) == 'Gujarat' ? 'selected' : '' }}>Gujarat</option>
-                        <option value="Maharashtra" {{ old('state', $asset->state) == 'Maharashtra' ? 'selected' : '' }}>Maharashtra</option>
-                        <option value="Delhi" {{ old('state', $asset->state) == 'Delhi' ? 'selected' : '' }}>Delhi</option>
-                        <option value="Karnataka" {{ old('state', $asset->state) == 'Karnataka' ? 'selected' : '' }}>Karnataka</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="city" style="font-weight: 600;">City</label>
-                    <select name="city" id="city" class="form-control">
-                        <option value="Ahmedabad" {{ old('city', $asset->city) == 'Ahmedabad' ? 'selected' : '' }}>Ahmedabad</option>
-                        <option value="Mumbai" {{ old('city', $asset->city) == 'Mumbai' ? 'selected' : '' }}>Mumbai</option>
-                        <option value="Pune" {{ old('city', $asset->city) == 'Pune' ? 'selected' : '' }}>Pune</option>
-                        <option value="Bangalore" {{ old('city', $asset->city) == 'Bangalore' ? 'selected' : '' }}>Bangalore</option>
-                    </select>
-                </div>
+                <x-master-select name="region_id" type="region" label="Region" :selected="old('region_id', $asset->region_id)" />
+                <x-master-select name="state_id" type="state" label="State" :selected="old('state_id', $asset->state_id)" />
+                <x-master-select name="city_id" type="city" label="City" :selected="old('city_id', $asset->city_id)" />
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 1.25rem;">
-                <div class="form-group">
-                    <label for="site_location" style="font-weight: 600;">Site / Location <span style="color: var(--status-down);">*</span></label>
-                    <select name="site_location" id="site_location" class="form-control" required>
-                        <option value="Ahmedabad DC" {{ old('site_location', $asset->site_location) == 'Ahmedabad DC' ? 'selected' : '' }}>Ahmedabad DC</option>
-                        <option value="Mumbai DC" {{ old('site_location', $asset->site_location) == 'Mumbai DC' ? 'selected' : '' }}>Mumbai DC</option>
-                        <option value="Bangalore DC" {{ old('site_location', $asset->site_location) == 'Bangalore DC' ? 'selected' : '' }}>Bangalore DC</option>
-                    </select>
-                </div>
+                <x-master-select name="site_location_id" type="site_location" label="Site / Location" :required="true" :selected="old('site_location_id', $asset->site_location_id)" />
                 <div class="form-group">
                     <label for="building_floor" style="font-weight: 600;">Building / Floor</label>
                     <input type="text" name="building_floor" id="building_floor" class="form-control" placeholder="e.g. Data Center - 1" value="{{ old('building_floor', $asset->building_floor) }}">
                 </div>
-                <div class="form-group">
-                    <label for="rack" style="font-weight: 600;">Rack</label>
-                    <select name="rack" id="rack" class="form-control">
-                        <option value="Rack-01" {{ old('rack', $asset->rack) == 'Rack-01' ? 'selected' : '' }}>Rack-01</option>
-                        <option value="Rack-02" {{ old('rack', $asset->rack) == 'Rack-02' ? 'selected' : '' }}>Rack-02</option>
-                        <option value="Rack-03" {{ old('rack', $asset->rack) == 'Rack-03' ? 'selected' : '' }}>Rack-03</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="rack_unit" style="font-weight: 600;">Rack Unit (U)</label>
-                    <select name="rack_unit" id="rack_unit" class="form-control">
-                        <option value="U-12" {{ old('rack_unit', $asset->rack_unit) == 'U-12' ? 'selected' : '' }}>U-12</option>
-                        <option value="U-13" {{ old('rack_unit', $asset->rack_unit) == 'U-13' ? 'selected' : '' }}>U-13</option>
-                        <option value="U-14" {{ old('rack_unit', $asset->rack_unit) == 'U-14' ? 'selected' : '' }}>U-14</option>
-                        <option value="U-15" {{ old('rack_unit', $asset->rack_unit) == 'U-15' ? 'selected' : '' }}>U-15</option>
-                    </select>
-                </div>
+                <x-master-select name="rack_id" type="rack" label="Rack" :selected="old('rack_id', $asset->rack_id)" />
+                <x-master-select name="rack_unit_id" type="rack_unit" label="Rack Unit (U)" :selected="old('rack_unit_id', $asset->rack_unit_id)" />
             </div>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1.25rem; margin-top: 1.25rem;">
                 <div class="form-group">
@@ -307,15 +213,7 @@
                     <label for="gps_coordinates" style="font-weight: 600;">GPS Coordinates</label>
                     <input type="text" name="gps_coordinates" id="gps_coordinates" class="form-control" placeholder="23.0225, 72.5714" value="{{ old('gps_coordinates', $asset->gps_coordinates) }}">
                 </div>
-                <div class="form-group">
-                    <label for="zone" style="font-weight: 600;">Zone</label>
-                    <select name="zone" id="zone" class="form-control">
-                        <option value="DC Network" {{ old('zone', $asset->zone) == 'DC Network' ? 'selected' : '' }}>DC Network</option>
-                        <option value="DMZ" {{ old('zone', $asset->zone) == 'DMZ' ? 'selected' : '' }}>DMZ</option>
-                        <option value="LAN" {{ old('zone', $asset->zone) == 'LAN' ? 'selected' : '' }}>LAN</option>
-                        <option value="WAN" {{ old('zone', $asset->zone) == 'WAN' ? 'selected' : '' }}>WAN</option>
-                    </select>
-                </div>
+                <x-master-select name="zone_id" type="zone" label="Zone" :selected="old('zone_id', $asset->zone_id)" />
             </div>
         </div>
 
@@ -369,6 +267,11 @@
             </div>
         </div>
 
+            </div>
+
+            <!-- Column 2: Technical & Monitoring Configuration -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        
         <!-- 6. Warranty & AMC Information -->
         <div style="background: white; border-radius: 12px; padding: 1.75rem; box-shadow: var(--card-shadow);">
             <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; color: var(--text-dark); display: flex; align-items: center; gap: 0.5rem;">
@@ -378,13 +281,7 @@
                 <!-- Warranty sub-column -->
                 <div style="border-right: 1px solid var(--border-color); padding-right: 2rem;">
                     <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--status-up); margin-bottom: 1rem;">Warranty</h4>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="warranty_status" style="font-weight: 600;">Warranty Status</label>
-                        <select name="warranty_status" id="warranty_status" class="form-control">
-                            <option value="Active" {{ old('warranty_status', $asset->warranty_status) == 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Expired" {{ old('warranty_status', $asset->warranty_status) == 'Expired' ? 'selected' : '' }}>Expired</option>
-                        </select>
-                    </div>
+                        <x-master-select name="warranty_status_id" type="warranty_status" label="Warranty Status" :selected="old('warranty_status_id', $asset->warranty_status_id)" />
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label for="warranty_start_date" style="font-weight: 600;">Start Date</label>
                         <input type="date" name="warranty_start_date" id="warranty_start_date" class="form-control" value="{{ old('warranty_start_date', $asset->warranty_start_date ? $asset->warranty_start_date->format('Y-m-d') : '') }}">
@@ -398,13 +295,7 @@
                 <!-- AMC sub-column -->
                 <div>
                     <h4 style="font-size: 0.95rem; font-weight: 700; color: #8b5cf6; margin-bottom: 1rem;">AMC / Support Contract</h4>
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="amc_status" style="font-weight: 600;">AMC Status</label>
-                        <select name="amc_status" id="amc_status" class="form-control">
-                            <option value="Active" {{ old('amc_status', $asset->amc_status) == 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Expired" {{ old('amc_status', $asset->amc_status) == 'Expired' ? 'selected' : '' }}>Expired</option>
-                        </select>
-                    </div>
+                        <x-master-select name="amc_status_id" type="amc_status" label="AMC Status" :selected="old('amc_status_id', $asset->amc_status_id)" />
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label for="amc_start_date" style="font-weight: 600;">Start Date</label>
                         <input type="date" name="amc_start_date" id="amc_start_date" class="form-control" value="{{ old('amc_start_date', $asset->amc_start_date ? $asset->amc_start_date->format('Y-m-d') : '') }}">
@@ -423,65 +314,15 @@
                 <i class="fa-solid fa-briefcase" style="color: #6366f1;"></i> 7. SLA & Business Mapping
             </h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
-                <div class="form-group">
-                    <label for="sla_policy" style="font-weight: 600;">SLA Policy <span style="color: var(--status-down);">*</span></label>
-                    <select name="sla_policy" id="sla_policy" class="form-control" required>
-                        <option value="Gold SLA" {{ old('sla_policy', $asset->sla_policy) == 'Gold SLA' ? 'selected' : '' }}>Gold SLA</option>
-                        <option value="Silver SLA" {{ old('sla_policy', $asset->sla_policy) == 'Silver SLA' ? 'selected' : '' }}>Silver SLA</option>
-                        <option value="Bronze SLA" {{ old('sla_policy', $asset->sla_policy) == 'Bronze SLA' ? 'selected' : '' }}>Bronze SLA</option>
-                        <option value="Standard SLA" {{ old('sla_policy', $asset->sla_policy) == 'Standard SLA' ? 'selected' : '' }}>Standard SLA</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="service_name" style="font-weight: 600;">Service Name <span style="color: var(--status-down);">*</span></label>
-                    <select name="service_name" id="service_name" class="form-control" required>
-                        <option value="Corporate WAN" {{ old('service_name', $asset->service_name) == 'Corporate WAN' ? 'selected' : '' }}>Corporate WAN</option>
-                        <option value="Internet Leased Line" {{ old('service_name', $asset->service_name) == 'Internet Leased Line' ? 'selected' : '' }}>Internet Leased Line</option>
-                        <option value="MPLS Link" {{ old('service_name', $asset->service_name) == 'MPLS Link' ? 'selected' : '' }}>MPLS Link</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="business_unit" style="font-weight: 600;">Business Unit</label>
-                    <select name="business_unit" id="business_unit" class="form-control">
-                        <option value="IT Operations" {{ old('business_unit', $asset->business_unit) == 'IT Operations' ? 'selected' : '' }}>IT Operations</option>
-                        <option value="Security Operations" {{ old('business_unit', $asset->business_unit) == 'Security Operations' ? 'selected' : '' }}>Security Operations</option>
-                        <option value="Finance" {{ old('business_unit', $asset->business_unit) == 'Finance' ? 'selected' : '' }}>Finance</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="sla_availability" style="font-weight: 600;">SLA Availability</label>
-                    <select name="sla_availability" id="sla_availability" class="form-control">
-                        <option value="99.99%" {{ old('sla_availability', $asset->sla_availability) == '99.99%' ? 'selected' : '' }}>99.99%</option>
-                        <option value="99.95%" {{ old('sla_availability', $asset->sla_availability) == '99.95%' ? 'selected' : '' }}>99.95%</option>
-                        <option value="99.9%" {{ old('sla_availability', $asset->sla_availability) == '99.9%' ? 'selected' : '' }}>99.9%</option>
-                    </select>
-                </div>
+                <x-master-select name="sla_policy_id" type="sla_policy" label="SLA Policy" :required="true" :selected="old('sla_policy_id', $asset->sla_policy_id)" />
+                <x-master-select name="service_name_id" type="service_name" label="Service Name" :required="true" :selected="old('service_name_id', $asset->service_name_id)" />
+                <x-master-select name="business_unit_id" type="business_unit" label="Business Unit" :selected="old('business_unit_id', $asset->business_unit_id)" />
+                <x-master-select name="sla_availability_id" type="sla_availability" label="SLA Availability" :selected="old('sla_availability_id', $asset->sla_availability_id)" />
             </div>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-top: 1.25rem;">
-                <div class="form-group">
-                    <label for="response_sla" style="font-weight: 600;">Response SLA</label>
-                    <select name="response_sla" id="response_sla" class="form-control">
-                        <option value="15 Minutes" {{ old('response_sla', $asset->response_sla) == '15 Minutes' ? 'selected' : '' }}>15 Minutes</option>
-                        <option value="30 Minutes" {{ old('response_sla', $asset->response_sla) == '30 Minutes' ? 'selected' : '' }}>30 Minutes</option>
-                        <option value="1 Hour" {{ old('response_sla', $asset->response_sla) == '1 Hour' ? 'selected' : '' }}>1 Hour</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="resolution_sla" style="font-weight: 600;">Resolution SLA</label>
-                    <select name="resolution_sla" id="resolution_sla" class="form-control">
-                        <option value="2 Hours" {{ old('resolution_sla', $asset->resolution_sla) == '2 Hours' ? 'selected' : '' }}>2 Hours</option>
-                        <option value="4 Hours" {{ old('resolution_sla', $asset->resolution_sla) == '4 Hours' ? 'selected' : '' }}>4 Hours</option>
-                        <option value="8 Hours" {{ old('resolution_sla', $asset->resolution_sla) == '8 Hours' ? 'selected' : '' }}>8 Hours</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="escalation_sla" style="font-weight: 600;">Escalation SLA</label>
-                    <select name="escalation_sla" id="escalation_sla" class="form-control">
-                        <option value="30 Minutes" {{ old('escalation_sla', $asset->escalation_sla) == '30 Minutes' ? 'selected' : '' }}>30 Minutes</option>
-                        <option value="1 Hour" {{ old('escalation_sla', $asset->escalation_sla) == '1 Hour' ? 'selected' : '' }}>1 Hour</option>
-                        <option value="2 Hours" {{ old('escalation_sla', $asset->escalation_sla) == '2 Hours' ? 'selected' : '' }}>2 Hours</option>
-                    </select>
-                </div>
+                <x-master-select name="response_sla_id" type="response_sla" label="Response SLA" :selected="old('response_sla_id', $asset->response_sla_id)" />
+                <x-master-select name="resolution_sla_id" type="resolution_sla" label="Resolution SLA" :selected="old('resolution_sla_id', $asset->resolution_sla_id)" />
+                <x-master-select name="escalation_sla_id" type="escalation_sla" label="Escalation SLA" :selected="old('escalation_sla_id', $asset->escalation_sla_id)" />
                 <div class="form-group">
                     <label for="business_impact" style="font-weight: 600;">Business Impact</label>
                     <select name="business_impact" id="business_impact" class="form-control">
@@ -633,6 +474,31 @@
                     <label for="notes" style="font-weight: 600;">Notes</label>
                     <textarea name="notes" id="notes" class="form-control" rows="4" placeholder="Enter any additional notes about this asset...">{{ old('notes', $asset->notes) }}</textarea>
                 </div>
+            </div>
+        </div>
+
+        <!-- 11. Backup File -->
+        <div style="background: white; border-radius: 12px; padding: 1.75rem; box-shadow: var(--card-shadow);">
+            <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; color: var(--text-dark); display: flex; align-items: center; gap: 0.5rem;">
+                <i class="fa-solid fa-file-shield" style="color: var(--status-up);"></i> 11. Backup File
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                <div class="form-group">
+                    <label for="backup_file" style="font-weight: 600;">Backup File (upload)</label>
+                    <input type="file" name="backup_file" id="backup_file" class="form-control">
+                    @if($asset->backup_path)
+                        <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fa-solid fa-file-arrow-down" style="color: var(--primary);"></i>
+                            <a href="{{ asset($asset->backup_path) }}" target="_blank" style="font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                                View current backup file
+                            </a>
+                        </div>
+                    @endif
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                        Max file size: 20MB. Upload configuration backup file or system logs.
+                    </p>
+                </div>
+            </div>
             </div>
         </div>
 

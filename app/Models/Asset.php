@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesApplicationMasters;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,20 +10,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Asset extends Model
 {
     use HasFactory;
+    use ResolvesApplicationMasters;
 
     protected $fillable = [
-        // 1. Asset Information
         'asset_name',
-        'asset_type',
-        'asset_category',
-        'status',
+        'asset_type_id',
+        'asset_category_id',
+        'status_id',
         'asset_id_auto',
-        'asset_group',
-        'criticality',
-        'availability_requirement',
-
-        // 2. Asset Identification
-        'manufacturer',
+        'asset_group_id',
+        'criticality_id',
+        'availability_requirement_id',
         'model_number',
         'serial_number',
         'part_number',
@@ -30,35 +28,38 @@ class Asset extends Model
         'hardware_version',
         'mac_address',
         'ean_imei',
-
-        // 3. Network Information
+        'manufacturer_id',
         'management_ip',
         'hostname',
-        'snmp_version',
+        'snmp_version_id',
         'snmp_community_user',
         'read_community',
         'write_community',
+        'snmp_port',
+        'service_id',
+        'vendor_id',
+        'api_url',
+        'api_username',
+        'api_password',
+        'health_status',
+        'last_seen',
         'ssh_enabled',
         'telnet_enabled',
         'auto_discover_snmp',
         'auto_import_interfaces',
         'auto_import_software',
         'auto_import_config_backup',
-
-        // 4. Location Information
         'customer_id',
-        'region',
-        'state',
-        'city',
-        'site_location',
+        'region_id',
+        'state_id',
+        'city_id',
+        'site_location_id',
         'building_floor',
-        'rack',
-        'rack_unit',
+        'rack_id',
+        'rack_unit_id',
         'address',
         'gps_coordinates',
-        'zone',
-
-        // 5. Vendor & Purchase Information
+        'zone_id',
         'vendor',
         'supplier_reseller',
         'purchase_order_no',
@@ -67,26 +68,20 @@ class Asset extends Model
         'installation_date',
         'commissioning_date',
         'cost',
-
-        // 6. Warranty & AMC Information
-        'warranty_status',
+        'warranty_status_id',
         'warranty_start_date',
         'warranty_end_date',
-        'amc_status',
+        'amc_status_id',
         'amc_start_date',
         'amc_end_date',
-
-        // 7. SLA & Business Mapping
-        'sla_policy',
-        'service_name',
-        'business_unit',
-        'sla_availability',
-        'response_sla',
-        'resolution_sla',
-        'escalation_sla',
+        'sla_policy_id',
+        'service_name_id',
+        'business_unit_id',
+        'sla_availability_id',
+        'response_sla_id',
+        'resolution_sla_id',
+        'escalation_sla_id',
         'business_impact',
-
-        // 8. Monitoring & Health Configuration
         'cpu_utilization_threshold',
         'memory_utilization_threshold',
         'packet_loss_threshold',
@@ -95,8 +90,6 @@ class Asset extends Model
         'health_score_calculation',
         'polling_interval',
         'alert_profile',
-
-        // 9. Ownership & Responsibility
         'asset_owner',
         'custodian_department',
         'responsible_person',
@@ -104,9 +97,8 @@ class Asset extends Model
         'email_id',
         'escalation_group',
         'notification_group',
-
-        // 10. Attachments & Notes
         'attachment_path',
+        'backup_path',
         'notes',
     ];
 
@@ -129,6 +121,8 @@ class Asset extends Model
             'amc_start_date' => 'date',
             'amc_end_date' => 'date',
             'cost' => 'decimal:2',
+            'snmp_port' => 'integer',
+            'last_seen' => 'datetime',
             'cpu_utilization_threshold' => 'integer',
             'memory_utilization_threshold' => 'integer',
             'packet_loss_threshold' => 'integer',
@@ -139,5 +133,15 @@ class Asset extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class, 'service_id');
+    }
+
+    public function deviceVendor(): BelongsTo
+    {
+        return $this->belongsTo(DeviceVendor::class, 'vendor_id');
     }
 }

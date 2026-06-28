@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\DeviceScriptController;
 use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AlertController;
@@ -23,6 +22,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\SlaController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ApplicationMasterController;
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -34,11 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    // Devices CRUD
-    Route::get('/devices', [DeviceController::class, 'index'])->name('devices.index');
-    Route::post('/devices', [DeviceController::class, 'store'])->name('devices.store');
-    Route::put('/devices/{device}', [DeviceController::class, 'update'])->name('devices.update');
-    Route::delete('/devices/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
+
 
     Route::get('/alarms', [AlarmController::class, 'index'])->name('alarms.index');
     Route::post('/alarms/{alarm}/ack', [AlarmController::class, 'acknowledge'])->name('alarms.ack');
@@ -123,6 +119,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail.update');
         Route::post('/settings/mail/test', [SettingsController::class, 'testMail'])->name('settings.mail.test');
+
+        Route::get('/master/application-masters', [ApplicationMasterController::class, 'index'])->name('master.application-masters.index');
+        Route::post('/master/application-masters', [ApplicationMasterController::class, 'store'])->name('master.application-masters.store');
+        Route::put('/master/application-masters/{applicationMaster}', [ApplicationMasterController::class, 'update'])->name('master.application-masters.update');
+        Route::delete('/master/application-masters/{applicationMaster}', [ApplicationMasterController::class, 'destroy'])->name('master.application-masters.destroy');
 
         Route::get('/devices/{device}/script', [DeviceScriptController::class, 'edit'])->name('devices.script.edit');
         Route::put('/devices/{device}/script', [DeviceScriptController::class, 'update'])->name('devices.script.update');

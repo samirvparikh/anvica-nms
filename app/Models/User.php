@@ -122,7 +122,7 @@ class User extends Authenticatable
 
     public function devices(): HasMany
     {
-        return $this->hasMany(Device::class);
+        return $this->hasMany(Device::class, 'customer_id');
     }
 
     public function services(): BelongsToMany

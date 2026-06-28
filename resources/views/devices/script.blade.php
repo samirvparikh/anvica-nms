@@ -6,7 +6,7 @@
         <h1>Device MikroTik Script</h1>
         <p>Generate <strong>script.rsc</strong> for <strong>{{ $device->name }}</strong> ({{ $device->ip_address }})</p>
     </div>
-    <a href="{{ route('devices.index') }}" class="btn-secondary">Back to Devices</a>
+    <a href="{{ route('inventory.assets.index') }}" class="btn-secondary">Back to Assets</a>
 </div>
 
 @if($device->vendor)

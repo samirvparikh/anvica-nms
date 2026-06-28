@@ -165,7 +165,7 @@ class MonitoringSeeder extends Seeder
                 ? DeviceVendor::where('service_id', $service->id)->where('slug', $map['vendor'])->first()
                 : null;
 
-            Device::where('name', $deviceName)->update([
+            Device::where('asset_name', $deviceName)->update([
                 // 'user_id' => $userAssignments[$deviceName] ?? null,
                 'service_id' => 1,
                 'vendor_id' => 1,
@@ -177,7 +177,7 @@ class MonitoringSeeder extends Seeder
             ]);
         }
 
-        $firewall = Device::where('name', 'Firewall-01')->first();
+        $firewall = Device::where('asset_name', 'Firewall-01')->first();
         if ($firewall && ! Alert::where('device_id', $firewall->id)->exists()) {
             $cpuPoint = ServicePoint::where('slug', 'cpu')->whereHas('service', fn ($q) => $q->where('slug', 'firewall'))->first();
             Alert::create([

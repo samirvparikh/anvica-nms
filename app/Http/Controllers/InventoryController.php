@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ValidatesApplicationMasterFields;
 use App\Models\Device;
 use App\Models\SlaPolicy;
 use App\Models\Asset;
@@ -12,6 +13,8 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
+    use ValidatesApplicationMasterFields;
+
     public function assetsIndex(Request $request)
     {
         $user = auth()->user();
@@ -32,7 +35,13 @@ class InventoryController extends Controller
 
         // Filtering
         if ($request->filled('status')) {
-            $query->where('status', $request->query('status'));
+            $statusId = is_numeric($request->query('status'))
+                ? (int) $request->query('status')
+                : \App\Support\ApplicationMasterHelper::resolveId('asset_status', $request->query('status'));
+
+            if ($statusId) {
+                $query->where('status_id', $statusId);
+            }
         }
 
         $assets = $query->get();
@@ -59,26 +68,44 @@ class InventoryController extends Controller
             $request->merge(['customer_id' => $user->id]);
         }
 
-        $request->validate([
-            // 1. Asset Information
-            'asset_name' => 'required|string|max:255',
-            'asset_type' => 'required|string|max:255',
-            'asset_category' => 'required|string|max:255',
-            'status' => 'required|string|max:255',
-            'criticality' => 'required|string|max:255',
-            // 2. Asset Identification
-            'manufacturer' => 'required|string|max:255',
-            'model_number' => 'required|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:assets,serial_number',
-            // 3. Network Information
-            'management_ip' => 'required|ip',
-            // 4. Location Information
-            'customer_id' => 'required|exists:users,id',
-            // 10. Attachment
-            'attachment' => 'nullable|file|max:20480',
-        ]);
+        $request->validate(
+            array_merge([
+                'asset_name' => 'required|string|max:255',
+                'model_number' => 'required|string|max:255',
+                'serial_number' => 'required|string|max:255|unique:assets,serial_number',
+                'management_ip' => 'required|ip',
+                'customer_id' => 'required|exists:users,id',
+                'attachment' => 'nullable|file|max:20480',
+                'backup_file' => 'nullable|file|max:20480',
+            ], $this->applicationMasterRules([
+                'asset_type_id',
+                'asset_category_id',
+                'status_id',
+                'criticality_id',
+                'manufacturer_id',
+                'site_location_id',
+                'sla_policy_id',
+                'service_name_id',
+            ])),
+            [],
+            [
+                'asset_name' => 'asset name',
+                'model_number' => 'model number',
+                'serial_number' => 'serial number',
+                'management_ip' => 'management IP',
+                'customer_id' => 'customer',
+                'asset_type_id' => 'asset type',
+                'asset_category_id' => 'asset category',
+                'status_id' => 'status',
+                'criticality_id' => 'criticality',
+                'manufacturer_id' => 'manufacturer',
+                'site_location_id' => 'site / location',
+                'sla_policy_id' => 'SLA policy',
+                'service_name_id' => 'service name',
+            ]
+        );
 
-        $data = $request->except(['attachment', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
+        $data = $request->except(['attachment', 'backup_file', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
 
         // Checkbox toggles mapping
         $data['ssh_enabled'] = $request->has('ssh_enabled');
@@ -101,6 +128,14 @@ class InventoryController extends Controller
             $filename = time() . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/attachments'), $filename);
             $data['attachment_path'] = 'uploads/attachments/' . $filename;
+        }
+
+        // Backup file upload
+        if ($request->hasFile('backup_file')) {
+            $file = $request->file('backup_file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/backups'), $filename);
+            $data['backup_path'] = 'uploads/backups/' . $filename;
         }
 
         Asset::create($data);
@@ -132,26 +167,26 @@ class InventoryController extends Controller
             $request->merge(['customer_id' => $user->id]);
         }
 
-        $request->validate([
-            // 1. Asset Information
+        $request->validate(array_merge([
             'asset_name' => 'required|string|max:255',
-            'asset_type' => 'required|string|max:255',
-            'asset_category' => 'required|string|max:255',
-            'status' => 'required|string|max:255',
-            'criticality' => 'required|string|max:255',
-            // 2. Asset Identification
-            'manufacturer' => 'required|string|max:255',
             'model_number' => 'required|string|max:255',
-            'serial_number' => 'required|string|max:255|unique:assets,serial_number,' . $asset->id,
-            // 3. Network Information
+            'serial_number' => 'required|string|max:255|unique:assets,serial_number,'.$asset->id,
             'management_ip' => 'required|ip',
-            // 4. Location Information
             'customer_id' => 'required|exists:users,id',
-            // 10. Attachment
             'attachment' => 'nullable|file|max:20480',
-        ]);
+            'backup_file' => 'nullable|file|max:20480',
+        ], $this->applicationMasterRules([
+            'asset_type_id',
+            'asset_category_id',
+            'status_id',
+            'criticality_id',
+            'manufacturer_id',
+            'site_location_id',
+            'sla_policy_id',
+            'service_name_id',
+        ])));
 
-        $data = $request->except(['attachment', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
+        $data = $request->except(['attachment', 'backup_file', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
 
         // Checkbox toggles mapping
         $data['ssh_enabled'] = $request->has('ssh_enabled');
@@ -177,6 +212,20 @@ class InventoryController extends Controller
             $data['attachment_path'] = 'uploads/attachments/' . $filename;
         }
 
+        // Backup file upload
+        if ($request->hasFile('backup_file')) {
+            $file = $request->file('backup_file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/backups'), $filename);
+
+            // Delete old backup if it exists
+            if ($asset->backup_path && file_exists(public_path($asset->backup_path))) {
+                @unlink(public_path($asset->backup_path));
+            }
+
+            $data['backup_path'] = 'uploads/backups/' . $filename;
+        }
+
         $asset->update($data);
 
         return redirect()->route('inventory.assets.index')->with('success', 'Asset updated successfully.');
@@ -194,6 +243,11 @@ class InventoryController extends Controller
         // Delete attachment if it exists
         if ($asset->attachment_path && file_exists(public_path($asset->attachment_path))) {
             @unlink(public_path($asset->attachment_path));
+        }
+
+        // Delete backup if it exists
+        if ($asset->backup_path && file_exists(public_path($asset->backup_path))) {
+            @unlink(public_path($asset->backup_path));
         }
 
         $asset->delete();

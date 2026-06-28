@@ -23,10 +23,12 @@
             ->join('');
         $isProfileActive = request()->is('profile*');
         $isAdmin = $authUser->isAdmin();
+        $navSectionMonitoring = request()->is('/') || request()->is('dashboard*') || request()->is('alarms*') || request()->is('maps*') || request()->is('monitoring*') || request()->is('reports*') || (request()->is('alerts*') && ! request()->is('alerts/manage'));
         $navSectionServiceDesk = request()->is('tickets*') || request()->is('incidents*') || request()->is('problems*') || request()->is('changes*') || request()->is('knowledge-base*');
         $navSectionMaintenance = request()->is('maintenance/preventive*') || request()->is('maintenance/calendar*') || request()->is('maintenance/windows*');
         $navSectionInventory = request()->is('inventory*');
         $navSectionSla = request()->is('sla*');
+        $navSectionMaster = request()->is('master*');
         $navSectionAdmin = request()->is('alerts/manage') || request()->is('vendors*') || request()->is('services*') || request()->is('service-points*') || request()->is('users*') || request()->is('settings*') || request()->is('api-request-logs*');
     @endphp
 
@@ -44,11 +46,11 @@
                     </svg>
                 </button>
                 <div class="sidebar-brand">
-                    <div class="logo-icon">
+                    <a href="{{ route('dashboard') }}" class="logo-icon" title="Go to Dashboard">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
                         </svg>
-                    </div>
+                    </a>
                     <div class="auth-logo-text sidebar-brand-text">
                         <h2 style="color: white; font-size: 1.1rem; font-weight: 700;">Anvica NMS</h2>
                         <p style="color: #64748b; font-size: 0.65rem;">Network Monitoring System</p>
@@ -57,7 +59,14 @@
             </div>
             
             <nav class="sidebar-nav">
-                <div class="nav-section-title">MONITORING</div>
+                <div class="nav-section {{ $navSectionMonitoring ? 'is-expanded' : '' }}" data-section="monitoring">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionMonitoring ? 'true' : 'false' }}">
+                        <span class="nav-section-title">MONITORING</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
                         <a href="{{ route('dashboard') }}" class="nav-link {{ request()->is('/') || request()->is('dashboard') ? 'active' : '' }}" title="Dashboard">
@@ -68,18 +77,6 @@
                                 <rect x="3" y="16" width="7" height="5" rx="1"/>
                             </svg>
                             <span class="nav-link-text">Dashboard</span>
-                        </a>
-                    </li>
-                    
-                    <li>
-                        <a href="{{ route('devices.index') }}" class="nav-link {{ request()->is('devices') ? 'active' : '' }}" title="Devices">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                                <line x1="6" y1="6" x2="6.01" y2="6"/>
-                                <line x1="6" y1="18" x2="6.01" y2="18"/>
-                            </svg>
-                            <span class="nav-link-text">Devices</span>
                         </a>
                     </li>
 
@@ -127,6 +124,8 @@
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
 
                 <div class="nav-section {{ $navSectionServiceDesk ? 'is-expanded' : '' }}" data-section="service-desk">
                     <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionServiceDesk ? 'true' : 'false' }}">
@@ -276,6 +275,8 @@
                     </div>
                 </div>
 
+                
+
                 @if($isAdmin)
                 <div class="nav-section {{ $navSectionAdmin ? 'is-expanded' : '' }}" data-section="administration">
                     <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionAdmin ? 'true' : 'false' }}">
@@ -361,22 +362,28 @@
                 </div>
                 @endif
 
-                <div class="nav-section-title">Account</div>
+
+                @if($isAdmin)
+                <div class="nav-section {{ $navSectionMaster ? 'is-expanded' : '' }}" data-section="master">
+                    <button type="button" class="nav-section-toggle" aria-expanded="{{ $navSectionMaster ? 'true' : 'false' }}">
+                        <span class="nav-section-title">NMS MASTER</span>
+                        <svg class="nav-section-chevron" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="nav-section-body">
                 <ul class="nav-list">
                     <li>
-                        <form action="{{ route('logout') }}" method="POST" id="logout-form" style="display: none;">
-                            @csrf
-                        </form>
-                        <a href="#" class="nav-link" title="Logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            <span class="nav-link-text">Logout</span>
+                        <a href="{{ route('master.application-masters.index') }}" class="nav-link {{ request()->is('master/application-masters*') ? 'active' : '' }}" title="Application Master">
+                            <i class="fa-solid fa-database" style="margin-right: 0.5rem; font-size: 1.1rem; width: 1.25rem; text-align: center;"></i>
+                            <span class="nav-link-text">Application Master</span>
                         </a>
                     </li>
                 </ul>
+                    </div>
+                </div>
+                @endif
+                
             </nav>
         </aside>
 
@@ -519,7 +526,7 @@
                         {{ session('success') }}
                     </div>
                 @endif
-                @if($errors->any())
+                @if($errors->any() && !View::hasSection('hideLayoutErrors'))
                     <div style="background-color: var(--bg-down); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--status-down); padding: 0.75rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.85rem; font-weight: 600;">
                         <ul style="list-style: none;">
                             @foreach($errors->all() as $error)

@@ -38,7 +38,7 @@ class DashboardController extends Controller
         $alertQuery = $this->userScope->alertsQuery($user, $customerId);
         $openAlerts = (clone $alertQuery)->where('status', Alert::STATUS_OPEN)->count();
         
-        $deviceNames = (clone $deviceQuery)->pluck('name')->all();
+        $deviceNames = (clone $deviceQuery)->pluck('asset_name')->all();
         $openAlarmsQuery = Alarm::where('status', 'Open');
         $criticalAlarmsQuery = Alarm::where('status', 'Open')->where('severity', 'Critical');
         $warningAlarmsQuery = Alarm::where('status', 'Open')->where('severity', 'Warning');

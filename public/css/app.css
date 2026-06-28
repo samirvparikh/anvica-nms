@@ -99,6 +99,14 @@ h6 {
     justify-content: center;
     color: white;
     font-weight: bold;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+a.logo-icon:hover {
+    opacity: 0.92;
+    transform: scale(1.03);
 }
 
 .logo-icon svg {
@@ -4164,3 +4172,107 @@ a.btn-action.script-btn.script-btn-active {
     .nms-report-grid .data-table td {
         white-space: nowrap;
     }
+}
+
+/* Application Master */
+.master-layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.master-type-panel {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 7rem);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+.master-type-panel .table-toolbar {
+    margin-bottom: 0;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.master-type-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.master-type-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 10px;
+    color: var(--text-dark, #1e293b);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.35;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.master-type-link > span:first-child {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.master-type-link:hover {
+    background: rgba(116, 198, 43, 0.08);
+    color: var(--primary);
+}
+
+.master-type-link.is-active {
+    background: rgba(116, 198, 43, 0.14);
+    color: var(--primary);
+}
+
+.master-type-count {
+    flex-shrink: 0;
+    min-width: 1.75rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.master-content {
+    margin-bottom: 0 !important;
+}
+
+.master-content .table-scroll {
+    max-height: calc(100vh - 14rem);
+    overflow: auto;
+}
+
+@media (max-width: 992px) {
+    .master-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .master-type-panel {
+        position: static;
+        max-height: none;
+    }
+
+    .master-type-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.35rem;
+        max-height: 280px;
+    }
+}

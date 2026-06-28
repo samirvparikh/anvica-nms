@@ -39,7 +39,7 @@ return new class extends Migration
             
             $table->foreignId('customer_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('device_id')->nullable()->constrained('devices')->onDelete('set null');
+            $table->foreignId('device_id')->nullable()->constrained('assets')->onDelete('set null');
             $table->foreignId('sla_policy_id')->nullable()->constrained('sla_policies')->onDelete('set null');
             
             // SLA Target timelines
@@ -94,7 +94,7 @@ return new class extends Migration
             $table->string('maintenance_id')->unique();
             $table->string('type')->default('Preventive');
             $table->string('category')->default('Network');
-            $table->foreignId('primary_device_id')->constrained('devices')->onDelete('cascade');
+            $table->foreignId('primary_device_id')->constrained('assets')->onDelete('cascade');
             $table->timestamp('start_time');
             $table->timestamp('end_time')->nullable();
             $table->integer('expected_downtime_minutes')->default(60);

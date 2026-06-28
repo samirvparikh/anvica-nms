@@ -52,7 +52,7 @@ class TicketController extends Controller
             $devices = Device::all();
             $users = User::all();
         } else {
-            $devices = Device::where('user_id', $user->id)->get();
+            $devices = Device::where('customer_id', $user->id)->get();
             $users = User::where('id', $user->id)->get();
         }
         $policies = SlaPolicy::all();

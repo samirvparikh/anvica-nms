@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Device;
-use App\Models\Site;
+use App\Support\DeviceAssetMapper;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -58,13 +58,31 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::updateOrCreate(
+            ['email' => 'jatin@gmail.com'],
+            [
+                'name' => 'jatin',
+                'mobile' => '9898183459',
+                'password' => Hash::make('123456'),
+                'role' => User::ROLE_USER,
+                'is_admin' => false,
+                'status' => User::STATUS_ACTIVE,
+                'device_limit' => 5,
+                'start_date' => now(),
+                'expire_date' => now()->addDays(364),
+                'created_by' => 1,
+            ]
+        );
 
-        $samir = \App\Models\User::where('email', 'samir@gmail.com')->first();
+
+        $samir = User::where('email', 'samir@gmail.com')->first();
+        $jatin = User::where('email', 'jatin@gmail.com')->first();
+
         $devices = [
             [
                 'user_id' => $samir?->id,
-                // 'service_id' => 1,
-                // 'vendor_id' => 1,
+                'service_id' => 1,
+                'vendor_id' => 1,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo',
                 'type' => 'Router',
@@ -79,10 +97,10 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'user_id' => $samir?->id,
-                // 'service_id' => 1,
-                // 'vendor_id' => 1,
+                'service_id' => 1,
+                'vendor_id' => 1,
                 'name' => 'Anvica_Demo',
-                'hostname' => 'Anvica_Demo',
+                'hostname' => 'Anvica_Demo2',
                 'type' => 'Router',
                 'device_type' => 'Router',
                 'ip_address' => '192.168.5.2',
@@ -93,15 +111,52 @@ class DatabaseSeeder extends Seeder
                 'status' => 'active',
                 'health_status' => 'Up',
             ],
+            [
+                'user_id' => $samir?->id,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                'name' => 'Anvica_Demo',
+                'hostname' => 'Anvica_Demo3',
+                'type' => 'Router',
+                'device_type' => 'Router',
+                'ip_address' => '192.168.5.3',
+                'snmp_version' => '2c',
+                'snmp_port' => 161,
+                'snmp_community' => 'Anvica_NMS',
+                'location' => 'Hathijan',
+                'status' => 'active',
+                'health_status' => 'Up',
+            ],
+            [
+                'user_id' => $jatin?->id,
+                'service_id' => 1,
+                'vendor_id' => 1,
+                'name' => 'Anvica_Jatin',
+                'hostname' => 'MikroTik',
+                'type' => 'Router',
+                'device_type' => 'Router',
+                'ip_address' => '103.112.225.1',
+                'snmp_version' => '2c',
+                'snmp_port' => 161,
+                'snmp_community' => 'Anvica_NMS',
+                'location' => 'Jamnagar',
+                'status' => 'active',
+                'health_status' => 'Up',
+            ],
         ];
 
         foreach ($devices as $device) {
-            Device::updateOrCreate(['name' => $device['name'], 'ip_address' => $device['ip_address']], $device);
+            $payload = DeviceAssetMapper::fromLegacyArray($device);
+            Device::updateOrCreate(
+                ['management_ip' => $payload['management_ip']],
+                $payload
+            );
         }
 
         
 
         $this->call(MonitoringSeeder::class);
         $this->call(SlaSeeder::class);
+        $this->call(ApplicationMasterSeeder::class);
     }
 }

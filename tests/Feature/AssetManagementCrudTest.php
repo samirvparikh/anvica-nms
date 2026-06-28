@@ -133,4 +133,61 @@ class AssetManagementCrudTest extends TestCase
             'id' => $asset->id,
         ]);
     }
+
+    public function test_can_upload_backup_file_and_it_is_deleted_with_asset(): void
+    {
+        $user = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
+        
+        $backupFile = UploadedFile::fake()->create('config_backup.txt', 100);
+
+        $response = $this->actingAs($user)->post('/inventory/assets', [
+            'asset_name' => 'Backup-Test-Router',
+            'asset_type' => 'Router',
+            'asset_category' => 'Network Infrastructure',
+            'status' => 'Active',
+            'criticality' => 'Medium',
+            'manufacturer' => 'Cisco',
+            'model_number' => 'ISR 4331',
+            'serial_number' => 'SERBACKUP1',
+            'management_ip' => '10.10.1.9',
+            'customer_id' => $user->id,
+            'backup_file' => $backupFile,
+        ]);
+
+        $response->assertRedirect('/inventory/assets');
+
+        $asset = Asset::where('serial_number', 'SERBACKUP1')->first();
+        $this->assertNotNull($asset);
+        $this->assertNotNull($asset->backup_path);
+        
+        $filePath = public_path($asset->backup_path);
+        $this->assertFileExists($filePath);
+
+        // Delete the asset
+        $response = $this->actingAs($user)->delete('/inventory/assets/' . $asset->id);
+        $response->assertRedirect('/inventory/assets');
+
+        $this->assertFileDoesNotExist($filePath);
+    }
+
+    public function test_user_devices_relation_uses_customer_id(): void
+    {
+        $user = User::factory()->create();
+        $asset = Asset::create([
+            'asset_name' => 'Alice-Router',
+            'asset_type' => 'Router',
+            'asset_category' => 'Network Infrastructure',
+            'status' => 'Active',
+            'criticality' => 'Medium',
+            'manufacturer' => 'Cisco',
+            'model_number' => 'ISR 4331',
+            'serial_number' => 'SER111',
+            'management_ip' => '10.10.1.1',
+            'customer_id' => $user->id,
+            'asset_id_auto' => 'AST-2026-0001',
+        ]);
+
+        $this->assertCount(1, $user->devices);
+        $this->assertEquals('Alice-Router', $user->devices->first()->name);
+    }
 }

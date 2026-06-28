@@ -19,13 +19,13 @@ class UserScopeService
             $query = Device::query();
 
             if ($customerId) {
-                $query->where('user_id', $customerId);
+                $query->where('customer_id', $customerId);
             }
 
             return $query;
         }
 
-        return Device::where('user_id', $user->id);
+        return Device::where('customer_id', $user->id);
     }
 
     public function deviceIds(User $user, ?int $customerId = null): array
@@ -39,7 +39,7 @@ class UserScopeService
             return true;
         }
 
-        return $device->user_id === $user->id;
+        return $device->customer_id === $user->id;
     }
 
     public function alertsQuery(User $user, ?int $customerId = null): Builder
