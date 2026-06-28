@@ -183,11 +183,36 @@ class ApplicationMasterService
         return $summaries;
     }
 
+    public function forgetCached(int $id): void
+    {
+        Cache::forget($this->cacheKey($id));
+    }
+
     protected function findCached(int $id): ?ApplicationMaster
     {
-        return Cache::remember("application_master.{$id}", 300, function () use ($id) {
-            return ApplicationMaster::find($id);
-        });
+        $key = $this->cacheKey($id);
+        $cached = Cache::get($key);
+
+        if ($cached instanceof ApplicationMaster) {
+            return $cached;
+        }
+
+        if ($cached !== null) {
+            Cache::forget($key);
+        }
+
+        $master = ApplicationMaster::query()->find($id);
+
+        if ($master !== null) {
+            Cache::put($key, $master, 300);
+        }
+
+        return $master;
+    }
+
+    protected function cacheKey(int $id): string
+    {
+        return "application_master.{$id}";
     }
 
     protected function normalizeLookupValue(string $type, string $value): string

@@ -55,6 +55,8 @@ class ApplicationMasterController extends Controller
 
         $applicationMaster->update($validated);
 
+        $this->masterService->forgetCached($applicationMaster->id);
+
         return redirect()
             ->route('master.application-masters.index', ['type' => $validated['type']])
             ->with('success', ApplicationMaster::typeLabel($validated['type']).' entry updated.');
@@ -63,7 +65,10 @@ class ApplicationMasterController extends Controller
     public function destroy(ApplicationMaster $applicationMaster)
     {
         $type = $applicationMaster->type;
+        $id = $applicationMaster->id;
         $applicationMaster->delete();
+
+        $this->masterService->forgetCached($id);
 
         return redirect()
             ->route('master.application-masters.index', ['type' => $type])

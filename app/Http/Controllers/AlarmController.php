@@ -23,7 +23,7 @@ class AlarmController extends Controller
             'ackCount' => $ackCount,
             'alarms' => $alarms,
             'isAdmin' => $isAdmin,
-            'devices' => $isAdmin ? Device::orderBy('name')->get(['id', 'name']) : collect(),
+            'devices' => $isAdmin ? Device::orderBy('name')->get(['id', 'asset_name']) : collect(),
         ]);
     }
 
