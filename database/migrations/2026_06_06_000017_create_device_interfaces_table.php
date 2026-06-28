@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('device_interfaces', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('device_id')->constrained('devices')->cascadeOnDelete();
             $table->string('interface_name');
             $table->string('status')->default('up');
             $table->unsignedBigInteger('rx')->default(0);

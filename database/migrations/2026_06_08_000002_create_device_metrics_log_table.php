@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('device_metrics_log', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('device_id')->constrained('devices')->cascadeOnDelete();
             $table->string('metric_slug');
             $table->decimal('metric_value', 16, 4);
             $table->string('metric_text')->nullable();

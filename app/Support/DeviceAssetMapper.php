@@ -72,6 +72,51 @@ class DeviceAssetMapper
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public static function fromDeviceRowForLegacySchema(object $row): array
+    {
+        $name = $row->name ?? $row->asset_name ?? 'Unnamed Asset';
+        $ip = $row->ip_address ?? $row->management_ip ?? '127.0.0.1';
+        $type = $row->device_type ?? $row->type ?? 'Router';
+        $year = date('Y');
+        $sequence = Asset::whereYear('created_at', $year)->count() + 1;
+
+        return array_filter([
+            'asset_name' => $name,
+            'asset_type' => $type,
+            'asset_category' => 'Network Infrastructure',
+            'status' => self::normalizeStatus($row->status ?? 'Active'),
+            'asset_id_auto' => sprintf('AST-%s-%04d', $year, $sequence),
+            'criticality' => 'Medium',
+            'manufacturer' => 'Cisco',
+            'model_number' => 'Generic',
+            'serial_number' => 'SN-'.Str::upper(Str::random(10)),
+            'management_ip' => $ip,
+            'hostname' => $row->hostname ?? $name,
+            'snmp_version' => $row->snmp_version ?? '2c',
+            'snmp_port' => (int) ($row->snmp_port ?? 161),
+            'snmp_community_user' => $row->snmp_community_user ?? $row->snmp_community ?? null,
+            'customer_id' => $row->user_id ?? $row->customer_id ?? null,
+            'site_location' => $row->site_location ?? $row->location ?? null,
+            'service_id' => $row->service_id ?? null,
+            'vendor_id' => $row->vendor_id ?? null,
+            'api_url' => $row->api_url ?? null,
+            'api_username' => $row->api_username ?? null,
+            'api_password' => $row->api_password ?? null,
+            'health_status' => $row->health_status ?? 'Up',
+            'last_seen' => $row->last_seen ?? null,
+            'health_monitoring' => true,
+            'health_score_calculation' => true,
+        ], static fn ($value) => $value !== null);
+    }
+
+    public static function resolveMasterId(string $type, ?string $value): ?int
+    {
+        return ApplicationMasterHelper::resolveId($type, $value);
+    }
+
+    /**
      * @param  array<string, mixed>  $extras
      * @return array<string, mixed>
      */

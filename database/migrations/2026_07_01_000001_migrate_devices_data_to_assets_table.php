@@ -16,7 +16,9 @@ return new class extends Migration
         $now = now();
 
         foreach (DB::table('devices')->orderBy('id')->get() as $row) {
-            $payload = DeviceAssetMapper::fromDeviceRow($row);
+            $payload = Schema::hasColumn('assets', 'asset_type_id')
+                ? DeviceAssetMapper::fromDeviceRow($row)
+                : DeviceAssetMapper::fromDeviceRowForLegacySchema($row);
             $payload['updated_at'] = $now;
 
             if (DB::table('assets')->where('id', $row->id)->exists()) {

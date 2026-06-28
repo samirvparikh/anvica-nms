@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('device_downtime_events', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('device_id')->constrained('devices')->cascadeOnDelete();
             $table->timestamp('down_at');
             $table->timestamp('up_at')->nullable();
             $table->unsignedInteger('duration_seconds')->nullable();

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('alerts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('device_id')->constrained('devices')->cascadeOnDelete();
             $table->foreignId('service_point_id')->nullable()->constrained()->nullOnDelete();
             $table->enum('severity', ['critical', 'warning', 'info'])->default('warning');
             $table->text('message');

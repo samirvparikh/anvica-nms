@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\DeviceAssetMapper;
+use App\Support\Migration\RepairsDeviceAssetForeignKeys;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use RepairsDeviceAssetForeignKeys;
+
     /**
      * Run the migrations.
      */
@@ -15,38 +17,9 @@ return new class extends Migration
     {
         Schema::disableForeignKeyConstraints();
 
-        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-            // 1. Drop old foreign keys pointing to devices table
-            Schema::table('tickets', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('maintenance_windows', function (Blueprint $table) {
-                $table->dropForeign(['primary_device_id']);
-            });
-            Schema::table('device_interface_log', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('device_downtime_events', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('device_scripts', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('device_metrics_log', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('alerts', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('device_interfaces', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-            Schema::table('device_metrics', function (Blueprint $table) {
-                $table->dropForeign(['device_id']);
-            });
-        }
+        $this->dropDeviceForeignKeysIfPresent();
 
-        // 2. Add monitoring columns to assets before copying legacy device rows.
+        // Add monitoring columns to assets before copying legacy device rows.
         Schema::table('assets', function (Blueprint $table) {
             if (! Schema::hasColumn('assets', 'service_id')) {
                 $table->foreignId('service_id')->nullable()->constrained('services')->onDelete('set null');
@@ -78,7 +51,7 @@ return new class extends Migration
             $now = now();
 
             foreach (DB::table('devices')->orderBy('id')->get() as $row) {
-                $payload = DeviceAssetMapper::fromDeviceRow($row);
+                $payload = $this->assetPayloadForMigration($row);
                 $payload['updated_at'] = $now;
 
                 if (DB::table('assets')->where('id', $row->id)->exists()) {
@@ -95,39 +68,12 @@ return new class extends Migration
             }
         }
 
-        // 3. Drop the devices table completely
+        $this->ensureAssetsExistForReferencedDeviceIds();
+
         Schema::dropIfExists('devices');
 
-        // 4. Create new foreign keys pointing to assets table
-        if (Schema::getConnection()->getDriverName() !== 'sqlite') {
-            Schema::table('tickets', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('set null');
-            });
-            Schema::table('maintenance_windows', function (Blueprint $table) {
-                $table->foreign('primary_device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_interface_log', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_downtime_events', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_scripts', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_metrics_log', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('alerts', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_interfaces', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-            Schema::table('device_metrics', function (Blueprint $table) {
-                $table->foreign('device_id')->references('id')->on('assets')->onDelete('cascade');
-            });
-        }
+        $this->ensureDeviceIdColumnsMatchAssets();
+        $this->addDeviceForeignKeysToAssets();
 
         Schema::enableForeignKeyConstraints();
     }

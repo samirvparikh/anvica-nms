@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('device_scripts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('device_id')->unique()->constrained('assets')->cascadeOnDelete();
+            $table->foreignId('device_id')->unique()->constrained('devices')->cascadeOnDelete();
             $table->string('target_ip');
             $table->string('snmp_community');
             $table->string('nms_url');
