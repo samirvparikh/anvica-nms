@@ -2,18 +2,16 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\ResolvesApplicationMasters;
 use App\Support\ApplicationMasterHelper;
 use App\Support\DeviceAssetMapper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 
-class Device extends Model
+class Device extends Asset
 {
     public const STATUS_ACTIVE = 'Active';
 
@@ -26,7 +24,6 @@ class Device extends Model
     public const HEALTH_DOWN = 'Down';
 
     use HasFactory;
-    use ResolvesApplicationMasters;
 
     protected $table = 'assets';
 
@@ -53,6 +50,7 @@ class Device extends Model
     protected static function booted(): void
     {
         static::saving(function (Device $device): void {
+            $device->stripLegacyAssetColumns();
             if (! $device->asset_name) {
                 $device->asset_name = $device->attributes['asset_name'] ?? $device->attributes['name'] ?? 'Default Asset';
             }
@@ -130,47 +128,64 @@ class Device extends Model
         'snmp_community',
     ];
 
-    protected $fillable = [
-        'customer_id',
-        'service_id',
-        'vendor_id',
-        'asset_name',
-        'hostname',
-        'asset_type_id',
-        'asset_category_id',
-        'status_id',
-        'criticality_id',
-        'manufacturer_id',
-        'site_location_id',
-        'management_ip',
-        'api_url',
-        'api_username',
-        'api_password',
-        'snmp_version_id',
-        'snmp_port',
-        'snmp_community_user',
-        'health_status',
-        'last_seen',
-    ];
-
     protected $hidden = [
         'api_password',
     ];
 
     protected function casts(): array
     {
-        return [
-            'last_seen' => 'datetime',
+        return array_merge(parent::casts(), [
             'api_password' => 'encrypted',
-            'ssh_enabled' => 'boolean',
-            'telnet_enabled' => 'boolean',
-            'auto_discover_snmp' => 'boolean',
-            'auto_import_interfaces' => 'boolean',
-            'auto_import_software' => 'boolean',
-            'auto_import_config_backup' => 'boolean',
-            'health_monitoring' => 'boolean',
-            'health_score_calculation' => 'boolean',
-        ];
+        ]);
+    }
+
+    public function getAssetIdAttribute(): ?string
+    {
+        return $this->asset_id_auto;
+    }
+
+    public function getCustodianAttribute(): ?string
+    {
+        return $this->custodian_department;
+    }
+
+    public function getCustomerSlaPolicyAttribute(): ?string
+    {
+        return $this->masterLabel('sla_policy_id');
+    }
+
+    public function getWarrantyStatusAttribute(): ?string
+    {
+        return $this->masterLabel('warranty_status_id');
+    }
+
+    public function getManufacturerAttribute(): ?string
+    {
+        return $this->masterLabel('manufacturer_id');
+    }
+
+    protected function stripLegacyAssetColumns(): void
+    {
+        if (! DeviceAssetMapper::usesMasterIdColumns()) {
+            return;
+        }
+
+        foreach ([
+            'asset_id', 'asset_type', 'asset_category', 'status', 'criticality', 'manufacturer',
+            'snmp_version', 'region', 'state', 'city', 'site_location', 'rack', 'rack_unit', 'zone',
+            'warranty_status', 'amc_status', 'sla_policy', 'service_name', 'business_unit',
+            'sla_availability', 'response_sla', 'resolution_sla', 'escalation_sla',
+            'warranty_type', 'warranty_provider', 'warranty_support_level', 'warranty_duration_years',
+            'warranty_onsite_support', 'warranty_parts_coverage', 'warranty_labor_coverage',
+            'warranty_transferable', 'warranty_terms', 'amc_available', 'amc_type', 'amc_provider',
+            'amc_support_level', 'amc_duration_years', 'amc_response_time', 'amc_resolution_time',
+            'amc_escalation_time', 'amc_coverage', 'amc_terms', 'invoice_date', 'warranty_cost',
+            'amc_cost', 'currency', 'tax', 'total_amc_cost', 'customer_sla_policy', 'availability_sla',
+            'renewal_reminder', 'amc_renewal_reminder', 'warranty_expiry_alert', 'amc_expiry_alert',
+            'notification_recipients', 'custodian', 'additional_notes', 'location',
+        ] as $column) {
+            unset($this->attributes[$column]);
+        }
     }
 
     // Accessors and Mutators for backward compatibility
