@@ -26,8 +26,7 @@ class MonitoringController extends Controller
 
             if ($customerId) {
                 $selectedCustomer = User::query()
-                    ->where('is_admin', false)
-                    ->where('role', User::ROLE_USER)
+                    ->customers()
                     ->find($customerId);
 
                 if (! $selectedCustomer) {
@@ -36,8 +35,7 @@ class MonitoringController extends Controller
             }
 
             $customers = User::query()
-                ->where('is_admin', false)
-                ->where('role', User::ROLE_USER)
+                ->customers()
                 ->orderBy('name')
                 ->get();
         }

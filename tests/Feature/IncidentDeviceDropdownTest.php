@@ -14,9 +14,9 @@ class IncidentDeviceDropdownTest extends TestCase
 
     public function test_admin_can_see_all_users_and_devices_on_incident_create(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Alice']);
-        $user2 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Bob']);
+        $admin = User::factory()->admin()->create();
+        $user1 = User::factory()->create(['name' => 'Alice']);
+        $user2 = User::factory()->create(['name' => 'Bob']);
 
         $device1 = Device::factory()->create(['user_id' => $user1->id, 'name' => 'Alice Device']);
         $device2 = Device::factory()->create(['user_id' => $user2->id, 'name' => 'Bob Device']);
@@ -37,8 +37,8 @@ class IncidentDeviceDropdownTest extends TestCase
 
     public function test_non_admin_sees_prefilled_customer_and_only_own_devices(): void
     {
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Alice']);
-        $user2 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Bob']);
+        $user1 = User::factory()->create(['name' => 'Alice']);
+        $user2 = User::factory()->create(['name' => 'Bob']);
 
         $device1 = Device::factory()->create(['user_id' => $user1->id, 'name' => 'Alice Device']);
         $device2 = Device::factory()->create(['user_id' => $user2->id, 'name' => 'Bob Device']);
@@ -60,8 +60,8 @@ class IncidentDeviceDropdownTest extends TestCase
 
     public function test_non_admin_customer_id_is_merged_and_forced_to_own_id_on_store(): void
     {
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user']);
-        $user2 = User::factory()->create(['is_admin' => false, 'role' => 'user']);
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
 
         SlaPolicy::create([
             'name' => 'Standard Incident SLA',

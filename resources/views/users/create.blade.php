@@ -24,7 +24,6 @@
 
 <form action="{{ route('users.store') }}" method="POST" enctype="multipart/form-data" id="engineerUserForm">
     @csrf
-    <input type="hidden" name="role" value="user">
     <input type="hidden" name="device_limit" value="50">
     <input type="hidden" name="start_date" value="{{ $today }}">
     <input type="hidden" name="expire_date" value="{{ $oneYearLater }}">
@@ -299,76 +298,18 @@
             <!-- Section 4: Roles & Permissions -->
             <div class="form-section">
                 <h3 class="form-section-title">4. Roles & Permissions</h3>
-                
-                <div class="form-row" style="grid-template-columns: 1fr 3fr; align-items: start;">
+
+                <div class="form-row">
                     <div class="form-group">
-                        <label class="required">Assign Roles</label>
-                        <div class="checkbox-grid" style="grid-template-columns: 1fr;">
-                            @php
-                                $rolesList = ['Super Admin', 'NMS Admin', 'NOC Engineer', 'Network Engineer', 'Field Engineer', 'Helpdesk Engineer', 'Read Only User', 'Vendor Engineer'];
-                            @endphp
-                            @foreach($rolesList as $rItem)
-                                <label class="checkbox-card">
-                                    <input type="checkbox" name="assigned_roles[]" value="{{ $rItem }}" class="role-checkbox" {{ $rItem === 'Network Engineer' ? 'checked' : '' }}>
-                                    {{ $rItem }}
-                                </label>
+                        <label for="role_id" class="required">Role</label>
+                        <select id="role_id" name="role_id" class="form-control" required>
+                            <option value="">Select Role</option>
+                            @foreach($assignableRoles as $role)
+                                <option value="{{ $role->id }}" {{ (string) old('role_id', $assignableRoles->first()?->id) === (string) $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }}
+                                </option>
                             @endforeach
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Module Access</label>
-                        <div class="module-access-table-wrapper">
-                            <table class="module-access-table">
-                                <thead>
-                                    <tr>
-                                        <th>Module</th>
-                                        <th style="text-align: center;">View</th>
-                                        <th style="text-align: center;">Create</th>
-                                        <th style="text-align: center;">Edit</th>
-                                        <th style="text-align: center;">Delete</th>
-                                        <th style="text-align: center;">Approve</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $modulesList = [
-                                            'Dashboard' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                            'Devices' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                            'Alarms' => ['view' => true, 'create' => false, 'edit' => true, 'delete' => false, 'approve' => false],
-                                            'Tickets' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => false, 'approve' => false],
-                                            'Incidents' => ['view' => true, 'create' => true, 'edit' => true, 'delete' => false, 'approve' => false],
-                                            'Problems' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => true],
-                                            'Changes' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => true],
-                                            'Assets' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                            'Reports' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                            'SLA' => ['view' => true, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                            'Administration' => ['view' => false, 'create' => false, 'edit' => false, 'delete' => false, 'approve' => false],
-                                        ];
-                                    @endphp
-                                    @foreach($modulesList as $mName => $permissions)
-                                        <tr class="module-row">
-                                            <td style="font-weight: 600;">{{ $mName }}</td>
-                                            <td style="text-align: center;">
-                                                <input type="checkbox" name="module_access[{{ $mName }}][view]" value="1" class="permission-checkbox" {{ $permissions['view'] ? 'checked' : '' }}>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <input type="checkbox" name="module_access[{{ $mName }}][create]" value="1" class="permission-checkbox" {{ $permissions['create'] ? 'checked' : '' }}>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <input type="checkbox" name="module_access[{{ $mName }}][edit]" value="1" class="permission-checkbox" {{ $permissions['edit'] ? 'checked' : '' }}>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <input type="checkbox" name="module_access[{{ $mName }}][delete]" value="1" class="permission-checkbox" {{ $permissions['delete'] ? 'checked' : '' }}>
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <input type="checkbox" name="module_access[{{ $mName }}][approve]" value="1" class="permission-checkbox" {{ $permissions['approve'] ? 'checked' : '' }}>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -601,7 +542,7 @@
             <!-- Save and reset actions -->
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
                 <a href="{{ route('users.index') }}" class="btn-secondary" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 8px;">Cancel</a>
-                <button type="button" class="btn-sidebar-action" style="padding: 0.75rem 1.5rem; border-radius: 8px;" onclick="window.history.back()">Save as Draft</button>
+                <!-- <button type="button" class="btn-sidebar-action" style="padding: 0.75rem 1.5rem; border-radius: 8px;" onclick="window.history.back()">Save as Draft</button> -->
                 <button type="submit" class="btn-primary" style="width: auto; padding: 0.75rem 2rem; border-radius: 8px; font-weight: 700;">Create User</button>
             </div>
 
@@ -935,7 +876,8 @@
             { sourceId: 'email', targetIds: ['sidebarEmail'] },
             { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
             { sourceId: 'department', targetIds: ['sidebarDepartment'] },
-            { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail', 'sidebarRole'] },
+            { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail'] },
+            { sourceId: 'role_id', targetIds: ['sidebarRole'] },
             { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
             { sourceId: 'access_level', targetIds: ['sidebarAccessLevel'] },
             { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
@@ -944,13 +886,18 @@
         binds.forEach(bind => {
             const input = document.getElementById(bind.sourceId);
             if (input) {
-                input.addEventListener('input', function() {
-                    const val = input.value || '—';
+                const updateTargets = () => {
+                    let val = input.value || '—';
+                    if (bind.sourceId === 'role_id' && input.options && input.selectedIndex >= 0) {
+                        val = input.options[input.selectedIndex].text || val;
+                    }
                     bind.targetIds.forEach(targetId => {
                         const target = document.getElementById(targetId);
                         if (target) target.textContent = val;
                     });
-                });
+                };
+                input.addEventListener('input', updateTargets);
+                input.addEventListener('change', updateTargets);
             }
         });
 
@@ -1029,72 +976,44 @@
             updateSlaOverview();
         }
 
-        // Roles Assigned checkboxes syncing
-        const roleCbs = document.querySelectorAll('.role-checkbox');
-        function syncRolesSidebar() {
-            const listEl = document.getElementById('sidebarRolesList');
-            listEl.innerHTML = '';
-            let checkedCount = 0;
-            roleCbs.forEach(cb => {
-                if (cb.checked) {
-                    checkedCount++;
-                    const badge = document.createElement('span');
-                    badge.className = 'role-badge';
-                    badge.textContent = cb.value;
-                    listEl.appendChild(badge);
-                }
-            });
-            if (checkedCount === 0) {
-                listEl.innerHTML = '<span style="color: var(--text-muted); font-size: 0.8rem;">No roles assigned</span>';
+        const roleSelect = document.getElementById('role_id');
+        const staffRoleIds = @json($staffRoleIds);
+        const staffSectionPrefixes = ['2.', '5.', '6.', '7.', '8.', '9.', '10.', '11.', 'NMS Services'];
+
+        function toggleCreateStaffSections() {
+            if (!roleSelect) {
+                return;
             }
-        }
-        roleCbs.forEach(cb => cb.addEventListener('change', syncRolesSidebar));
-        syncRolesSidebar();
 
-        // Module Access progress bar calculations
-        const permissionCbs = document.querySelectorAll('.permission-checkbox');
-        const rows = document.querySelectorAll('.module-row');
-
-        function calculatePermissions() {
-            const totalModules = rows.length;
-            let fullAccess = 0;
-            let limitedAccess = 0;
-            let noAccess = 0;
-
-            rows.forEach(row => {
-                const cbs = row.querySelectorAll('.permission-checkbox');
-                let checkedCount = 0;
-                cbs.forEach(cb => {
-                    if (cb.checked) checkedCount++;
-                });
-
-                if (checkedCount === cbs.length) {
-                    fullAccess++;
-                } else if (checkedCount === 0) {
-                    noAccess++;
-                } else {
-                    limitedAccess++;
+            const isStaff = staffRoleIds.map(String).includes(String(roleSelect.value));
+            document.querySelectorAll('.form-section').forEach(section => {
+                const title = section.querySelector('.form-section-title')?.textContent?.trim() || '';
+                const isStaffSection = staffSectionPrefixes.some(prefix => title.startsWith(prefix));
+                if (isStaffSection) {
+                    section.style.display = isStaff ? '' : 'none';
                 }
             });
 
-            // Update textual counts
-            document.getElementById('pbTotalCount').textContent = totalModules;
-            document.getElementById('pbFullCount').textContent = fullAccess;
-            document.getElementById('pbLimitedCount').textContent = limitedAccess;
-            document.getElementById('pbNoCount').textContent = noAccess;
+            const accessLevel = document.getElementById('access_level');
+            if (accessLevel) {
+                accessLevel.required = isStaff;
+            }
 
-            // Update Progress Bar Fill Widths
-            const fullPct = totalModules > 0 ? (fullAccess / totalModules) * 100 : 0;
-            const limitedPct = totalModules > 0 ? (limitedAccess / totalModules) * 100 : 0;
-            const noPct = totalModules > 0 ? (noAccess / totalModules) * 100 : 0;
+            document.querySelectorAll('#engineerUserForm [required]').forEach(field => {
+                if (['role_id', 'name', 'email', 'mobile', 'password', 'password_confirmation', 'status', 'auth_type'].includes(field.id)) {
+                    return;
+                }
 
-            document.getElementById('pbFullFill').style.width = `${fullPct}%`;
-            document.getElementById('pbLimitedFill').style.width = `${limitedPct}%`;
-            document.getElementById('pbNoFill').style.width = `${noPct}%`;
+                if (field.closest('.form-section')?.querySelector('.form-section-title')?.textContent?.trim().startsWith('4.')) {
+                    return;
+                }
+
+                field.required = isStaff;
+            });
         }
 
-        permissionCbs.forEach(cb => cb.addEventListener('change', calculatePermissions));
-        calculatePermissions();
+        roleSelect?.addEventListener('change', toggleCreateStaffSections);
+        toggleCreateStaffSections();
     });
 </script>
 @endsection

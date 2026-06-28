@@ -20,6 +20,7 @@
             </svg>
             Add User
         </a>
+        @if(auth()->user()->isSuperAdmin())
         <button class="btn-add" id="openAddAdminModalBtn" style="background-color: var(--text-dark); color: white; display: inline-flex; align-items: center; justify-content: center; gap: 0.25rem;">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                 <line x1="12" y1="5" x2="12" y2="19"/>
@@ -27,6 +28,7 @@
             </svg>
             Add Admin
         </button>
+        @endif
     </div>
 </div>
 
@@ -66,7 +68,7 @@
                 <td>{{ $user->email }}</td>
                 <td>
                     <span class="status-badge {{ $user->isAdmin() ? 'active' : 'inactive' }}">
-                        {{ $user->isAdmin() ? 'Admin' : 'User' }}
+                        {{ $user->roleLabel() }}
                     </span>
                 </td>
                 <td>
@@ -109,7 +111,8 @@
                             data-name="{{ $user->name }}"
                             data-email="{{ $user->email }}"
                             data-mobile="{{ $user->mobile }}"
-                            data-role="{{ $user->role }}"
+                            data-role-id="{{ $user->role_id }}"
+                            data-assignable-roles="{{ json_encode(\App\Models\User::assignableRolesForEditor(auth()->user(), $user)->map(fn ($role) => ['id' => $role->id, 'name' => $role->name])->values()) }}"
                             data-status="{{ $user->status ?? 'Active' }}"
                             data-device-limit=""
                             data-start-date=""
@@ -164,7 +167,16 @@
             @csrf
             <div class="modal-body">
                 <input type="hidden" name="status" value="Active">
-                <input type="hidden" name="role" value="admin">
+                <div class="form-group">
+                    <label for="add_admin_role">Role</label>
+                    <select id="add_admin_role" name="role_id" class="form-control" required>
+                        @foreach($assignableRoles as $role)
+                            @if($role->slug === \App\Models\Role::SLUG_ADMIN)
+                                <option value="{{ $role->id }}" {{ (string) old('role_id', $role->id) === (string) $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="add_admin_name">Name</label>
                     <input type="text" id="add_admin_name" name="name" class="form-control" required>
@@ -217,9 +229,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="edit_user_role">Role</label>
-                        <select id="edit_user_role" name="role" class="form-control role-select" required>
-                            <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>User</option>
-                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                        <select id="edit_user_role" name="role_id" class="form-control role-select" required>
+                            @foreach($assignableRoles as $role)
+                                <option value="{{ $role->id }}" {{ (string) old('role_id') === (string) $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group user-device-limit-field" id="editDeviceLimitField">
@@ -307,30 +320,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    const staffRoleIds = @json($staffRoleIds->map(fn ($id) => (string) $id));
+
     function toggleUserFields(roleSelect, fieldsContainer, deviceLimitField) {
-        const isUser = roleSelect.value === 'user';
-        fieldsContainer.style.display = isUser ? '' : 'none';
+        const isStaff = staffRoleIds.includes(String(roleSelect.value));
+        fieldsContainer.style.display = isStaff ? '' : 'none';
 
         if (deviceLimitField) {
-            deviceLimitField.style.display = isUser ? '' : 'none';
+            deviceLimitField.style.display = isStaff ? '' : 'none';
         }
 
         fieldsContainer.querySelectorAll('.user-only-input').forEach(input => {
             if (input.type === 'checkbox') {
-                input.disabled = !isUser;
-                if (!isUser) {
+                input.disabled = !isStaff;
+                if (!isStaff) {
                     input.checked = false;
                 }
             } else {
-                input.required = isUser && input.name !== 'services[]';
-                input.disabled = !isUser;
+                input.required = isStaff && input.name !== 'services[]';
+                input.disabled = !isStaff;
             }
         });
 
         const deviceLimitInput = deviceLimitField?.querySelector('.user-only-input');
         if (deviceLimitInput) {
-            deviceLimitInput.required = isUser;
-            deviceLimitInput.disabled = !isUser;
+            deviceLimitInput.required = isStaff;
+            deviceLimitInput.disabled = !isStaff;
         }
     }
 
@@ -340,19 +355,30 @@ document.addEventListener('DOMContentLoaded', function () {
     editRoleSelect.addEventListener('change', () => toggleUserFields(editRoleSelect, editUserOnlyFields, editDeviceLimitField));
 
     const addAdminModal = document.getElementById('addAdminModal');
-    document.getElementById('openAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.add('open'));
-    document.getElementById('closeAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.remove('open'));
-    document.getElementById('cancelAddAdminModalBtn').addEventListener('click', () => addAdminModal.classList.remove('open'));
+    if (addAdminModal) {
+        document.getElementById('openAddAdminModalBtn')?.addEventListener('click', () => addAdminModal.classList.add('open'));
+        document.getElementById('closeAddAdminModalBtn')?.addEventListener('click', () => addAdminModal.classList.remove('open'));
+        document.getElementById('cancelAddAdminModalBtn')?.addEventListener('click', () => addAdminModal.classList.remove('open'));
+    }
 
     const editModal = document.getElementById('editUserModal');
     const editForm = document.getElementById('editUserForm');
 
     document.querySelectorAll('.editUserBtn').forEach(btn => {
         btn.addEventListener('click', function () {
+            const allowedRoles = JSON.parse(this.getAttribute('data-assignable-roles') || '[]');
+            editRoleSelect.innerHTML = '';
+            allowedRoles.forEach(role => {
+                const option = document.createElement('option');
+                option.value = role.id;
+                option.textContent = role.name;
+                editRoleSelect.appendChild(option);
+            });
+
             document.getElementById('edit_user_name').value = this.getAttribute('data-name');
             document.getElementById('edit_user_email').value = this.getAttribute('data-email');
             document.getElementById('edit_user_mobile').value = this.getAttribute('data-mobile') || '';
-            editRoleSelect.value = this.getAttribute('data-role') || 'user';
+            editRoleSelect.value = this.getAttribute('data-role-id') || '';
             document.getElementById('edit_user_status').value = this.getAttribute('data-status') || 'Active';
             document.getElementById('edit_user_device_limit').value = this.getAttribute('data-device-limit') || '10';
             document.getElementById('edit_user_start_date').value = this.getAttribute('data-start-date') || '';

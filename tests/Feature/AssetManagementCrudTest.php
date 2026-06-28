@@ -15,9 +15,9 @@ class AssetManagementCrudTest extends TestCase
 
     public function test_admin_can_list_all_assets_and_non_admin_only_sees_own(): void
     {
-        $admin = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Alice']);
-        $user2 = User::factory()->create(['is_admin' => false, 'role' => 'user', 'name' => 'Bob']);
+        $admin = User::factory()->admin()->create();
+        $user1 = User::factory()->create(['name' => 'Alice']);
+        $user2 = User::factory()->create(['name' => 'Bob']);
 
         $asset1 = Asset::create([
             'asset_name' => 'Alice-Router',
@@ -62,8 +62,8 @@ class AssetManagementCrudTest extends TestCase
 
     public function test_user_can_create_asset_with_scoped_customer_id(): void
     {
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user']);
-        $user2 = User::factory()->create(['is_admin' => false, 'role' => 'user']);
+        $user1 = User::factory()->create();
+        $user2 = User::factory()->create();
 
         $response = $this->actingAs($user1)->post('/inventory/assets', [
             'asset_name' => 'Test-Router',
@@ -90,7 +90,7 @@ class AssetManagementCrudTest extends TestCase
 
     public function test_user_can_edit_and_delete_own_asset(): void
     {
-        $user1 = User::factory()->create(['is_admin' => false, 'role' => 'user']);
+        $user1 = User::factory()->create();
         $asset = Asset::create([
             'asset_name' => 'Alice-Router',
             'asset_type' => 'Router',
@@ -136,7 +136,7 @@ class AssetManagementCrudTest extends TestCase
 
     public function test_can_upload_backup_file_and_it_is_deleted_with_asset(): void
     {
-        $user = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
+        $user = User::factory()->admin()->create();
         
         $backupFile = UploadedFile::fake()->create('config_backup.txt', 100);
 

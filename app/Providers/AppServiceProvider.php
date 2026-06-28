@@ -80,7 +80,7 @@ class AppServiceProvider extends ServiceProvider
             ]);
 
             if ($user && $user->isAdmin() && (request()->is('/') || request()->is('dashboard*'))) {
-                $view->with('dashboardUsers', User::where('is_admin', false)->where('role', '!=', 'admin')->orderBy('name')->get(['id', 'name']));
+                $view->with('dashboardUsers', User::query()->customers()->orderBy('name')->get(['id', 'name']));
             }
         });
     }

@@ -417,9 +417,15 @@
                 <div class="form-group">
                     <label for="responsible_person" style="font-weight: 600;">Responsible Person <span style="color: var(--status-down);">*</span></label>
                     <select name="responsible_person" id="responsible_person" class="form-control" required>
-                        <option value="Vijay Kumar" {{ old('responsible_person') == 'Vijay Kumar' ? 'selected' : '' }}>Vijay Kumar</option>
-                        <option value="Rohan Shah" {{ old('responsible_person') == 'Rohan Shah' ? 'selected' : '' }}>Rohan Shah</option>
-                        <option value="Sanjay Mehta" {{ old('responsible_person') == 'Sanjay Mehta' ? 'selected' : '' }}>Sanjay Mehta</option>
+                        <option value="">Select Responsible Person</option>
+                        @foreach($users as $person)
+                            <option value="{{ $person->name }}"
+                                data-email="{{ $person->email }}"
+                                data-mobile="{{ $person->mobile }}"
+                                {{ old('responsible_person', $users->count() === 1 ? $users->first()->name : '') === $person->name ? 'selected' : '' }}>
+                                {{ $person->name }}@if($person->email) — {{ $person->email }}@endif
+                            </option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="form-group">
@@ -514,6 +520,27 @@
                 passwordInput.setAttribute('type', type);
                 this.classList.toggle('fa-eye');
                 this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        const responsibleSelect = document.getElementById('responsible_person');
+        const emailInput = document.getElementById('email_id');
+        const contactInput = document.getElementById('contact_number');
+
+        if (responsibleSelect) {
+            responsibleSelect.addEventListener('change', function () {
+                const option = this.options[this.selectedIndex];
+                if (!option || !option.value) {
+                    return;
+                }
+
+                if (emailInput && option.dataset.email) {
+                    emailInput.value = option.dataset.email;
+                }
+
+                if (contactInput && option.dataset.mobile) {
+                    contactInput.value = option.dataset.mobile;
+                }
             });
         }
     });

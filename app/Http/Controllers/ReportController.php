@@ -38,8 +38,7 @@ class ReportController extends Controller
 
             if ($customerId) {
                 $selectedCustomer = User::query()
-                    ->where('is_admin', false)
-                    ->where('role', User::ROLE_USER)
+                    ->customers()
                     ->find($customerId);
 
                 if (! $selectedCustomer) {
@@ -48,8 +47,7 @@ class ReportController extends Controller
             }
 
             $customers = User::query()
-                ->where('is_admin', false)
-                ->where('role', User::ROLE_USER)
+                ->customers()
                 ->orderBy('name')
                 ->get();
         }
@@ -400,8 +398,7 @@ class ReportController extends Controller
 
             if ($customerId) {
                 $selectedCustomer = User::query()
-                    ->where('is_admin', false)
-                    ->where('role', User::ROLE_USER)
+                    ->customers()
                     ->find($customerId);
 
                 if (! $selectedCustomer) {
@@ -410,8 +407,7 @@ class ReportController extends Controller
             }
 
             $customers = User::query()
-                ->where('is_admin', false)
-                ->where('role', User::ROLE_USER)
+                ->customers()
                 ->orderBy('name')
                 ->get();
         }

@@ -54,9 +54,9 @@ class InventoryController extends Controller
     {
         $user = auth()->user();
         if ($user->isAdmin()) {
-            $users = User::all();
+            $users = User::query()->orderBy('name')->get();
         } else {
-            $users = User::where('id', $user->id)->get();
+            $users = User::where('id', $user->id)->orderBy('name')->get();
         }
         $vendors = DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get();
         return view('inventory.assets.create', compact('users', 'vendors'));
@@ -149,10 +149,10 @@ class InventoryController extends Controller
         $user = auth()->user();
         if ($user->isAdmin()) {
             $asset = Asset::findOrFail($id);
-            $users = User::all();
+            $users = User::query()->orderBy('name')->get();
         } else {
             $asset = Asset::where('customer_id', $user->id)->findOrFail($id);
-            $users = User::where('id', $user->id)->get();
+            $users = User::where('id', $user->id)->orderBy('name')->get();
         }
         $vendors = DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get();
         return view('inventory.assets.edit', compact('asset', 'users', 'vendors'));

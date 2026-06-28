@@ -17,7 +17,7 @@ class FaultManagementReportTest extends TestCase
 
     public function test_fault_management_calculates_all_sections_only_from_devices_not_interfaces(): void
     {
-        $user = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
+        $user = User::factory()->admin()->create();
         $device = Device::factory()->create(['user_id' => $user->id, 'name' => 'Core-Switch']);
 
         $from = Carbon::now()->subDays(7);

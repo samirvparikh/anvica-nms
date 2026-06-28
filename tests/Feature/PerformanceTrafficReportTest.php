@@ -17,7 +17,7 @@ class PerformanceTrafficReportTest extends TestCase
 
     public function test_performance_traffic_report_returns_simulated_fallback_trends_on_empty_database(): void
     {
-        $user = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
+        $user = User::factory()->admin()->create();
 
         $from = Carbon::now()->subDays(7)->startOfDay();
         $to = Carbon::now()->endOfDay();
@@ -63,7 +63,7 @@ class PerformanceTrafficReportTest extends TestCase
 
     public function test_performance_traffic_report_computes_dynamic_averages_from_database_logs(): void
     {
-        $user = User::factory()->create(['is_admin' => true, 'role' => 'admin']);
+        $user = User::factory()->admin()->create();
         $device = Device::factory()->create(['user_id' => $user->id, 'name' => 'Edge-Router']);
 
         $from = Carbon::now()->subDays(2)->startOfDay();

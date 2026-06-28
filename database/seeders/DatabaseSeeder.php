@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Device;
 use App\Models\DeviceVendor;
+use App\Models\Role;
 use App\Models\Service;
 use App\Models\User;
 use App\Support\DeviceAssetMapper;
@@ -18,13 +19,17 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(ApplicationMasterSeeder::class);
+        $this->call(RoleSeeder::class);
+
+        $superadminRole = Role::findBySlug(Role::SLUG_SUPERADMIN);
+        $engineerRole = Role::findBySlug(Role::SLUG_ENGINEER);
 
         User::updateOrCreate(
             ['email' => 'admin@anvica.in'],
             [
                 'name' => 'admin',
                 'password' => Hash::make('123456'),
-                'role' => User::ROLE_ADMIN,
+                'role_id' => $superadminRole?->id,
                 'is_admin' => true,
                 'status' => User::STATUS_ACTIVE,
             ]
@@ -36,7 +41,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'samir',
                 'mobile' => '9898183457',
                 'password' => Hash::make('123456'),
-                'role' => User::ROLE_USER,
+                'role_id' => $engineerRole?->id,
                 'is_admin' => false,
                 'status' => User::STATUS_ACTIVE,
                 'device_limit' => 5,
@@ -52,7 +57,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'vijay',
                 'mobile' => '9898183458',
                 'password' => Hash::make('123456'),
-                'role' => User::ROLE_USER,
+                'role_id' => $engineerRole?->id,
                 'is_admin' => false,
                 'status' => User::STATUS_ACTIVE,
                 'device_limit' => 5,
@@ -68,7 +73,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'jatin',
                 'mobile' => '9898183459',
                 'password' => Hash::make('123456'),
-                'role' => User::ROLE_USER,
+                'role_id' => $engineerRole?->id,
                 'is_admin' => false,
                 'status' => User::STATUS_ACTIVE,
                 'device_limit' => 5,

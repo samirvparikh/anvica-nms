@@ -7,6 +7,7 @@ use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\SlaBreach;
 use App\Models\MaintenanceWindow;
+use App\Models\Role;
 use App\Models\User;
 use App\Support\ApplicationMasterHelper;
 use Carbon\Carbon;
@@ -42,8 +43,12 @@ class SlaSeeder extends Seeder
         );
 
         // Fetch users
-        $admin = User::where('role', User::ROLE_ADMIN)->first();
-        $user = User::where('role', User::ROLE_USER)->first() ?? $admin;
+        $admin = User::query()
+            ->whereHas('assignedRole', fn ($query) => $query->whereIn('slug', [Role::SLUG_ADMIN, Role::SLUG_SUPERADMIN]))
+            ->first();
+        $user = User::query()
+            ->whereHas('assignedRole', fn ($query) => $query->where('is_staff', true))
+            ->first() ?? $admin;
 
         // 2. Enrich devices with warranty, AMC, and SLA demo data (current assets schema).
         $devices = Device::all();
