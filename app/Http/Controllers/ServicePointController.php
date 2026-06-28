@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Service;
 use App\Models\ServicePoint;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ServicePointController extends Controller
 {
@@ -27,17 +27,8 @@ class ServicePointController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'service_id' => 'required|exists:services,id',
-            'name' => 'required|string|max:191',
-            'method' => 'required|string|max:191',
-            'unit' => 'nullable|string|max:50',
-            'warning_threshold' => 'nullable|numeric',
-            'critical_threshold' => 'nullable|numeric',
-            'status' => 'required|in:Active,Inactive',
-        ]);
+        $validated = $request->validate($this->pointRules($request));
 
-        $validated['slug'] = Str::slug($validated['name']);
         ServicePoint::create($validated);
 
         return $this->redirectToIndex($request, 'Service point created successfully.');
@@ -45,17 +36,8 @@ class ServicePointController extends Controller
 
     public function update(Request $request, ServicePoint $servicePoint)
     {
-        $validated = $request->validate([
-            'service_id' => 'required|exists:services,id',
-            'name' => 'required|string|max:191',
-            'method' => 'required|string|max:191',
-            'unit' => 'nullable|string|max:50',
-            'warning_threshold' => 'nullable|numeric',
-            'critical_threshold' => 'nullable|numeric',
-            'status' => 'required|in:Active,Inactive',
-        ]);
+        $validated = $request->validate($this->pointRules($request, $servicePoint));
 
-        $validated['slug'] = Str::slug($validated['name']);
         $servicePoint->update($validated);
 
         return $this->redirectToIndex($request, 'Service point updated successfully.');
@@ -77,5 +59,28 @@ class ServicePointController extends Controller
         return redirect()
             ->route('service-points.index', $params)
             ->with('success', $message);
+    }
+
+    /** @return array<string, mixed> */
+    protected function pointRules(Request $request, ?ServicePoint $servicePoint = null): array
+    {
+        return [
+            'service_id' => 'required|exists:services,id',
+            'name' => 'required|string|max:191',
+            'slug' => [
+                'required',
+                'string',
+                'max:191',
+                'regex:/^[A-Za-z0-9_-]+$/',
+                Rule::unique('service_points', 'slug')
+                    ->where('service_id', $request->input('service_id'))
+                    ->ignore($servicePoint?->id),
+            ],
+            'method' => 'required|string|max:191',
+            'unit' => 'nullable|string|max:50',
+            'warning_threshold' => 'nullable|numeric',
+            'critical_threshold' => 'nullable|numeric',
+            'status' => 'required|in:Active,Inactive',
+        ];
     }
 }

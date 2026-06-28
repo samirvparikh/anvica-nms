@@ -39,6 +39,7 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th>Slug</th>
                 <th>Service</th>
                 <th>Method</th>
                 <th>Unit</th>
@@ -52,10 +53,12 @@
             @forelse($servicePoints as $point)
             <tr class="service-point-row"
                 data-name="{{ strtolower($point->name) }}"
+                data-slug="{{ strtolower($point->slug ?? '') }}"
                 data-service="{{ strtolower($point->service->name) }}"
                 data-method="{{ strtolower($point->method) }}"
                 data-status="{{ strtolower($point->status) }}">
                 <td style="font-weight:700;">{{ $point->name }}</td>
+                <td><code>{{ $point->slug ?? '—' }}</code></td>
                 <td>{{ $point->service->name }}</td>
                 <td>{{ $point->method }}</td>
                 <td>{{ $point->unit ?? '—' }}</td>
@@ -69,6 +72,7 @@
                             data-update-url="{{ route('service-points.update', $point) }}"
                             data-service-id="{{ $point->service_id }}"
                             data-name="{{ $point->name }}"
+                            data-slug="{{ $point->slug }}"
                             data-method="{{ $point->method }}"
                             data-unit="{{ $point->unit }}"
                             data-warning="{{ $point->warning_threshold }}"
@@ -97,7 +101,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No service points found.</td></tr>
+            <tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">No service points found.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -125,11 +129,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" name="name" id="point_name" class="form-control" required>
+                    <label for="point_name">Name</label>
+                    <input type="text" name="name" id="point_name" class="form-control" placeholder="e.g. CPU Temp" required>
                 </div>
                 <div class="form-group">
-                    <label>Method</label>
+                    <label for="point_slug">Slug</label>
+                    <input type="text" name="slug" id="point_slug" class="form-control" placeholder="e.g. CPU_Temp" required pattern="[A-Za-z0-9_-]+" title="Letters, numbers, underscores, and hyphens only">
+                    <span class="form-hint" style="font-size:0.78rem;color:var(--text-muted);">API JSON key — must match what the device sends (e.g. CPU, CPU_Temp, Ping_Status, Ping_Latency, etc.).</span>
+                </div>
+                <div class="form-group">
+                    <label for="point_method">Method</label>
                     <input type="text" name="method" id="point_method" class="form-control" required>
                 </div>
                 <div class="form-group">
@@ -171,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function () {
             tableRows.forEach(function (row) {
                 const haystack = [
                     row.getAttribute('data-name'),
+                    row.getAttribute('data-slug'),
                     row.getAttribute('data-service'),
                     row.getAttribute('data-method'),
                     row.getAttribute('data-status'),
@@ -183,13 +193,34 @@ document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('pointModal');
     const form = document.getElementById('pointForm');
     const methodField = document.getElementById('pointMethodField');
+    const nameInput = document.getElementById('point_name');
+    const slugInput = document.getElementById('point_slug');
+    let slugManuallyEdited = false;
+
+    function suggestSlugFromName(name) {
+        return name.trim().replace(/\s+/g, '_');
+    }
+
+    if (nameInput && slugInput) {
+        nameInput.addEventListener('input', function () {
+            if (!slugManuallyEdited) {
+                slugInput.value = suggestSlugFromName(nameInput.value);
+            }
+        });
+
+        slugInput.addEventListener('input', function () {
+            slugManuallyEdited = slugInput.value.trim() !== '';
+        });
+    }
 
     function openModal(edit = false, data = {}) {
         document.getElementById('pointModalTitle').textContent = edit ? 'Edit Service Point' : 'Add Service Point';
         methodField.innerHTML = edit ? '<input type="hidden" name="_method" value="PUT">' : '';
         form.action = edit ? data.updateUrl : '{{ route('service-points.store') }}';
         document.getElementById('point_service_id').value = data.serviceId || '';
-        document.getElementById('point_name').value = data.name || '';
+        nameInput.value = data.name || '';
+        slugInput.value = data.slug || '';
+        slugManuallyEdited = edit || Boolean(data.slug);
         document.getElementById('point_method').value = data.method || '';
         document.getElementById('point_unit').value = data.unit || '';
         document.getElementById('point_warning').value = data.warning || '';
@@ -198,9 +229,12 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.add('open');
     }
 
-    document.getElementById('openAddPointBtn').onclick = () => openModal(false, {
-        serviceId: '{{ $serviceId ?? '' }}',
-    });
+    document.getElementById('openAddPointBtn').onclick = () => {
+        slugManuallyEdited = false;
+        openModal(false, {
+            serviceId: '{{ $serviceId ?? '' }}',
+        });
+    };
     document.getElementById('closePointModal').onclick = () => modal.classList.remove('open');
     document.getElementById('cancelPointModal').onclick = () => modal.classList.remove('open');
 
@@ -209,6 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
             updateUrl: btn.dataset.updateUrl,
             serviceId: btn.dataset.serviceId,
             name: btn.dataset.name,
+            slug: btn.dataset.slug,
             method: btn.dataset.method,
             unit: btn.dataset.unit,
             warning: btn.dataset.warning,
