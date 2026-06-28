@@ -149,6 +149,11 @@ Route::middleware('auth')->group(function () {
 
     // Inventory Routes
     Route::get('/inventory/assets', [InventoryController::class, 'assetsIndex'])->name('inventory.assets.index');
+    Route::get('/inventory/assets/create', [InventoryController::class, 'assetsCreate'])->name('inventory.assets.create');
+    Route::post('/inventory/assets', [InventoryController::class, 'assetsStore'])->name('inventory.assets.store');
+    Route::get('/inventory/assets/{asset}/edit', [InventoryController::class, 'assetsEdit'])->name('inventory.assets.edit');
+    Route::put('/inventory/assets/{asset}', [InventoryController::class, 'assetsUpdate'])->name('inventory.assets.update');
+    Route::delete('/inventory/assets/{asset}', [InventoryController::class, 'assetsDestroy'])->name('inventory.assets.destroy');
     Route::get('/inventory/asset-groups', [InventoryController::class, 'assetGroupsIndex'])->name('inventory.asset-groups.index');
     Route::get('/inventory/software', [InventoryController::class, 'softwareIndex'])->name('inventory.software.index');
     Route::get('/inventory/warranty', [InventoryController::class, 'warrantyIndex'])->name('inventory.warranty.index');

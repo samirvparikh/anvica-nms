@@ -47,14 +47,24 @@ class TicketController extends Controller
 
     public function incidentsCreate()
     {
-        $devices = Device::all();
-        $users = User::all();
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $devices = Device::all();
+            $users = User::all();
+        } else {
+            $devices = Device::where('user_id', $user->id)->get();
+            $users = User::where('id', $user->id)->get();
+        }
         $policies = SlaPolicy::all();
         return view('service-desk.incidents.create', compact('devices', 'users', 'policies'));
     }
 
     public function incidentsStore(Request $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            $request->merge(['customer_id' => auth()->id()]);
+        }
+
         $request->validate([
             'title' => 'required|string|max:255',
             'customer_id' => 'required|exists:users,id',

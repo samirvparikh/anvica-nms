@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Device;
 use App\Models\SlaPolicy;
+use App\Models\Asset;
+use App\Models\User;
+use App\Models\DeviceVendor;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -11,13 +14,20 @@ class InventoryController extends Controller
 {
     public function assetsIndex(Request $request)
     {
-        $query = Device::query();
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $query = Asset::query();
+        } else {
+            $query = Asset::where('customer_id', $user->id);
+        }
 
         // Sorting
         $sort = $request->query('sort', 'created_at');
         $dir = $request->query('direction', 'desc');
-        if (in_array($sort, ['asset_id', 'name', 'ip_address', 'status', 'created_at'])) {
+        if (in_array($sort, ['asset_id_auto', 'asset_name', 'management_ip', 'manufacturer', 'model_number', 'serial_number', 'status', 'created_at'])) {
             $query->orderBy($sort, $dir === 'asc' ? 'asc' : 'desc');
+        } else {
+            $query->orderBy('created_at', 'desc');
         }
 
         // Filtering
@@ -28,6 +38,167 @@ class InventoryController extends Controller
         $assets = $query->get();
 
         return view('inventory.assets.index', compact('assets', 'sort', 'dir'));
+    }
+
+    public function assetsCreate()
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $users = User::all();
+        } else {
+            $users = User::where('id', $user->id)->get();
+        }
+        $vendors = DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get();
+        return view('inventory.assets.create', compact('users', 'vendors'));
+    }
+
+    public function assetsStore(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user->isAdmin()) {
+            $request->merge(['customer_id' => $user->id]);
+        }
+
+        $request->validate([
+            // 1. Asset Information
+            'asset_name' => 'required|string|max:255',
+            'asset_type' => 'required|string|max:255',
+            'asset_category' => 'required|string|max:255',
+            'status' => 'required|string|max:255',
+            'criticality' => 'required|string|max:255',
+            // 2. Asset Identification
+            'manufacturer' => 'required|string|max:255',
+            'model_number' => 'required|string|max:255',
+            'serial_number' => 'required|string|max:255|unique:assets,serial_number',
+            // 3. Network Information
+            'management_ip' => 'required|ip',
+            // 4. Location Information
+            'customer_id' => 'required|exists:users,id',
+            // 10. Attachment
+            'attachment' => 'nullable|file|max:20480',
+        ]);
+
+        $data = $request->except(['attachment', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
+
+        // Checkbox toggles mapping
+        $data['ssh_enabled'] = $request->has('ssh_enabled');
+        $data['telnet_enabled'] = $request->has('telnet_enabled');
+        $data['auto_discover_snmp'] = $request->has('auto_discover_snmp');
+        $data['auto_import_interfaces'] = $request->has('auto_import_interfaces');
+        $data['auto_import_software'] = $request->has('auto_import_software');
+        $data['auto_import_config_backup'] = $request->has('auto_import_config_backup');
+        $data['health_monitoring'] = $request->has('health_monitoring');
+        $data['health_score_calculation'] = $request->has('health_score_calculation');
+
+        // Autogenerate Asset ID (e.g. AST-2026-0001)
+        $year = date('Y');
+        $count = Asset::whereYear('created_at', $year)->count() + 1;
+        $data['asset_id_auto'] = sprintf('AST-%s-%04d', $year, $count);
+
+        // Attachment file upload
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/attachments'), $filename);
+            $data['attachment_path'] = 'uploads/attachments/' . $filename;
+        }
+
+        Asset::create($data);
+
+        return redirect()->route('inventory.assets.index')->with('success', 'Asset created successfully.');
+    }
+
+    public function assetsEdit($id)
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $asset = Asset::findOrFail($id);
+            $users = User::all();
+        } else {
+            $asset = Asset::where('customer_id', $user->id)->findOrFail($id);
+            $users = User::where('id', $user->id)->get();
+        }
+        $vendors = DeviceVendor::with('service')->where('status', DeviceVendor::STATUS_ACTIVE)->orderBy('name')->get();
+        return view('inventory.assets.edit', compact('asset', 'users', 'vendors'));
+    }
+
+    public function assetsUpdate(Request $request, $id)
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $asset = Asset::findOrFail($id);
+        } else {
+            $asset = Asset::where('customer_id', $user->id)->findOrFail($id);
+            $request->merge(['customer_id' => $user->id]);
+        }
+
+        $request->validate([
+            // 1. Asset Information
+            'asset_name' => 'required|string|max:255',
+            'asset_type' => 'required|string|max:255',
+            'asset_category' => 'required|string|max:255',
+            'status' => 'required|string|max:255',
+            'criticality' => 'required|string|max:255',
+            // 2. Asset Identification
+            'manufacturer' => 'required|string|max:255',
+            'model_number' => 'required|string|max:255',
+            'serial_number' => 'required|string|max:255|unique:assets,serial_number,' . $asset->id,
+            // 3. Network Information
+            'management_ip' => 'required|ip',
+            // 4. Location Information
+            'customer_id' => 'required|exists:users,id',
+            // 10. Attachment
+            'attachment' => 'nullable|file|max:20480',
+        ]);
+
+        $data = $request->except(['attachment', 'ssh_enabled', 'telnet_enabled', 'auto_discover_snmp', 'auto_import_interfaces', 'auto_import_software', 'auto_import_config_backup', 'health_monitoring', 'health_score_calculation']);
+
+        // Checkbox toggles mapping
+        $data['ssh_enabled'] = $request->has('ssh_enabled');
+        $data['telnet_enabled'] = $request->has('telnet_enabled');
+        $data['auto_discover_snmp'] = $request->has('auto_discover_snmp');
+        $data['auto_import_interfaces'] = $request->has('auto_import_interfaces');
+        $data['auto_import_software'] = $request->has('auto_import_software');
+        $data['auto_import_config_backup'] = $request->has('auto_import_config_backup');
+        $data['health_monitoring'] = $request->has('health_monitoring');
+        $data['health_score_calculation'] = $request->has('health_score_calculation');
+
+        // Attachment file upload
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('uploads/attachments'), $filename);
+
+            // Delete old attachment if it exists
+            if ($asset->attachment_path && file_exists(public_path($asset->attachment_path))) {
+                @unlink(public_path($asset->attachment_path));
+            }
+
+            $data['attachment_path'] = 'uploads/attachments/' . $filename;
+        }
+
+        $asset->update($data);
+
+        return redirect()->route('inventory.assets.index')->with('success', 'Asset updated successfully.');
+    }
+
+    public function assetsDestroy($id)
+    {
+        $user = auth()->user();
+        if ($user->isAdmin()) {
+            $asset = Asset::findOrFail($id);
+        } else {
+            $asset = Asset::where('customer_id', $user->id)->findOrFail($id);
+        }
+
+        // Delete attachment if it exists
+        if ($asset->attachment_path && file_exists(public_path($asset->attachment_path))) {
+            @unlink(public_path($asset->attachment_path));
+        }
+
+        $asset->delete();
+
+        return redirect()->route('inventory.assets.index')->with('success', 'Asset deleted successfully.');
     }
 
     public function assetGroupsIndex()

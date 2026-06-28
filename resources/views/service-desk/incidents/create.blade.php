@@ -28,26 +28,45 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
                         <label for="customer_id" style="font-weight: 600;">Customer / Organization <span style="color: var(--status-down);">*</span></label>
-                        <select name="customer_id" id="customer_id" class="form-control" required>
-                            <option value="">Select Customer</option>
-                            @foreach($users as $user)
-                                <option value="{{ $user->id }}" {{ $user->id === auth()->id() ? 'selected' : '' }}>
-                                    {{ $user->name }} ({{ $user->email }})
+                        @if(auth()->user()->isAdmin())
+                            <select name="customer_id" id="customer_id" class="form-control" required>
+                                <option value="">Select Customer</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}" {{ $user->id === auth()->id() ? 'selected' : '' }}>
+                                        {{ $user->name }} ({{ $user->email }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        @else
+                            <input type="hidden" name="customer_id" id="customer_id" value="{{ auth()->id() }}">
+                            <input type="text" class="form-control" value="{{ auth()->user()->name }} ({{ auth()->user()->email }})" readonly disabled style="cursor: not-allowed; background-color: var(--border-color); opacity: 0.85;">
+                        @endif
+                    </div>
+                    <div class="form-group">
+                        <label for="device_id" style="font-weight: 600;">Affected Asset (Device Mapping)</label>
+                        <select name="device_id" id="device_id" class="form-control">
+                            <option value="">Select Affected NMS Device</option>
+                            @foreach($devices as $device)
+                                <option value="{{ $device->id }}" {{ old('device_id') == $device->id ? 'selected' : '' }}>
+                                    {{ $device->name }} ({{ $device->ip_address }})
                                 </option>
                             @endforeach
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="contact_person" style="font-weight: 600;">Contact Person</label>
-                        <input type="text" name="contact_person" id="contact_person" class="form-control" placeholder="John Doe">
                     </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
+                        <label for="contact_person" style="font-weight: 600;">Contact Person</label>
+                        <input type="text" name="contact_person" id="contact_person" class="form-control" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
                         <label for="contact_number" style="font-weight: 600;">Contact Number</label>
                         <input type="text" name="contact_number" id="contact_number" class="form-control" placeholder="+91 9999999999">
                     </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
                         <label for="category" style="font-weight: 600;">Ticket Type / Category</label>
                         <select name="category" id="category" class="form-control">
@@ -57,13 +76,13 @@
                             <option value="Security">Security</option>
                         </select>
                     </div>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
                         <label for="sub_category" style="font-weight: 600;">Sub Category</label>
                         <input type="text" name="sub_category" id="sub_category" class="form-control" placeholder="VPN Failure, Packet Loss, etc.">
                     </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
                         <label for="source" style="font-weight: 600;">Source</label>
                         <select name="source" id="source" class="form-control">
@@ -103,7 +122,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label for="affected_users" style="font-weight: 600;">Affected Users</label>
                         <input type="number" name="affected_users" id="affected_users" class="form-control" min="0" value="0">
@@ -112,19 +131,6 @@
                         <label for="business_impact" style="font-weight: 600;">Business Impact</label>
                         <input type="text" name="business_impact" id="business_impact" class="form-control" placeholder="All employees at Mumbai branch offline">
                     </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="device_id" style="font-weight: 600;">Affected Asset (Device Mapping)</label>
-                    <select name="device_id" id="device_id" class="form-control">
-                        <option value="">Select Affected NMS Device</option>
-                        @foreach($devices as $device)
-                            <option value="{{ $device->id }}">{{ $device->name }} ({{ $device->ip_address }})</option>
-                        @endforeach
-                    </select>
-                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                        Mapping a device will populate serial number, warranty status, and AMC indicators.
-                    </p>
                 </div>
             </div>
 
@@ -247,4 +253,48 @@
         
     </div>
 </form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const customerSelect = document.getElementById('customer_id');
+        const deviceSelect = document.getElementById('device_id');
+
+        // Embedded devices JSON from backend
+        const devices = @json($devices);
+        const oldDeviceId = "{{ old('device_id') }}";
+
+        function updateDevices() {
+            const selectedCustomerId = customerSelect.value;
+            
+            // Clear current options, keeping the placeholder
+            deviceSelect.innerHTML = '<option value="">Select Affected NMS Device</option>';
+
+            if (!selectedCustomerId) {
+                return;
+            }
+
+            // Filter devices for the selected customer
+            const filteredDevices = devices.filter(device => device.user_id == selectedCustomerId);
+
+            // Populate devices
+            filteredDevices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = `${device.name} (${device.ip_address})`;
+                if (oldDeviceId && device.id == oldDeviceId) {
+                    option.selected = true;
+                }
+                deviceSelect.appendChild(option);
+            });
+        }
+
+        if (customerSelect) {
+            if (customerSelect.tagName === 'SELECT') {
+                customerSelect.addEventListener('change', updateDevices);
+            }
+            // Run initially to pre-fill/filter if a customer is already selected (e.g. on load or validation fail)
+            updateDevices();
+        }
+    });
+</script>
 @endsection
