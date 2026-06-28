@@ -8,6 +8,7 @@ use App\Models\Ticket;
 use App\Models\SlaBreach;
 use App\Models\MaintenanceWindow;
 use App\Models\User;
+use App\Support\ApplicationMasterHelper;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -44,62 +45,38 @@ class SlaSeeder extends Seeder
         $admin = User::where('role', User::ROLE_ADMIN)->first();
         $user = User::where('role', User::ROLE_USER)->first() ?? $admin;
 
-        // 2. Update Devices with Warranty & AMC details
+        // 2. Enrich devices with warranty, AMC, and SLA demo data (current assets schema).
         $devices = Device::all();
         $i = 1;
         foreach ($devices as $device) {
-            $device->update([
-                'asset_id' => 'AST-1025' . $i,
-                'asset_name' => $device->name,
-                'manufacturer' => 'Cisco Systems',
+            $payload = array_filter([
                 'model_number' => $i % 2 === 0 ? 'ISR-4331/K9' : 'Catalyst-3850',
-                'serial_number' => 'FTX' . mt_rand(100000, 999999) . 'Z' . $i,
-                'location' => 'Mumbai DC, Rack A' . $i,
-                'status' => 'active',
-                'warranty_type' => 'OEM Warranty',
-                'warranty_provider' => 'Cisco Services Ltd',
-                'warranty_support_level' => '8x5 NBD',
-                'warranty_status' => 'Active',
+                'site_location_id' => ApplicationMasterHelper::resolveId('site_location', 'Mumbai DC'),
+                'rack_id' => ApplicationMasterHelper::resolveId('rack', 'Rack-0'.min($i, 3)),
+                'status_id' => ApplicationMasterHelper::resolveId('asset_status', 'Active'),
+                'manufacturer_id' => ApplicationMasterHelper::resolveId('manufacturer', 'Cisco'),
+                'warranty_status_id' => ApplicationMasterHelper::resolveId('warranty_status', 'Active'),
                 'warranty_start_date' => Carbon::now()->subYears(2),
                 'warranty_end_date' => Carbon::now()->addYear(),
-                'warranty_duration_years' => 3,
-                'warranty_onsite_support' => true,
-                'warranty_parts_coverage' => 'All parts',
-                'warranty_labor_coverage' => 'Vendor engineer dispatched',
-                'warranty_transferable' => false,
-                'amc_available' => true,
-                'amc_type' => 'Comprehensive',
-                'amc_provider' => 'Network Solutions Pvt Ltd',
-                'amc_support_level' => '24x7x4hr Response',
+                'amc_status_id' => ApplicationMasterHelper::resolveId('amc_status', 'Active'),
                 'amc_start_date' => Carbon::now()->subYear(),
                 'amc_end_date' => Carbon::now()->addYears(2),
-                'amc_duration_years' => 3,
-                'amc_response_time' => '15 Mins',
-                'amc_resolution_time' => '2 Hours',
-                'amc_escalation_time' => '30 Mins',
-                'amc_coverage' => '24x7x365 coverage',
-                'purchase_order_no' => 'PO-2026-90' . $i,
-                'invoice_no' => 'INV-098' . $i,
+                'purchase_order_no' => 'PO-2026-90'.$i,
+                'invoice_no' => 'INV-098'.$i,
                 'purchase_date' => Carbon::now()->subYears(2),
-                'invoice_date' => Carbon::now()->subYears(2),
-                'warranty_cost' => 150000.00,
-                'amc_cost' => 45000.00,
-                'currency' => 'INR',
-                'tax' => 8100.00,
-                'total_amc_cost' => 53100.00,
-                'customer_sla_policy' => $gold->name,
-                'availability_sla' => 99.95,
-                'response_sla' => '15 Mins',
-                'resolution_sla' => '2 Hours',
-                'renewal_reminder' => '30 Days Before',
-                'amc_renewal_reminder' => '30 Days Before',
-                'warranty_expiry_alert' => true,
-                'amc_expiry_alert' => true,
+                'cost' => 150000.00,
+                'sla_policy_id' => ApplicationMasterHelper::resolveId('sla_policy', 'Gold SLA'),
+                'sla_availability_id' => ApplicationMasterHelper::resolveId('sla_availability', '99.95%'),
+                'response_sla_id' => ApplicationMasterHelper::resolveId('response_sla', '15 Minutes'),
+                'resolution_sla_id' => ApplicationMasterHelper::resolveId('resolution_sla', '2 Hours'),
+                'escalation_sla_id' => ApplicationMasterHelper::resolveId('escalation_sla', '30 Minutes'),
                 'asset_owner' => 'Anvica Networks',
-                'custodian' => 'IT Ops Mumbai',
+                'custodian_department' => 'IT Ops Mumbai',
                 'responsible_person' => 'Vijay Kumar',
                 'contact_number' => '+91 9888877777',
-            ]);
+            ], static fn ($value) => $value !== null && $value !== '');
+
+            $device->update($payload);
             $i++;
         }
 
