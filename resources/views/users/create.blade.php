@@ -40,11 +40,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="name" class="required">Full Name</label>
-                        <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Vijay Kumar" required value="{{ old('name') }}">
+                        <input type="text" id="name" name="name" class="form-control" placeholder="Enter Full Name" required value="{{ old('name') }}">
                     </div>
                     <div class="form-group">
                         <label for="username" class="required">User ID</label>
-                        <input type="text" id="username" name="username" class="form-control" placeholder="e.g. vijay.kumar" required value="{{ old('username') }}">
+                        <input type="text" id="username" name="username" class="form-control" placeholder="Enter User ID" required value="{{ old('username') }}">
                     </div>
                     <div class="form-group">
                         <label for="employee_id">Employee ID</label>
@@ -59,11 +59,11 @@
                     </div>
                     <div class="form-group">
                         <label for="mobile" class="required">Mobile Number</label>
-                        <input type="text" id="mobile" name="mobile" class="form-control" placeholder="e.g. +91 98765 43210" required value="{{ old('mobile') }}">
+                        <input type="text" id="mobile" name="mobile" class="form-control" placeholder="Enter Mobile Number" required value="{{ old('mobile') }}">
                     </div>
                     <div class="form-group">
                         <label for="alternate_number">Alternate Number</label>
-                        <input type="text" id="alternate_number" name="alternate_number" class="form-control" placeholder="e.g. +91 91234 56789" value="{{ old('alternate_number') }}">
+                        <input type="text" id="alternate_number" name="alternate_number" class="form-control" placeholder="Enter Alternate Number" value="{{ old('alternate_number') }}">
                     </div>
                 </div>
 
@@ -196,15 +196,15 @@
                 <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr;">
                     <div class="form-group">
                         <label for="address">Address</label>
-                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="e.g. Ahmedabad Data Center, Near Kalupur Station, Ahmedabad, Gujarat - 380001">{{ old('address') }}</textarea>
+                        <textarea id="address" name="address" class="form-control" rows="2" placeholder="Enter Address">{{ old('address') }}</textarea>
                     </div>
                     <div class="form-group">
                         <label for="landline">Landline Number</label>
-                        <input type="text" id="landline" name="landline" class="form-control" placeholder="e.g. 079-26876543" value="{{ old('landline') }}">
+                        <input type="text" id="landline" name="landline" class="form-control" placeholder="Enter Landline Number" value="{{ old('landline') }}">
                     </div>
                     <div class="form-group">
                         <label for="extension">Extension</label>
-                        <input type="text" id="extension" name="extension" class="form-control" placeholder="e.g. 1025" value="{{ old('extension') }}">
+                        <input type="text" id="extension" name="extension" class="form-control" placeholder="Enter Extension" value="{{ old('extension') }}">
                     </div>
                 </div>
             </div>
@@ -266,7 +266,7 @@
                     </div>
                 </div>
 
-                <div class="form-row" style="grid-template-columns: 1fr 1fr;">
+                <!-- <div class="form-row" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
                         <div class="toggle-switch-wrapper">
                             <label class="toggle-switch">
@@ -285,7 +285,7 @@
                             <span class="toggle-switch-label">Force Password Change on First Login</span>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
 
             <!-- Section 4: SLA Association -->
@@ -323,21 +323,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Service Categories (Allowed)</label>
-                        <div class="tags-input-container" id="serviceCategoriesContainer">
-                            <span class="tag-badge">Network <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            <span class="tag-badge">Connectivity <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            <span class="tag-badge">Security <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            <input type="text" class="tags-input-field" placeholder="+ Add category" onkeydown="handleTagInput(event, 'service_categories[]', this)">
-                        </div>
-                        <!-- Hidden inputs generated dynamically -->
-                        <div id="serviceCategoriesHiddenInputs">
-                            <input type="hidden" name="service_categories[]" value="Network">
-                            <input type="hidden" name="service_categories[]" value="Connectivity">
-                            <input type="hidden" name="service_categories[]" value="Security">
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="max_tickets_per_day">Max Tickets / Day</label>
                         <input type="number" id="max_tickets_per_day" name="max_tickets_per_day" class="form-control" min="0" value="50">
                     </div>
@@ -350,7 +335,7 @@
 
             <!-- Section 6: Notifications & Preferences -->
             <div class="form-section">
-                <h3 class="form-section-title">6. Notifications & Preferences</h3>
+                <h3 class="form-section-title">5. Notifications & Preferences</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -382,16 +367,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="required">Email for Alerts</label>
-                        <div class="tags-input-container" id="alertEmailsContainer">
-                            <span class="tag-badge">vijay.kumar@westernrail.in <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            <input type="text" class="tags-input-field" placeholder="+ Add email" onkeydown="handleTagInput(event, 'alert_emails[]', this, true)">
-                        </div>
-                        <div id="alertEmailsHiddenInputs">
-                            <input type="hidden" name="alert_emails[]" value="vijay.kumar@westernrail.in">
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="escalation_group">Escalation Group</label>
                         <select id="escalation_group" name="escalation_group" class="form-control">
                             <option value="Network Operations Team" {{ old('escalation_group') === 'Network Operations Team' ? 'selected' : '' }}>Network Operations Team</option>
@@ -412,7 +387,7 @@
 
             <!-- Section 7: Additional Information -->
             <div class="form-section">
-                <h3 class="form-section-title">7. Additional Information</h3>
+                <h3 class="form-section-title">6. Additional Information</h3>
                 
                 <div class="form-row" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
@@ -439,13 +414,13 @@
 
                 <div class="form-group">
                     <label for="notes">Notes</label>
-                    <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="e.g. Engineer for core network operations and incidents handling.">{{ old('notes') }}</textarea>
+                    <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Enter Notes">{{ old('notes') }}</textarea>
                 </div>
             </div>
 
             <!-- Section 8: Attachments -->
             <div class="form-section">
-                <h3 class="form-section-title">8. Attachments</h3>
+                <h3 class="form-section-title">7. Attachments</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -491,24 +466,6 @@
                             </div>
                             <input type="file" id="other_document" name="other_document" class="file-upload-input" accept=".pdf,.doc,.docx,.jpg,.png">
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Services Association Section (Original services from DB) -->
-            <div class="form-section">
-                <h3 class="form-section-title">NMS Services Access</h3>
-                <div class="form-group">
-                    <label>Assign Services</label>
-                    <div class="checkbox-grid">
-                        @forelse($services as $service)
-                            <label class="checkbox-card">
-                                <input type="checkbox" name="services[]" value="{{ $service->id }}" checked>
-                                {{ $service->name }}
-                            </label>
-                        @empty
-                            <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
-                        @endforelse
                     </div>
                 </div>
             </div>
@@ -951,7 +908,7 @@
 
         const roleSelect = document.getElementById('role_id');
         const staffRoleIds = @json($staffRoleIds);
-        const staffSectionPrefixes = ['2.', '4.', '6.', '7.', '8.', '9.', '10.', '11.', 'NMS Services'];
+        const staffSectionPrefixes = ['2.', '4.', '5.', '6.', '7.'];
 
         function toggleCreateStaffSections() {
             if (!roleSelect) {

@@ -333,24 +333,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Service Categories (Allowed)</label>
-                        <div class="tags-input-container" id="serviceCategoriesContainer">
-                            @php
-                                $categories = old('service_categories', $user->service_categories ?? ['Network', 'Connectivity', 'Security']);
-                            @endphp
-                            @foreach($categories as $category)
-                                <span class="tag-badge">{{ $category }} <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            @endforeach
-                            <input type="text" class="tags-input-field" placeholder="+ Add category" onkeydown="handleTagInput(event, 'service_categories[]', this)">
-                        </div>
-                        <!-- Hidden inputs generated dynamically -->
-                        <div id="serviceCategoriesHiddenInputs">
-                            @foreach($categories as $category)
-                                <input type="hidden" name="service_categories[]" value="{{ $category }}">
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="max_tickets_per_day">Max Tickets / Day</label>
                         <input type="number" id="max_tickets_per_day" name="max_tickets_per_day" class="form-control" min="0" value="{{ old('max_tickets_per_day', $user->max_tickets_per_day ?? 50) }}">
                     </div>
@@ -363,7 +345,7 @@
 
             <!-- Section 6: Notifications & Preferences -->
             <div class="form-section">
-                <h3 class="form-section-title">6. Notifications & Preferences</h3>
+                <h3 class="form-section-title">5. Notifications & Preferences</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -398,23 +380,6 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="required">Email for Alerts</label>
-                        <div class="tags-input-container" id="alertEmailsContainer">
-                            @php
-                                $alertEmails = old('alert_emails', $user->alert_emails ?? [$user->email]);
-                            @endphp
-                            @foreach($alertEmails as $aEmail)
-                                <span class="tag-badge">{{ $aEmail }} <span class="remove-tag" onclick="removeTag(this)">&times;</span></span>
-                            @endforeach
-                            <input type="text" class="tags-input-field" placeholder="+ Add email" onkeydown="handleTagInput(event, 'alert_emails[]', this, true)">
-                        </div>
-                        <div id="alertEmailsHiddenInputs">
-                            @foreach($alertEmails as $aEmail)
-                                <input type="hidden" name="alert_emails[]" value="{{ $aEmail }}">
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="form-group">
                         <label for="escalation_group">Escalation Group</label>
                         <select id="escalation_group" name="escalation_group" class="form-control">
                             <option value="Network Operations Team" {{ old('escalation_group', $user->escalation_group) === 'Network Operations Team' ? 'selected' : '' }}>Network Operations Team</option>
@@ -435,7 +400,7 @@
 
             <!-- Section 7: Additional Information -->
             <div class="form-section">
-                <h3 class="form-section-title">7. Additional Information</h3>
+                <h3 class="form-section-title">6. Additional Information</h3>
                 
                 <div class="form-row" style="grid-template-columns: 1fr 1fr;">
                     <div class="form-group">
@@ -469,7 +434,7 @@
 
             <!-- Section 8: Attachments -->
             <div class="form-section">
-                <h3 class="form-section-title">8. Attachments</h3>
+                <h3 class="form-section-title">7. Attachments</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -543,27 +508,6 @@
                 </div>
             </div>
 
-            <!-- Services Association Section -->
-            <div class="form-section">
-                <h3 class="form-section-title">NMS Services Access</h3>
-                <div class="form-group">
-                    <label>Assign Services</label>
-                    <div class="checkbox-grid">
-                        @php
-                            $userServiceIds = old('services', $user->services->pluck('id')->toArray());
-                        @endphp
-                        @forelse($services as $service)
-                            <label class="checkbox-card">
-                                <input type="checkbox" name="services[]" value="{{ $service->id }}" {{ in_array($service->id, $userServiceIds) ? 'checked' : '' }}>
-                                {{ $service->name }}
-                            </label>
-                        @empty
-                            <p style="color: var(--text-muted); font-size: 0.85rem;">No services available. Create services first.</p>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-
             <!-- Save and update actions -->
             <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
                 <a href="{{ route('users.index') }}" class="btn-secondary" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 8px;">Cancel</a>
@@ -630,7 +574,7 @@
                     </div>
                     <div class="summary-detail-item">
                         <span class="label">Access Level</span>
-                        <span class="value" id="sidebarAccessLevel">{{ $user->access_level ?? '—' }}</span>
+                        <span class="value" id="sidebarAccessLevel">{{ $user->roleLabel() }}</span>
                     </div>
                     <div class="summary-detail-item">
                         <span class="label">Time Zone</span>

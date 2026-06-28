@@ -28,22 +28,20 @@ class UserController extends Controller
 
     public function create()
     {
-        $services = Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get();
         $slaPolicies = \App\Models\SlaPolicy::orderBy('name')->get();
         $assignableRoles = User::assignableRolesForCreator(auth()->user());
         $staffRoleIds = Role::query()->where('is_staff', true)->pluck('id');
 
-        return view('users.create', compact('services', 'slaPolicies', 'assignableRoles', 'staffRoleIds'));
+        return view('users.create', compact('slaPolicies', 'assignableRoles', 'staffRoleIds'));
     }
 
     public function edit(User $user)
     {
-        $services = Service::where('status', Service::STATUS_ACTIVE)->orderBy('name')->get();
         $slaPolicies = \App\Models\SlaPolicy::orderBy('name')->get();
         $assignableRoles = User::assignableRolesForEditor(auth()->user(), $user);
         $staffRoleIds = Role::query()->where('is_staff', true)->pluck('id');
 
-        return view('users.edit', compact('user', 'services', 'slaPolicies', 'assignableRoles', 'staffRoleIds'));
+        return view('users.edit', compact('user', 'slaPolicies', 'assignableRoles', 'staffRoleIds'));
     }
 
     public function store(Request $request)
@@ -78,8 +76,8 @@ class UserController extends Controller
             $user->save();
         }
 
-        if ($isStaffRole && ! empty($validated['services'])) {
-            $user->services()->sync($validated['services']);
+        if ($isStaffRole) {
+            $user->services()->sync($this->allActiveServiceIds());
         }
 
         $user->load('assignedRole');
@@ -148,8 +146,6 @@ class UserController extends Controller
 
         if ($isAdminRole) {
             $user->services()->sync([]);
-        } else {
-            $user->services()->sync($validated['services'] ?? []);
         }
 
         $user->load('assignedRole');
@@ -201,8 +197,6 @@ class UserController extends Controller
             $rules['device_limit'] = 'required|integer|min:' . $minDeviceLimit;
             $rules['start_date'] = 'required|date';
             $rules['expire_date'] = 'required|date|after_or_equal:start_date';
-            $rules['services'] = 'nullable|array';
-            $rules['services.*'] = 'exists:services,id';
 
             if ($isStore || $request->has('username')) {
                 $rules['username'] = [
@@ -234,11 +228,9 @@ class UserController extends Controller
                 $rules['two_factor'] = 'nullable|boolean';
                 $rules['force_password_change'] = 'nullable|boolean';
                 $rules['business_unit'] = 'nullable|string|max:191';
-                $rules['service_categories'] = 'nullable|array';
                 $rules['max_tickets_per_day'] = 'nullable|integer|min:0';
                 $rules['max_changes_per_week'] = 'nullable|integer|min:0';
                 $rules['notification_methods'] = 'nullable|array';
-                $rules['alert_emails'] = 'nullable|array';
                 $rules['working_hours'] = 'nullable|string|max:191';
                 $rules['escalation_group'] = 'nullable|string|max:191';
                 $rules['preferred_dashboard'] = 'nullable|string|max:191';
@@ -282,11 +274,10 @@ class UserController extends Controller
             'force_password_change' => $request->boolean('force_password_change'),
             'sla_policy_id' => $validated['sla_policy_id'] ?? null,
             'business_unit' => $validated['business_unit'] ?? null,
-            'service_categories' => $validated['service_categories'] ?? [],
             'max_tickets_per_day' => $validated['max_tickets_per_day'] ?? null,
             'max_changes_per_week' => $validated['max_changes_per_week'] ?? null,
             'notification_methods' => $validated['notification_methods'] ?? [],
-            'alert_emails' => $validated['alert_emails'] ?? [],
+            'alert_emails' => ! empty($validated['email']) ? [$validated['email']] : [],
             'working_hours' => $validated['working_hours'] ?? null,
             'escalation_group' => $validated['escalation_group'] ?? null,
             'preferred_dashboard' => $validated['preferred_dashboard'] ?? null,
@@ -294,6 +285,15 @@ class UserController extends Controller
             'certifications' => $validated['certifications'] ?? null,
             'notes' => $validated['notes'] ?? null,
         ];
+    }
+
+    /** @return list<int> */
+    private function allActiveServiceIds(): array
+    {
+        return Service::where('status', Service::STATUS_ACTIVE)
+            ->orderBy('name')
+            ->pluck('id')
+            ->all();
     }
 
     private function handleStaffUploads(Request $request, User $user): void
