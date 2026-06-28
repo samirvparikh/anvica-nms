@@ -3,10 +3,24 @@
 namespace App\Support;
 
 use App\Models\Asset;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class DeviceAssetMapper
 {
+    public static function usesMasterIdColumns(): bool
+    {
+        if (! Schema::hasTable('assets')) {
+            return false;
+        }
+
+        if (Schema::hasColumn('assets', 'asset_type_id')) {
+            return true;
+        }
+
+        return ! Schema::hasColumn('assets', 'asset_type');
+    }
+
     /**
      * @return array<string, mixed>
      */

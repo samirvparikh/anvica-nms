@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Models\Concerns\ResolvesApplicationMasters;
+use App\Support\ApplicationMasterHelper;
+use App\Support\DeviceAssetMapper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class Device extends Model
 {
@@ -53,26 +56,40 @@ class Device extends Model
             if (! $device->asset_name) {
                 $device->asset_name = $device->attributes['asset_name'] ?? $device->attributes['name'] ?? 'Default Asset';
             }
-            if (! $device->asset_type_id) {
-                $device->asset_type = $device->attributes['asset_type'] ?? $device->attributes['type'] ?? 'Router';
-            }
-            if (! $device->asset_category_id) {
-                $device->asset_category = 'Network Infrastructure';
-            }
-            if (! $device->status_id) {
-                $device->status = 'Active';
-            }
+
+            self::resolveMasterIdAttribute($device, 'asset_type_id', 'asset_type', [
+                $device->attributes['asset_type'] ?? null,
+                $device->attributes['type'] ?? null,
+                $device->attributes['device_type'] ?? null,
+                'Router',
+            ]);
+
+            self::resolveMasterIdAttribute($device, 'asset_category_id', 'asset_category', [
+                $device->attributes['asset_category'] ?? null,
+                'Network Infrastructure',
+            ]);
+
+            self::resolveMasterIdAttribute($device, 'status_id', 'asset_status', [
+                $device->attributes['status'] ?? null,
+                'Active',
+            ]);
+
             if (! $device->asset_id_auto) {
                 $year = date('Y');
                 $count = Asset::whereYear('created_at', $year)->count() + 1;
                 $device->asset_id_auto = sprintf('AST-%s-%04d', $year, $count);
             }
-            if (! $device->criticality_id) {
-                $device->criticality = 'Medium';
-            }
-            if (! $device->manufacturer_id) {
-                $device->manufacturer = 'Cisco';
-            }
+
+            self::resolveMasterIdAttribute($device, 'criticality_id', 'criticality', [
+                $device->attributes['criticality'] ?? null,
+                'Medium',
+            ]);
+
+            self::resolveMasterIdAttribute($device, 'manufacturer_id', 'manufacturer', [
+                $device->attributes['manufacturer'] ?? null,
+                'Cisco',
+            ]);
+
             if (! $device->model_number) {
                 $device->model_number = 'ISR 4331';
             }
@@ -85,8 +102,11 @@ class Device extends Model
             if (! $device->management_ip) {
                 $device->management_ip = $device->attributes['management_ip'] ?? $device->attributes['ip_address'] ?? '127.0.0.1';
             }
+
             if (! $device->site_location_id && ! empty($device->attributes['location'])) {
-                $device->site_location = $device->attributes['location'];
+                self::resolveMasterIdAttribute($device, 'site_location_id', 'site_location', [
+                    $device->attributes['location'],
+                ]);
             }
         });
 
@@ -181,7 +201,7 @@ class Device extends Model
 
     public function setDeviceTypeAttribute($value)
     {
-        $this->asset_type = $value;
+        $this->setAttribute('asset_type_id', $value);
     }
 
     public function getTypeAttribute()
@@ -191,7 +211,7 @@ class Device extends Model
 
     public function setTypeAttribute($value)
     {
-        $this->asset_type = $value;
+        $this->setAttribute('asset_type_id', $value);
     }
 
     public function getUserIdAttribute()
@@ -211,7 +231,7 @@ class Device extends Model
 
     public function setLocationAttribute($value)
     {
-        $this->site_location = $value;
+        $this->setAttribute('site_location_id', $value);
     }
 
     public function getSnmpCommunityAttribute()
@@ -342,5 +362,55 @@ class Device extends Model
                 return parent::orderBy($column, $direction);
             }
         };
+    }
+
+    /**
+     * @param  array<int, mixed>  $candidates
+     */
+    protected static function resolveMasterIdAttribute(Device $device, string $column, string $masterType, array $candidates): void
+    {
+        if (! empty($device->attributes[$column])) {
+            return;
+        }
+
+        if (DeviceAssetMapper::usesMasterIdColumns()) {
+            foreach ($candidates as $candidate) {
+                if ($candidate === null || $candidate === '') {
+                    continue;
+                }
+
+                $resolvedId = ApplicationMasterHelper::resolveId($masterType, (string) $candidate);
+
+                if ($resolvedId) {
+                    $device->attributes[$column] = $resolvedId;
+
+                    return;
+                }
+            }
+
+            return;
+        }
+
+        $legacyColumn = match ($column) {
+            'asset_type_id' => 'asset_type',
+            'asset_category_id' => 'asset_category',
+            'status_id' => 'status',
+            'criticality_id' => 'criticality',
+            'manufacturer_id' => 'manufacturer',
+            'site_location_id' => 'site_location',
+            default => null,
+        };
+
+        if (! $legacyColumn || ! Schema::hasColumn('assets', $legacyColumn)) {
+            return;
+        }
+
+        foreach ($candidates as $candidate) {
+            if ($candidate !== null && $candidate !== '') {
+                $device->attributes[$legacyColumn] = $candidate;
+
+                return;
+            }
+        }
     }
 }

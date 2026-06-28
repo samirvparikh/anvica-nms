@@ -15,6 +15,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(ApplicationMasterSeeder::class);
+
         User::updateOrCreate(
             ['email' => 'admin@anvica.in'],
             [
@@ -157,6 +159,5 @@ class DatabaseSeeder extends Seeder
 
         $this->call(MonitoringSeeder::class);
         $this->call(SlaSeeder::class);
-        $this->call(ApplicationMasterSeeder::class);
     }
 }

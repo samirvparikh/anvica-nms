@@ -135,7 +135,7 @@ trait RepairsDeviceAssetForeignKeys
      */
     protected function assetPayloadForMigration(object $row): array
     {
-        if (Schema::hasColumn('assets', 'asset_type_id')) {
+        if (DeviceAssetMapper::usesMasterIdColumns()) {
             return DeviceAssetMapper::fromDeviceRow($row);
         }
 
@@ -166,7 +166,7 @@ trait RepairsDeviceAssetForeignKeys
             'updated_at' => $now,
         ];
 
-        if (Schema::hasColumn('assets', 'asset_type_id')) {
+        if (DeviceAssetMapper::usesMasterIdColumns()) {
             return array_merge($base, [
                 'asset_type_id' => DeviceAssetMapper::resolveMasterId('asset_type', 'Router'),
                 'asset_category_id' => DeviceAssetMapper::resolveMasterId('asset_category', 'Network Infrastructure'),
