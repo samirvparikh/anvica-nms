@@ -74,7 +74,7 @@ class Device extends Model
                 'Active',
             ]);
 
-            if (! $device->asset_id_auto) {
+            if (! $device->exists && ! $device->asset_id_auto) {
                 $year = date('Y');
                 $count = Asset::whereYear('created_at', $year)->count() + 1;
                 $device->asset_id_auto = sprintf('AST-%s-%04d', $year, $count);
@@ -93,7 +93,7 @@ class Device extends Model
             if (! $device->model_number) {
                 $device->model_number = 'ISR 4331';
             }
-            if (! $device->serial_number) {
+            if (! $device->exists && ! $device->serial_number) {
                 $device->serial_number = 'SN-'.uniqid();
             }
             if (! $device->customer_id) {

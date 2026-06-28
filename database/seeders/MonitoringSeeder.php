@@ -7,6 +7,7 @@ use App\Models\Device;
 use App\Models\DeviceVendor;
 use App\Models\Service;
 use App\Models\ServicePoint;
+use App\Support\ApplicationMasterHelper;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -165,16 +166,12 @@ class MonitoringSeeder extends Seeder
                 ? DeviceVendor::where('service_id', $service->id)->where('slug', $map['vendor'])->first()
                 : null;
 
-            Device::where('asset_name', $deviceName)->update([
-                // 'user_id' => $userAssignments[$deviceName] ?? null,
-                'service_id' => 1,
-                'vendor_id' => 1,
-                // 'device_type' => $service?->name,
-                // 'hostname' => $deviceName,
-                'snmp_version' => '2c',
+            Device::where('asset_name', $deviceName)->update(array_filter([
+                'service_id' => $service?->id,
+                'vendor_id' => $vendor?->id,
+                'snmp_version_id' => ApplicationMasterHelper::resolveId('snmp_version', '2c'),
                 'snmp_port' => 161,
-                // 'snmp_community' => 'Anvica_NMS',
-            ]);
+            ], static fn ($value) => $value !== null));
         }
 
         $firewall = Device::where('asset_name', 'Firewall-01')->first();

@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Device;
+use App\Models\DeviceVendor;
+use App\Models\Service;
+use App\Models\User;
 use App\Support\DeviceAssetMapper;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -80,11 +82,18 @@ class DatabaseSeeder extends Seeder
         $samir = User::where('email', 'samir@gmail.com')->first();
         $jatin = User::where('email', 'jatin@gmail.com')->first();
 
+        $this->call(MonitoringSeeder::class);
+
+        $routerService = Service::where('slug', 'router')->first();
+        $mikrotikVendor = $routerService
+            ? DeviceVendor::where('service_id', $routerService->id)->where('slug', 'mikrotik')->first()
+            : null;
+
         $devices = [
             [
                 'user_id' => $samir?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                'service_id' => $routerService?->id,
+                'vendor_id' => $mikrotikVendor?->id,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo',
                 'type' => 'Router',
@@ -99,8 +108,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'user_id' => $samir?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                'service_id' => $routerService?->id,
+                'vendor_id' => $mikrotikVendor?->id,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo2',
                 'type' => 'Router',
@@ -115,8 +124,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'user_id' => $samir?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                'service_id' => $routerService?->id,
+                'vendor_id' => $mikrotikVendor?->id,
                 'name' => 'Anvica_Demo',
                 'hostname' => 'Anvica_Demo3',
                 'type' => 'Router',
@@ -131,8 +140,8 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'user_id' => $jatin?->id,
-                'service_id' => 1,
-                'vendor_id' => 1,
+                'service_id' => $routerService?->id,
+                'vendor_id' => $mikrotikVendor?->id,
                 'name' => 'Anvica_Jatin',
                 'hostname' => 'MikroTik',
                 'type' => 'Router',
@@ -149,15 +158,18 @@ class DatabaseSeeder extends Seeder
 
         foreach ($devices as $device) {
             $payload = DeviceAssetMapper::fromLegacyArray($device);
+
+            $existing = Device::where('management_ip', $payload['management_ip'])->first();
+            if ($existing) {
+                unset($payload['asset_id_auto'], $payload['serial_number']);
+            }
+
             Device::updateOrCreate(
                 ['management_ip' => $payload['management_ip']],
                 $payload
             );
         }
 
-        
-
-        $this->call(MonitoringSeeder::class);
         $this->call(SlaSeeder::class);
     }
 }

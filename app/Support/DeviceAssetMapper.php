@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Asset;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -172,7 +173,39 @@ class DeviceAssetMapper
             'health_score_calculation' => $extras['health_score_calculation'] ?? true,
         ];
 
+        $payload = self::filterInvalidForeignKeys($payload);
+
         return array_filter($payload, static fn ($value) => $value !== null);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected static function filterInvalidForeignKeys(array $payload): array
+    {
+        if (! empty($payload['service_id']) && Schema::hasTable('services')) {
+            $exists = DB::table('services')->where('id', $payload['service_id'])->exists();
+            if (! $exists) {
+                unset($payload['service_id']);
+            }
+        }
+
+        if (! empty($payload['vendor_id']) && Schema::hasTable('device_vendors')) {
+            $exists = DB::table('device_vendors')->where('id', $payload['vendor_id'])->exists();
+            if (! $exists) {
+                unset($payload['vendor_id']);
+            }
+        }
+
+        if (! empty($payload['customer_id']) && Schema::hasTable('users')) {
+            $exists = DB::table('users')->where('id', $payload['customer_id'])->exists();
+            if (! $exists) {
+                unset($payload['customer_id']);
+            }
+        }
+
+        return $payload;
     }
 
     public static function normalizeStatus(mixed $status): string
