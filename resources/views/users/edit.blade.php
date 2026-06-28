@@ -223,22 +223,17 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="auth_type" class="required">Authentication Type</label>
-                        <select id="auth_type" name="auth_type" class="form-control" required>
-                            <option value="Local Authentication" {{ old('auth_type', $user->auth_type) === 'Local Authentication' ? 'selected' : '' }}>Local Authentication</option>
-                            <option value="Active Directory" {{ old('auth_type', $user->auth_type) === 'Active Directory' ? 'selected' : '' }}>Active Directory</option>
-                            <option value="LDAP" {{ old('auth_type', $user->auth_type) === 'LDAP' ? 'selected' : '' }}>LDAP</option>
-                            <option value="OAuth" {{ old('auth_type', $user->auth_type) === 'OAuth' ? 'selected' : '' }}>OAuth 2.0</option>
+                        <label for="role_id" class="required">Role</label>
+                        <select id="role_id" name="role_id" class="form-control" required {{ $assignableRoles->count() <= 1 ? 'disabled' : '' }}>
+                            @foreach($assignableRoles as $role)
+                                <option value="{{ $role->id }}" {{ (string) old('role_id', $user->role_id) === (string) $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }}
+                                </option>
+                            @endforeach
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="access_level" class="required">Access Level</label>
-                        <select id="access_level" name="access_level" class="form-control" required>
-                            <option value="Engineer" {{ old('access_level', $user->access_level) === 'Engineer' ? 'selected' : '' }}>Engineer</option>
-                            <option value="Operator" {{ old('access_level', $user->access_level) === 'Operator' ? 'selected' : '' }}>Operator</option>
-                            <option value="Manager" {{ old('access_level', $user->access_level) === 'Manager' ? 'selected' : '' }}>Manager</option>
-                            <option value="Viewer" {{ old('access_level', $user->access_level) === 'Viewer' ? 'selected' : '' }}>Viewer</option>
-                        </select>
+                        @if($assignableRoles->count() <= 1)
+                            <input type="hidden" name="role_id" value="{{ $user->role_id }}">
+                        @endif
                     </div>
                     <div class="form-group">
                         <label for="status">Account Status</label>
@@ -303,30 +298,9 @@
                 </div>
             </div>
 
-            <!-- Section 4: Roles & Permissions -->
+            <!-- Section 4: SLA Association -->
             <div class="form-section">
-                <h3 class="form-section-title">4. Roles & Permissions</h3>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="role_id" class="required">Role</label>
-                        <select id="role_id" name="role_id" class="form-control" required {{ $assignableRoles->count() <= 1 ? 'disabled' : '' }}>
-                            @foreach($assignableRoles as $role)
-                                <option value="{{ $role->id }}" {{ (string) old('role_id', $user->role_id) === (string) $role->id ? 'selected' : '' }}>
-                                    {{ $role->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @if($assignableRoles->count() <= 1)
-                            <input type="hidden" name="role_id" value="{{ $user->role_id }}">
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 5: SLA Association -->
-            <div class="form-section">
-                <h3 class="form-section-title">5. SLA Association</h3>
+                <h3 class="form-section-title">4. SLA Association</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -911,9 +885,8 @@
             { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
             { sourceId: 'department', targetIds: ['sidebarDepartment'] },
             { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail'] },
-            { sourceId: 'role_id', targetIds: ['sidebarRole'] },
+            { sourceId: 'role_id', targetIds: ['sidebarRole', 'sidebarAccessLevel'] },
             { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
-            { sourceId: 'access_level', targetIds: ['sidebarAccessLevel'] },
             { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
         ];
 

@@ -215,21 +215,14 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="auth_type" class="required">Authentication Type</label>
-                        <select id="auth_type" name="auth_type" class="form-control" required>
-                            <option value="Local Authentication" {{ old('auth_type') === 'Local Authentication' ? 'selected' : '' }}>Local Authentications</option>
-                            <option value="Active Directory" {{ old('auth_type') === 'Active Directory' ? 'selected' : '' }}>Active Directory</option>
-                            <option value="LDAP" {{ old('auth_type') === 'LDAP' ? 'selected' : '' }}>LDAP</option>
-                            <option value="OAuth" {{ old('auth_type') === 'OAuth' ? 'selected' : '' }}>OAuth 2.0</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="access_level" class="required">Access Level</label>
-                        <select id="access_level" name="access_level" class="form-control" required>
-                            <option value="Engineer" {{ old('access_level') === 'Engineer' ? 'selected' : '' }}>Engineer</option>
-                            <option value="Operator" {{ old('access_level') === 'Operator' ? 'selected' : '' }}>Operator</option>
-                            <option value="Manager" {{ old('access_level') === 'Manager' ? 'selected' : '' }}>Manager</option>
-                            <option value="Viewer" {{ old('access_level') === 'Viewer' ? 'selected' : '' }}>Viewer</option>
+                        <label for="role_id" class="required">Role</label>
+                        <select id="role_id" name="role_id" class="form-control" required>
+                            <option value="">Select Role</option>
+                            @foreach($assignableRoles as $role)
+                                <option value="{{ $role->id }}" {{ (string) old('role_id', $assignableRoles->first()?->id) === (string) $role->id ? 'selected' : '' }}>
+                                    {{ $role->name }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group">
@@ -295,28 +288,9 @@
                 </div>
             </div>
 
-            <!-- Section 4: Roles & Permissions -->
+            <!-- Section 4: SLA Association -->
             <div class="form-section">
-                <h3 class="form-section-title">4. Roles & Permissions</h3>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="role_id" class="required">Role</label>
-                        <select id="role_id" name="role_id" class="form-control" required>
-                            <option value="">Select Role</option>
-                            @foreach($assignableRoles as $role)
-                                <option value="{{ $role->id }}" {{ (string) old('role_id', $assignableRoles->first()?->id) === (string) $role->id ? 'selected' : '' }}>
-                                    {{ $role->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Section 5: SLA Association -->
-            <div class="form-section">
-                <h3 class="form-section-title">5. SLA Association</h3>
+                <h3 class="form-section-title">4. SLA Association</h3>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -877,9 +851,8 @@
             { sourceId: 'mobile', targetIds: ['sidebarMobile'] },
             { sourceId: 'department', targetIds: ['sidebarDepartment'] },
             { sourceId: 'designation', targetIds: ['sidebarDesignation', 'sidebarDesignationDetail'] },
-            { sourceId: 'role_id', targetIds: ['sidebarRole'] },
+            { sourceId: 'role_id', targetIds: ['sidebarRole', 'sidebarAccessLevel'] },
             { sourceId: 'office_location', targetIds: ['sidebarLocation'] },
-            { sourceId: 'access_level', targetIds: ['sidebarAccessLevel'] },
             { sourceId: 'timezone', targetIds: ['sidebarTimezone'] },
         ];
 
@@ -978,7 +951,7 @@
 
         const roleSelect = document.getElementById('role_id');
         const staffRoleIds = @json($staffRoleIds);
-        const staffSectionPrefixes = ['2.', '5.', '6.', '7.', '8.', '9.', '10.', '11.', 'NMS Services'];
+        const staffSectionPrefixes = ['2.', '4.', '6.', '7.', '8.', '9.', '10.', '11.', 'NMS Services'];
 
         function toggleCreateStaffSections() {
             if (!roleSelect) {
@@ -994,17 +967,8 @@
                 }
             });
 
-            const accessLevel = document.getElementById('access_level');
-            if (accessLevel) {
-                accessLevel.required = isStaff;
-            }
-
             document.querySelectorAll('#engineerUserForm [required]').forEach(field => {
-                if (['role_id', 'name', 'email', 'mobile', 'password', 'password_confirmation', 'status', 'auth_type'].includes(field.id)) {
-                    return;
-                }
-
-                if (field.closest('.form-section')?.querySelector('.form-section-title')?.textContent?.trim().startsWith('4.')) {
+                if (['role_id', 'name', 'email', 'mobile', 'password', 'password_confirmation', 'status'].includes(field.id)) {
                     return;
                 }
 

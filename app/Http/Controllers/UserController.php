@@ -68,7 +68,7 @@ class UserController extends Controller
         ];
 
         if ($isStaffRole && ($request->isMethod('post') || $request->has('username'))) {
-            $data = array_merge($data, $this->staffProfileData($validated, $request));
+            $data = array_merge($data, $this->staffProfileData($validated, $request, $role));
         }
 
         $user = User::create($data);
@@ -136,7 +136,7 @@ class UserController extends Controller
         ]);
 
         if ($isStaffRole && ($request->isMethod('put') || $request->isMethod('patch') || $request->has('username'))) {
-            $user->fill($this->staffProfileData($validated, $request));
+            $user->fill($this->staffProfileData($validated, $request, $role));
             $this->handleStaffUploads($request, $user);
         }
 
@@ -216,8 +216,6 @@ class UserController extends Controller
                 $rules['reporting_manager'] = 'required|string|max:191';
                 $rules['office_location'] = 'required|string|max:191';
                 $rules['timezone'] = 'required|string|max:191';
-                $rules['auth_type'] = 'required|string|max:191';
-                $rules['access_level'] = 'required|string|max:191';
                 $rules['sla_policy_id'] = 'required|exists:sla_policies,id';
                 $rules['employee_id'] = 'nullable|string|max:191';
                 $rules['alternate_number'] = 'nullable|string|max:20';
@@ -257,11 +255,11 @@ class UserController extends Controller
     }
 
     /** @param  array<string, mixed>  $validated */
-    private function staffProfileData(array $validated, Request $request): array
+    private function staffProfileData(array $validated, Request $request, ?Role $role = null): array
     {
         return [
             'username' => $validated['username'] ?? null,
-            'access_level' => $validated['access_level'] ?? null,
+            'access_level' => $role?->name,
             'employee_id' => $validated['employee_id'] ?? null,
             'alternate_number' => $validated['alternate_number'] ?? null,
             'dob' => $validated['dob'] ?? null,
@@ -276,7 +274,7 @@ class UserController extends Controller
             'address' => $validated['address'] ?? null,
             'landline' => $validated['landline'] ?? null,
             'extension' => $validated['extension'] ?? null,
-            'auth_type' => $validated['auth_type'] ?? 'Local Authentication',
+            'auth_type' => 'Local Authentication',
             'password_expiry_days' => $validated['password_expiry_days'] ?? null,
             'failed_login_attempts' => $validated['failed_login_attempts'] ?? 0,
             'lockout_minutes' => $validated['lockout_minutes'] ?? 30,
