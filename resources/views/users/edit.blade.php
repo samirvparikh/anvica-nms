@@ -463,9 +463,7 @@
             <div class="summary-card">
                 <h3>Roles Assigned</h3>
                 <div class="assigned-roles-list" id="sidebarRolesList">
-                    @foreach($userRoles as $uRole)
-                        <span class="role-badge">{{ $uRole }}</span>
-                    @endforeach
+                    <span class="role-badge">{{ $user->roleLabel() }}</span>
                 </div>
             </div>
 
@@ -713,6 +711,12 @@
                         const target = document.getElementById(targetId);
                         if (target) target.textContent = val;
                     });
+                    if (bind.sourceId === 'role_id') {
+                        const rolesList = document.getElementById('sidebarRolesList');
+                        if (rolesList) {
+                            rolesList.innerHTML = '<span class="role-badge">' + (val || '—') + '</span>';
+                        }
+                    }
                 };
                 input.addEventListener('input', updateTargets);
                 input.addEventListener('change', updateTargets);
