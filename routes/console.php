@@ -17,6 +17,8 @@ Schedule::job(new PollRouterJob)->everyMinute();
 Schedule::job(new PollSwitchJob)->everyMinute();
 Schedule::job(new PollFirewallJob)->everyMinute();
 
+Schedule::command('alerts:convert-to-alarms')->everyMinute();
+
 Schedule::call(function () {
     Device::with(['service', 'vendor'])
         ->whereNotNull('service_id')

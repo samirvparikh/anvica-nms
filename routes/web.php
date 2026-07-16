@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/alerts', [AlertController::class, 'userIndex'])->name('alerts.index');
     Route::post('/alerts/{alert}/ack', [AlertController::class, 'acknowledge'])->name('alerts.ack');
+    Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->name('alerts.close');
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
@@ -114,7 +115,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/alerts/manage', [AlertController::class, 'store'])->name('alerts.store');
         Route::put('/alerts/{alert}', [AlertController::class, 'update'])->name('alerts.update');
         Route::delete('/alerts/{alert}', [AlertController::class, 'destroy'])->name('alerts.destroy');
-        Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->name('alerts.close');
 
         Route::get('/settings', [SettingsController::class, 'edit'])->name('settings.edit');
         Route::put('/settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail.update');

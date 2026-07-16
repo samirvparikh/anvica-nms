@@ -92,6 +92,16 @@
                     </li>
 
                     <li>
+                        <a href="{{ route('alerts.index') }}" class="nav-link {{ request()->is('alerts') && ! request()->is('alerts/manage*') ? 'active' : '' }}" title="Alerts">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            <span class="nav-link-text">Alerts</span>
+                        </a>
+                    </li>
+
+                    <li>
                         <a href="{{ route('maps.index') }}" class="nav-link {{ request()->is('maps') ? 'active' : '' }}" title="Maps">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
@@ -433,9 +443,9 @@
                 </div>
 
                 <div class="header-right">
-                    <!-- Notifications -->
-                    <div class="notification-widget" id="notificationWidget">
-                        <button class="notification-btn" id="notificationTrigger" aria-expanded="false" aria-haspopup="true" aria-label="Toggle notifications">
+                    <!-- Alerts Notifications -->
+                    <div class="notification-widget" id="alertNotificationWidget" data-notification-widget>
+                        <button class="notification-btn" id="alertNotificationTrigger" aria-expanded="false" aria-haspopup="true" aria-label="Toggle alert notifications" title="Alerts">
                             <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -445,24 +455,23 @@
                             <span class="notification-badge">{{ $activeAlertsCount }}</span>
                         @endif
 
-                        <!-- Notifications Dropdown -->
-                        <div class="notification-dropdown" id="notificationDropdown">
+                        <div class="notification-dropdown" id="alertNotificationDropdown">
                             <div class="dropdown-header">
-                                <h3>Notifications</h3>
+                                <h3>Alerts</h3>
                                 @if(($activeAlertsCount ?? 0) > 0)
                                     <span class="badge">{{ $activeAlertsCount }} Active</span>
                                 @endif
                             </div>
                             <div class="dropdown-body">
-                                @forelse($headerNotifications ?? [] as $notification)
+                                @forelse($headerAlertNotifications ?? [] as $notification)
                                     <a href="{{ $notification['url'] }}" class="notification-item {{ $notification['severity'] }}">
                                         <div class="notification-icon">
                                             @if($notification['severity'] === 'critical')
-                                                <i class="fa-solid fa-circle-exclamation text-danger" style="color: var(--status-down);"></i>
+                                                <i class="fa-solid fa-circle-exclamation" style="color: var(--status-down);"></i>
                                             @elseif($notification['severity'] === 'warning')
-                                                <i class="fa-solid fa-triangle-exclamation text-warning" style="color: var(--status-warning);"></i>
+                                                <i class="fa-solid fa-triangle-exclamation" style="color: var(--status-warning);"></i>
                                             @else
-                                                <i class="fa-solid fa-circle-info text-info" style="color: #3b82f6;"></i>
+                                                <i class="fa-solid fa-circle-info" style="color: #3b82f6;"></i>
                                             @endif
                                         </div>
                                         <div class="notification-content">
@@ -476,12 +485,63 @@
                                 @empty
                                     <div class="empty-state">
                                         <i class="fa-regular fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; color: var(--text-muted);"></i>
-                                        <p>No active notifications</p>
+                                        <p>No active alerts</p>
                                     </div>
                                 @endforelse
                             </div>
                             <div class="dropdown-footer">
                                 <a href="{{ route('alerts.index') }}">View All Alerts</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Alarms Notifications -->
+                    <div class="notification-widget" id="alarmNotificationWidget" data-notification-widget>
+                        <button class="notification-btn" id="alarmNotificationTrigger" aria-expanded="false" aria-haspopup="true" aria-label="Toggle alarm notifications" title="Alarms">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                <line x1="12" y1="9" x2="12" y2="13"/>
+                                <line x1="12" y1="17" x2="12.01" y2="17"/>
+                            </svg>
+                        </button>
+                        @if(($activeAlarmsCount ?? 0) > 0)
+                            <span class="notification-badge">{{ $activeAlarmsCount }}</span>
+                        @endif
+
+                        <div class="notification-dropdown" id="alarmNotificationDropdown">
+                            <div class="dropdown-header">
+                                <h3>Alarms</h3>
+                                @if(($activeAlarmsCount ?? 0) > 0)
+                                    <span class="badge">{{ $activeAlarmsCount }} Active</span>
+                                @endif
+                            </div>
+                            <div class="dropdown-body">
+                                @forelse($headerAlarmNotifications ?? [] as $notification)
+                                    <a href="{{ $notification['url'] }}" class="notification-item {{ $notification['severity'] }}">
+                                        <div class="notification-icon">
+                                            @if($notification['severity'] === 'critical')
+                                                <i class="fa-solid fa-circle-exclamation" style="color: var(--status-down);"></i>
+                                            @else
+                                                <i class="fa-solid fa-triangle-exclamation" style="color: var(--status-warning);"></i>
+                                            @endif
+                                        </div>
+                                        <div class="notification-content">
+                                            <div class="notification-meta">
+                                                <span class="device-name">{{ $notification['device_name'] }}</span>
+                                                <span class="time">{{ $notification['created_at']->diffForHumans() }}</span>
+                                            </div>
+                                            <p class="notification-message">{{ $notification['message'] }}</p>
+                                        </div>
+                                    </a>
+                                @empty
+                                    <div class="empty-state">
+                                        <i class="fa-regular fa-bell-slash" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; color: var(--text-muted);"></i>
+                                        <p>No active alarms</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                            <div class="dropdown-footer">
+                                <a href="{{ route('alarms.index') }}">View All Alarms</a>
                             </div>
                         </div>
                     </div>
@@ -606,9 +666,20 @@
                 }
             });
 
-            var notificationWidget = document.getElementById('notificationWidget');
-            var notificationTrigger = document.getElementById('notificationTrigger');
-            var notificationDropdown = document.getElementById('notificationDropdown');
+            var notificationWidgets = document.querySelectorAll('[data-notification-widget]');
+
+            function closeAllNotificationWidgets(exceptWidget) {
+                notificationWidgets.forEach(function (widget) {
+                    if (exceptWidget && widget === exceptWidget) {
+                        return;
+                    }
+                    widget.classList.remove('open');
+                    var trigger = widget.querySelector('.notification-btn');
+                    if (trigger) {
+                        trigger.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
 
             if (profileTrigger && profileDropdown) {
                 profileTrigger.addEventListener('click', function (e) {
@@ -616,10 +687,8 @@
                     var isOpen = profileMenu.classList.toggle('open');
                     profileTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
-                    // Close notification dropdown if it is open
-                    if (isOpen && notificationWidget) {
-                        notificationWidget.classList.remove('open');
-                        if (notificationTrigger) notificationTrigger.setAttribute('aria-expanded', 'false');
+                    if (isOpen) {
+                        closeAllNotificationWidgets();
                     }
                 });
 
@@ -631,26 +700,36 @@
                 });
             }
 
-            if (notificationTrigger && notificationDropdown) {
-                notificationTrigger.addEventListener('click', function (e) {
+            notificationWidgets.forEach(function (widget) {
+                var trigger = widget.querySelector('.notification-btn');
+                if (!trigger) {
+                    return;
+                }
+
+                trigger.addEventListener('click', function (e) {
                     e.stopPropagation();
-                    var isOpen = notificationWidget.classList.toggle('open');
-                    notificationTrigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                    var willOpen = !widget.classList.contains('open');
+                    closeAllNotificationWidgets(widget);
+                    widget.classList.toggle('open', willOpen);
+                    trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
 
-                    // Close profile menu if it is open
-                    if (isOpen && profileMenu) {
+                    if (willOpen && profileMenu) {
                         profileMenu.classList.remove('open');
-                        if (profileTrigger) profileTrigger.setAttribute('aria-expanded', 'false');
+                        if (profileTrigger) {
+                            profileTrigger.setAttribute('aria-expanded', 'false');
+                        }
                     }
                 });
+            });
 
-                document.addEventListener('click', function (e) {
-                    if (notificationWidget && !notificationWidget.contains(e.target)) {
-                        notificationWidget.classList.remove('open');
-                        notificationTrigger.setAttribute('aria-expanded', 'false');
-                    }
+            document.addEventListener('click', function (e) {
+                var clickedInside = Array.from(notificationWidgets).some(function (widget) {
+                    return widget.contains(e.target);
                 });
-            }
+                if (!clickedInside) {
+                    closeAllNotificationWidgets();
+                }
+            });
 
             var navSections = document.querySelectorAll('.nav-section[data-section]');
             var navSectionsStorageKey = 'navSectionsState';

@@ -46,6 +46,7 @@ class Alert extends Model
         'duration_seconds',
         'acknowledged_at',
         'acknowledged_by',
+        'converted_to_alarm_at',
     ];
 
     protected function casts(): array
@@ -54,6 +55,7 @@ class Alert extends Model
             'started_at' => 'datetime',
             'resolved_at' => 'datetime',
             'acknowledged_at' => 'datetime',
+            'converted_to_alarm_at' => 'datetime',
         ];
     }
 

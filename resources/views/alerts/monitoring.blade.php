@@ -78,7 +78,13 @@
                             <button type="submit" class="btn-action ack-btn">Acknowledge</button>
                         </form>
                     @elseif($isOpen && $isAcknowledged)
-                        <span class="status-badge up">Acknowledged</span>
+                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                            <span class="status-badge up">Acknowledged</span>
+                            <form action="{{ route('alerts.close', $alert) }}" method="POST" style="display: inline-block;">
+                                @csrf
+                                <button type="submit" class="btn-action edit-btn" title="Close / Resolve">Resolve</button>
+                            </form>
+                        </div>
                     @else
                         <span class="status-badge up">Closed</span>
                     @endif

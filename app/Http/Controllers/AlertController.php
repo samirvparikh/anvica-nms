@@ -108,10 +108,22 @@ class AlertController extends Controller
         return redirect()->route('alerts.manage')->with('success', 'Alert deleted successfully.');
     }
 
-    public function close(Alert $alert)
+    public function close(Request $request, Alert $alert)
     {
+        $alert->load('device');
+        abort_unless($this->userScope->canAccessDevice($request->user(), $alert->device), 403);
+
+        if ($alert->status === Alert::STATUS_CLOSED) {
+            return redirect()->back()->with('success', 'Alert is already closed.');
+        }
+
         $this->alertService->closeAlert($alert);
 
-        return redirect()->route('alerts.manage')->with('success', 'Alert closed successfully.');
+        $redirectRoute = $request->user()->isAdmin() && $request->headers->get('referer')
+            && str_contains((string) $request->headers->get('referer'), '/alerts/manage')
+            ? 'alerts.manage'
+            : 'alerts.index';
+
+        return redirect()->route($redirectRoute)->with('success', 'Alert closed successfully.');
     }
 }

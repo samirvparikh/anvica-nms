@@ -35,8 +35,8 @@ class AppServiceProvider extends ServiceProvider
             $user = Auth::user();
             $openAlerts = $user ? app(AlertRepository::class)->openCount($user) : 0;
             $openAlarms = Alarm::where('status', 'Open')->count();
-            
-            $alerts = $user ? app(AlertRepository::class)->scopedQuery($user)
+
+            $headerAlertNotifications = $user ? app(AlertRepository::class)->scopedQuery($user)
                 ->where('status', Alert::STATUS_OPEN)
                 ->with('device')
                 ->latest()
@@ -44,7 +44,6 @@ class AppServiceProvider extends ServiceProvider
                 ->get()
                 ->map(function ($item) {
                     return [
-                        'type' => 'alert',
                         'id' => $item->id,
                         'device_name' => $item->device?->name ?? 'Unknown',
                         'message' => $item->message,
@@ -54,13 +53,12 @@ class AppServiceProvider extends ServiceProvider
                     ];
                 }) : collect();
 
-            $alarms = Alarm::where('status', 'Open')
+            $headerAlarmNotifications = Alarm::where('status', 'Open')
                 ->latest()
                 ->take(5)
                 ->get()
                 ->map(function ($item) {
                     return [
-                        'type' => 'alarm',
                         'id' => $item->id,
                         'device_name' => $item->device_name,
                         'message' => $item->message,
@@ -70,13 +68,13 @@ class AppServiceProvider extends ServiceProvider
                     ];
                 });
 
-            $notifications = $alerts->merge($alarms)
-                ->sortByDesc('created_at')
-                ->take(5);
-
             $view->with([
-                'activeAlertsCount' => $openAlerts + $openAlarms,
-                'headerNotifications' => $notifications,
+                'activeAlertsCount' => $openAlerts,
+                'headerAlertNotifications' => $headerAlertNotifications,
+                'activeAlarmsCount' => $openAlarms,
+                'headerAlarmNotifications' => $headerAlarmNotifications,
+                // Backward-compatible aliases used by older blade snippets.
+                'headerNotifications' => $headerAlertNotifications,
             ]);
 
             if ($user && $user->isAdmin() && (request()->is('/') || request()->is('dashboard*'))) {
