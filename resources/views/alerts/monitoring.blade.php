@@ -56,6 +56,7 @@
                 $deviceName = $alert->device?->name ?? 'Unknown';
                 $isOpen = $alert->status === \App\Models\Alert::STATUS_OPEN;
                 $isAcknowledged = $alert->acknowledged_at !== null;
+                $isConverted = $alert->converted_to_alarm_at !== null;
             @endphp
             <tr class="alert-row"
                 data-device="{{ strtolower($deviceName) }}"
@@ -85,6 +86,8 @@
                                 <button type="submit" class="btn-action edit-btn" title="Close / Resolve">Resolve</button>
                             </form>
                         </div>
+                    @elseif($isConverted)
+                        <span class="status-badge down">Alarm</span>
                     @else
                         <span class="status-badge up">Closed</span>
                     @endif

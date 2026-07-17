@@ -29,7 +29,13 @@
                 <td>{{ $alert->device->user?->name ?? 'Unassigned' }}</td>
                 <td><span class="status-badge {{ $alert->severity }}">{{ ucfirst($alert->severity) }}</span></td>
                 <td>{{ $alert->message }}</td>
-                <td><span class="status-badge {{ $alert->status === 'open' ? 'warning' : 'up' }}">{{ ucfirst($alert->status) }}</span></td>
+                <td>
+                    @if($alert->converted_to_alarm_at !== null)
+                        <span class="status-badge down">Alarm</span>
+                    @else
+                        <span class="status-badge {{ $alert->status === 'open' ? 'warning' : 'up' }}">{{ ucfirst($alert->status) }}</span>
+                    @endif
+                </td>
                 <td>{{ $alert->created_at->format('M d, H:i') }}</td>
                 <td style="text-align:right;">
                     @if($alert->status === 'open')
