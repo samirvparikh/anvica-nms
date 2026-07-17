@@ -2,8 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\CronLog;
 use App\Services\AlertToAlarmConverter;
 use Illuminate\Console\Command;
+use Throwable;
 
 class ConvertUnacknowledgedAlertsToAlarms extends Command
 {
@@ -13,10 +15,21 @@ class ConvertUnacknowledgedAlertsToAlarms extends Command
 
     public function handle(AlertToAlarmConverter $converter): int
     {
-        $count = $converter->convertExpiredAlerts();
+        $log = CronLog::start($this->getName());
 
-        $this->info("Converted {$count} alert(s) to alarm(s).");
+        try {
+            $count = $converter->convertExpiredAlerts();
 
-        return self::SUCCESS;
+            $message = "Converted {$count} alert(s) to alarm(s).";
+            $this->info($message);
+            $log->markSuccess($message, $count);
+
+            return self::SUCCESS;
+        } catch (Throwable $e) {
+            $this->error($e->getMessage());
+            $log->markFailed($e->getMessage(), self::FAILURE);
+
+            return self::FAILURE;
+        }
     }
 }

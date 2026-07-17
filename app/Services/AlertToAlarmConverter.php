@@ -25,6 +25,7 @@ class AlertToAlarmConverter
             ->with('device')
             ->where('status', Alert::STATUS_OPEN)
             ->whereNull('acknowledged_at')
+            ->whereNull('resolved_at')
             ->whereNull('converted_to_alarm_at')
             ->where('created_at', '<=', $cutoff)
             ->orderBy('id')
