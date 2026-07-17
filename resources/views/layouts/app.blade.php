@@ -23,6 +23,7 @@
             ->join('');
         $isProfileActive = request()->is('profile*');
         $isAdmin = $authUser->isAdmin();
+        $isSuperAdmin = $authUser->isSuperAdmin();
         $navSectionMonitoring = request()->is('/') || request()->is('dashboard*') || request()->is('alarms*') || request()->is('maps*') || request()->is('monitoring*') || request()->is('reports*') || (request()->is('alerts*') && ! request()->is('alerts/manage'));
         $navSectionServiceDesk = request()->is('tickets*') || request()->is('incidents*') || request()->is('problems*') || request()->is('changes*') || request()->is('knowledge-base*');
         $navSectionMaintenance = request()->is('maintenance/preventive*') || request()->is('maintenance/calendar*') || request()->is('maintenance/windows*');
@@ -367,6 +368,17 @@
                             <span class="nav-link-text">API Data</span>
                         </a>
                     </li>
+                    @if($isSuperAdmin)
+                    <li>
+                        <a href="{{ route('cron-logs') }}" class="nav-link {{ request()->is('cron-logs*') ? 'active' : '' }}" title="Cron Log">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="9"/>
+                                <polyline points="12 7 12 12 15 14"/>
+                            </svg>
+                            <span class="nav-link-text">Cron Log</span>
+                        </a>
+                    </li>
+                    @endif
                 </ul>
                     </div>
                 </div>

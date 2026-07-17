@@ -8,6 +8,7 @@ use App\Http\Controllers\AlarmController;
 use App\Http\Controllers\AlertController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\ApiRequestLogController;
+use App\Http\Controllers\CronLogController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ServiceController;
@@ -69,6 +70,9 @@ Route::middleware('auth')->group(function () {
     // API Request Logs
     Route::get('/api-request-logs', [ApiRequestLogController::class, 'index'])->name('api-request-logs');
     Route::get('/api-request-logs/{apiRequestLog}', [ApiRequestLogController::class, 'show'])->name('api-request-logs.show');
+
+    // Cron Logs (superadmin only)
+    Route::get('/cron-logs', [CronLogController::class, 'index'])->name('cron-logs');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
