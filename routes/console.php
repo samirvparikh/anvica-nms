@@ -18,6 +18,7 @@ Schedule::job(new PollSwitchJob)->everyMinute();
 Schedule::job(new PollFirewallJob)->everyMinute();
 
 Schedule::command('alerts:convert-to-alarms')->everyMinute();
+Schedule::command('devices:check-stale')->everyMinute();
 
 Schedule::call(function () {
     Device::with(['service', 'vendor'])

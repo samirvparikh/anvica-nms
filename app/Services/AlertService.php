@@ -344,14 +344,18 @@ class AlertService
         ])));
     }
 
-    public function raiseOfflineAlert(Device $device): void
+    public function raiseOfflineAlert(Device $device, ?string $message = null): void
     {
-        $exists = Alert::where('device_id', $device->id)
+        $message ??= 'Device Offline: '.$device->name.' is unreachable';
+
+        $existing = Alert::where('device_id', $device->id)
             ->where('status', Alert::STATUS_OPEN)
             ->where('alarm_type', Alert::ALARM_DEVICE_DOWN)
-            ->exists();
+            ->first();
 
-        if ($exists) {
+        if ($existing) {
+            $existing->update(['message' => $message]);
+
             return;
         }
 
@@ -359,7 +363,7 @@ class AlertService
             'device_id' => $device->id,
             'alarm_type' => Alert::ALARM_DEVICE_DOWN,
             'severity' => Alert::SEVERITY_CRITICAL,
-            'message' => 'Device Offline: ' . $device->name . ' is unreachable',
+            'message' => $message,
             'status' => Alert::STATUS_OPEN,
             'started_at' => now(),
         ]);
@@ -371,7 +375,8 @@ class AlertService
             ->where('status', Alert::STATUS_OPEN)
             ->where(function ($query) {
                 $query->where('alarm_type', Alert::ALARM_DEVICE_DOWN)
-                    ->orWhere('message', 'like', '%Device Offline%');
+                    ->orWhere('message', 'like', '%Device Offline%')
+                    ->orWhere('message', 'like', '%Device Shutdown%');
             })
             ->get()
             ->each(fn (Alert $alert) => $this->closeAlert($alert));

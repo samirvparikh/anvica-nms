@@ -147,6 +147,9 @@ class MonitoringService
         if ($pingStatus !== null && $pingStatus !== '') {
             $pingText = strtoupper(trim((string) $pingStatus));
             $healthStatus = in_array($pingText, ['UP', '1', 'TRUE', 'ONLINE'], true) ? 'Up' : 'Down';
+        } elseif ($storedMetricKeys !== [] && strcasecmp((string) $previousHealth, Device::HEALTH_DOWN) === 0) {
+            // Any successful /api/device/data push recovers a silence-based Down.
+            $healthStatus = Device::HEALTH_UP;
         }
 
         $device->update([
