@@ -3,12 +3,15 @@
 namespace App\Services;
 
 use App\Models\Alert;
+use App\Models\AlertActivity;
 use App\Models\Device;
 use App\Models\ServicePoint;
+use App\Models\User;
 use App\Repositories\AlertRepository;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class AlertService
 {
@@ -22,7 +25,110 @@ class AlertService
 
     public function __construct(
         protected AlertRepository $alertRepository,
+        protected AlertToAlarmConverter $alertToAlarmConverter,
     ) {}
+
+    public const ACTION_ACKNOWLEDGED = 'acknowledged';
+
+    public const ACTION_CONVERT_TO_ALARM = 'convert_to_alarm';
+
+    public const ACTION_RESOLVED = 'resolved';
+
+    /**
+     * Apply a user-selected status action from the acknowledge modal.
+     */
+    public function applyUserAction(Alert $alert, User $user, string $action, ?string $remarks = null): string
+    {
+        return match ($action) {
+            self::ACTION_ACKNOWLEDGED => $this->acknowledgeAlert($alert, $user, $remarks),
+            self::ACTION_CONVERT_TO_ALARM => $this->convertAlertToAlarm($alert, $user, $remarks),
+            self::ACTION_RESOLVED => $this->resolveAlert($alert, $user, $remarks),
+            default => throw new InvalidArgumentException('Invalid alert action.'),
+        };
+    }
+
+    public function acknowledgeAlert(Alert $alert, User $user, ?string $remarks = null): string
+    {
+        if ($alert->status !== Alert::STATUS_OPEN) {
+            return 'Alert is already closed.';
+        }
+
+        if ($alert->acknowledged_at === null) {
+            $alert->update([
+                'acknowledged_at' => now(),
+                'acknowledged_by' => $user->id,
+            ]);
+        }
+
+        $this->logActivity(
+            $alert,
+            $user,
+            AlertActivity::ACTION_ACKNOWLEDGED,
+            'acknowledged',
+            $remarks
+        );
+
+        return 'Alert acknowledged successfully.';
+    }
+
+    public function convertAlertToAlarm(Alert $alert, User $user, ?string $remarks = null): string
+    {
+        if ($alert->converted_to_alarm_at !== null) {
+            return 'Alert is already converted to an alarm.';
+        }
+
+        $converted = $this->alertToAlarmConverter->convertAlert($alert, $user, $remarks);
+
+        return $converted
+            ? 'Alert converted to alarm successfully.'
+            : 'Alert could not be converted to an alarm.';
+    }
+
+    public function resolveAlert(Alert $alert, User $user, ?string $remarks = null): string
+    {
+        if ($alert->status === Alert::STATUS_CLOSED && $alert->converted_to_alarm_at === null) {
+            return 'Alert is already resolved.';
+        }
+
+        if ($alert->converted_to_alarm_at !== null) {
+            return 'Alert was already converted to an alarm.';
+        }
+
+        if ($alert->acknowledged_at === null) {
+            $alert->update([
+                'acknowledged_at' => now(),
+                'acknowledged_by' => $user->id,
+            ]);
+        }
+
+        $this->closeAlert($alert);
+
+        $this->logActivity(
+            $alert,
+            $user,
+            AlertActivity::ACTION_RESOLVED,
+            'resolved',
+            $remarks
+        );
+
+        return 'Alert resolved successfully.';
+    }
+
+    public function logActivity(
+        Alert $alert,
+        ?User $user,
+        string $action,
+        ?string $status = null,
+        ?string $remarks = null
+    ): AlertActivity {
+        return AlertActivity::create([
+            'alert_id' => $alert->id,
+            'user_id' => $user?->id,
+            'action' => $action,
+            'status' => $status,
+            'remarks' => $remarks,
+        ]);
+    }
 
     /**
      * Evaluate normalized poll metrics (cpu, ram, disk, temperature).

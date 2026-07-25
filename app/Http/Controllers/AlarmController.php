@@ -4,17 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Models\Alarm;
 use App\Models\Device;
+use App\Services\AlarmActionService;
 use Illuminate\Http\Request;
 
 class AlarmController extends Controller
 {
+    public function __construct(
+        protected AlarmActionService $alarmActionService,
+    ) {}
+
     public function index()
     {
         $criticalCount = Alarm::where('severity', 'Critical')->where('status', 'Open')->count();
         $warningCount = Alarm::where('severity', 'Warning')->where('status', 'Open')->count();
         $ackCount = Alarm::where('status', 'Acknowledged')->count();
 
-        $alarms = Alarm::orderBy('status', 'asc')->orderByDesc('created_at')->get();
+        $alarms = Alarm::with('ticket')
+            ->orderByRaw("CASE status WHEN 'Open' THEN 1 WHEN 'Acknowledged' THEN 2 ELSE 3 END")
+            ->orderByDesc('created_at')
+            ->get();
         $isAdmin = (bool) request()->user()?->isAdmin();
 
         return view('alarms.index', [
@@ -62,11 +70,24 @@ class AlarmController extends Controller
         return redirect()->route('alarms.index')->with('success', 'Alarm deleted successfully.');
     }
 
-    public function acknowledge(Alarm $alarm)
+    public function acknowledge(Request $request, Alarm $alarm)
     {
-        $alarm->update(['status' => 'Acknowledged']);
+        $validated = $request->validate([
+            'action' => 'required|in:convert_to_ticket,resolved',
+            'remarks' => 'nullable|string|max:2000',
+        ], [], [
+            'action' => 'status',
+            'remarks' => 'remarks',
+        ]);
 
-        return redirect()->route('alarms.index')->with('success', 'Alarm acknowledged successfully.');
+        $message = $this->alarmActionService->applyUserAction(
+            $alarm,
+            $request->user(),
+            $validated['action'],
+            $validated['remarks'] ?? null,
+        );
+
+        return redirect()->route('alarms.index')->with('success', $message);
     }
 
     /**
@@ -78,7 +99,7 @@ class AlarmController extends Controller
             'device_name' => 'required|string|max:255',
             'message' => 'required|string|max:1000',
             'severity' => 'required|in:Critical,Warning',
-            'status' => 'required|in:Open,Acknowledged',
+            'status' => 'required|in:Open,Acknowledged,Resolved',
         ]);
     }
 }

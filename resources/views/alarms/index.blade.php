@@ -4,7 +4,7 @@
 <div class="page-header">
     <div class="page-title">
         <h1>Alarms</h1>
-        <p>Operational alarms — acknowledge issues across your infrastructure.</p>
+        <p>Operational alarms — convert to tickets or resolve with remarks.</p>
     </div>
     @if($isAdmin)
     <button class="btn-add" type="button" id="openAddAlarmBtn">+ Add Alarm</button>
@@ -13,6 +13,12 @@
 
 @if(session('success'))
 <div class="alert alert-success" style="margin-bottom:1rem;">{{ session('success') }}</div>
+@endif
+
+@if($errors->any())
+<div class="alert alert-danger" style="margin-bottom:1rem;">
+    {{ $errors->first() }}
+</div>
 @endif
 
 <div class="alarm-summary-cards">
@@ -50,7 +56,7 @@
                 <th>Description</th>
                 <th>Status</th>
                 <th>Timestamp</th>
-                <th class="col-actions" style="text-align: right; width: {{ $isAdmin ? '220px' : '150px' }};">Actions</th>
+                <th class="col-actions" style="text-align: right; width: {{ $isAdmin ? '260px' : '180px' }};">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -66,21 +72,50 @@
                     </span>
                 </td>
                 <td style="font-weight: 700;">{{ $alarm->device_name }}</td>
-                <td style="color: var(--text-muted);">{{ $alarm->message }}</td>
+                <td style="color: var(--text-muted);">
+                    {{ $alarm->message }}
+                    @if($alarm->ticket)
+                        <div style="margin-top:0.25rem;font-size:0.8rem;">
+                            Ticket:
+                            <a href="{{ route('tickets.index') }}" style="color:var(--primary);font-weight:600;">{{ $alarm->ticket->ticket_number }}</a>
+                        </div>
+                    @endif
+                </td>
                 <td>
-                    <span class="status-badge {{ $alarm->status === 'Open' ? 'warning' : 'up' }}">{{ $alarm->status }}</span>
+                    @php
+                        $statusClass = match ($alarm->status) {
+                            'Open' => 'warning',
+                            'Resolved' => 'up',
+                            default => 'up',
+                        };
+                    @endphp
+                    <span class="status-badge {{ $statusClass }}">{{ $alarm->status }}</span>
                 </td>
                 <td>{{ $alarm->created_at->format('M d, Y h:i A') }}</td>
                 <td style="text-align: right; white-space: nowrap;">
                     @if($alarm->status === 'Open')
-                    <form action="{{ route('alarms.ack', $alarm) }}" method="POST" style="display: inline-block;">
-                        @csrf
-                        <button type="submit" class="btn-action ack-btn">Acknowledge</button>
-                    </form>
+                    <button
+                        type="button"
+                        class="btn-action ack-btn open-alarm-action-modal"
+                        data-ack-url="{{ route('alarms.ack', $alarm) }}"
+                        data-alarm-device="{{ $alarm->device_name }}"
+                        data-alarm-message="{{ $alarm->message }}"
+                        data-default-action="convert_to_ticket"
+                    >Acknowledge</button>
+                    @elseif($alarm->status === 'Acknowledged' && ! $alarm->ticket_id)
+                    <button
+                        type="button"
+                        class="btn-action edit-btn open-alarm-action-modal"
+                        data-ack-url="{{ route('alarms.ack', $alarm) }}"
+                        data-alarm-device="{{ $alarm->device_name }}"
+                        data-alarm-message="{{ $alarm->message }}"
+                        data-default-action="resolved"
+                    >Update</button>
                     @endif
                     @if($isAdmin)
                     <button type="button" class="btn-action edit-btn editAlarmBtn"
                         data-id="{{ $alarm->id }}"
+                        data-update-url="{{ route('alarms.update', $alarm) }}"
                         data-device-name="{{ $alarm->device_name }}"
                         data-severity="{{ $alarm->severity }}"
                         data-message="{{ $alarm->message }}"
@@ -100,6 +135,43 @@
             @endforelse
         </tbody>
     </table>
+</div>
+
+<div class="modal-overlay" id="alarmActionModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="alarmActionModalTitle">Acknowledge Alarm</h3>
+            <button type="button" class="modal-close" id="closeAlarmActionModal">&times;</button>
+        </div>
+        <form method="POST" id="alarmActionForm">
+            @csrf
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Device</label>
+                    <input type="text" id="alarmActionDevice" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="alarmActionMessage" class="form-control" rows="2" readonly></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="alarmActionStatus">Action <span style="color:#dc2626;">*</span></label>
+                    <select name="action" id="alarmActionStatus" class="form-control" required>
+                        <option value="convert_to_ticket">Convert to Ticket</option>
+                        <option value="resolved">Resolve</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="alarmActionRemarks">Remarks</label>
+                    <textarea name="remarks" id="alarmActionRemarks" class="form-control" rows="3" maxlength="2000" placeholder="Add remarks / notes..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelAlarmActionModal">Cancel</button>
+                <button type="submit" class="btn-primary" style="width:auto;padding:0.5rem 1.5rem;">Save</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 @if($isAdmin)
@@ -138,6 +210,7 @@
                     <select name="status" id="alarm_status" class="form-control" required>
                         <option value="Open">Open</option>
                         <option value="Acknowledged">Acknowledged</option>
+                        <option value="Resolved">Resolved</option>
                     </select>
                 </div>
             </div>
@@ -168,6 +241,43 @@
             });
         }
 
+        const actionModal = document.getElementById('alarmActionModal');
+        const actionForm = document.getElementById('alarmActionForm');
+        const actionStatus = document.getElementById('alarmActionStatus');
+        const actionDevice = document.getElementById('alarmActionDevice');
+        const actionMessage = document.getElementById('alarmActionMessage');
+        const actionRemarks = document.getElementById('alarmActionRemarks');
+        const actionTitle = document.getElementById('alarmActionModalTitle');
+
+        function openActionModal(btn) {
+            const defaultAction = btn.getAttribute('data-default-action') || 'convert_to_ticket';
+            actionForm.action = btn.getAttribute('data-ack-url') || '';
+            actionDevice.value = btn.getAttribute('data-alarm-device') || '';
+            actionMessage.value = btn.getAttribute('data-alarm-message') || '';
+            actionRemarks.value = '';
+            actionStatus.value = defaultAction;
+            actionTitle.textContent = defaultAction === 'resolved' ? 'Update Alarm' : 'Acknowledge Alarm';
+            actionModal.classList.add('open');
+        }
+
+        function closeActionModal() {
+            actionModal.classList.remove('open');
+        }
+
+        document.querySelectorAll('.open-alarm-action-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openActionModal(btn);
+            });
+        });
+
+        document.getElementById('closeAlarmActionModal').addEventListener('click', closeActionModal);
+        document.getElementById('cancelAlarmActionModal').addEventListener('click', closeActionModal);
+        actionModal.addEventListener('click', function (e) {
+            if (e.target === actionModal) {
+                closeActionModal();
+            }
+        });
+
         const modal = document.getElementById('alarmModal');
         const form = document.getElementById('alarmForm');
         const methodField = document.getElementById('alarmMethodField');
@@ -180,7 +290,7 @@
 
             document.getElementById('alarmModalTitle').textContent = edit ? 'Edit Alarm' : 'Add Alarm';
             methodField.innerHTML = edit ? '<input type="hidden" name="_method" value="PUT">' : '';
-            form.action = edit ? ('{{ url('/alarms') }}/' + data.id) : '{{ route('alarms.store') }}';
+            form.action = edit ? (data.updateUrl || '') : '{{ route('alarms.store') }}';
             document.getElementById('alarm_device_name').value = data.deviceName || '';
             document.getElementById('alarm_severity').value = data.severity || 'Warning';
             document.getElementById('alarm_message').value = data.message || '';
@@ -200,6 +310,7 @@
         document.querySelectorAll('.editAlarmBtn').forEach(btn => {
             btn.addEventListener('click', () => openModal(true, {
                 id: btn.dataset.id,
+                updateUrl: btn.dataset.updateUrl,
                 deviceName: btn.dataset.deviceName,
                 severity: btn.dataset.severity,
                 message: btn.dataset.message,

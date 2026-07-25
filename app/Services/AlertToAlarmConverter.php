@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Models\Alarm;
 use App\Models\Alert;
+use App\Models\AlertActivity;
+use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AlertToAlarmConverter
 {
@@ -30,12 +33,33 @@ class AlertToAlarmConverter
             ->where('created_at', '<=', $cutoff)
             ->orderBy('id')
             ->each(function (Alert $alert) use (&$converted, $now) {
-                if (Alarm::where('alert_id', $alert->id)->exists()) {
-                    $alert->update(['converted_to_alarm_at' => $now]);
-
-                    return;
+                if ($this->convertAlert($alert, null, 'Auto-converted after 15 minutes without acknowledgement.', $now)) {
+                    $converted++;
                 }
+            });
 
+        return $converted;
+    }
+
+    /**
+     * Convert a single alert into an alarm and close the alert.
+     */
+    public function convertAlert(
+        Alert $alert,
+        ?User $user = null,
+        ?string $remarks = null,
+        ?Carbon $now = null
+    ): bool {
+        $now = $now ?? now();
+
+        if ($alert->converted_to_alarm_at !== null) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($alert, $user, $remarks, $now) {
+            $alert->loadMissing('device');
+
+            if (! Alarm::where('alert_id', $alert->id)->exists()) {
                 Alarm::create([
                     'alert_id' => $alert->id,
                     'device_name' => $alert->device?->name ?? $alert->device?->asset_name ?? 'Unknown',
@@ -43,21 +67,35 @@ class AlertToAlarmConverter
                     'severity' => $this->mapSeverity($alert->severity),
                     'status' => 'Open',
                 ]);
+            }
 
-                $alert->update([
-                    'converted_to_alarm_at' => $now,
-                    'status' => Alert::STATUS_CLOSED,
-                    'resolved_at' => $now,
-                    'duration_seconds' => (int) ($alert->started_at ?? $alert->created_at)->diffInSeconds($now),
-                ]);
+            $updates = [
+                'converted_to_alarm_at' => $now,
+                'status' => Alert::STATUS_CLOSED,
+                'resolved_at' => $now,
+                'duration_seconds' => (int) ($alert->started_at ?? $alert->created_at)->diffInSeconds($now),
+            ];
 
-                $converted++;
-            });
+            if ($alert->acknowledged_at === null) {
+                $updates['acknowledged_at'] = $now;
+                $updates['acknowledged_by'] = $user?->id;
+            }
 
-        return $converted;
+            $alert->update($updates);
+
+            AlertActivity::create([
+                'alert_id' => $alert->id,
+                'user_id' => $user?->id,
+                'action' => AlertActivity::ACTION_CONVERTED_TO_ALARM,
+                'status' => 'alarm',
+                'remarks' => $remarks,
+            ]);
+
+            return true;
+        });
     }
 
-    protected function mapSeverity(string $severity): string
+    public function mapSeverity(string $severity): string
     {
         return strtolower($severity) === 'critical' ? 'Critical' : 'Warning';
     }

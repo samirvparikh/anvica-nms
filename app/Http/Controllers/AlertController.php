@@ -45,16 +45,36 @@ class AlertController extends Controller
         $alert->load('device');
         abort_unless($this->userScope->canAccessDevice($request->user(), $alert->device), 403);
 
-        if ($alert->status !== Alert::STATUS_OPEN) {
-            return redirect()->route('alerts.index')->with('success', 'Alert is already closed.');
-        }
-
-        $alert->update([
-            'acknowledged_at' => now(),
-            'acknowledged_by' => $request->user()->id,
+        $validated = $request->validate([
+            'action' => 'required|in:acknowledged,convert_to_alarm,resolved',
+            'remarks' => 'nullable|string|max:2000',
+        ], [], [
+            'action' => 'status',
+            'remarks' => 'remarks',
         ]);
 
-        return redirect()->route('alerts.index')->with('success', 'Alert acknowledged successfully.');
+        $message = $this->alertService->applyUserAction(
+            $alert,
+            $request->user(),
+            $validated['action'],
+            $validated['remarks'] ?? null
+        );
+
+        return redirect()->back()->with('success', $message);
+    }
+
+    /**
+     * Show alert details with activity history.
+     */
+    public function show(Request $request, Alert $alert)
+    {
+        $alert->load(['device', 'servicePoint', 'acknowledgedBy', 'activities.user']);
+        abort_unless($this->userScope->canAccessDevice($request->user(), $alert->device), 403);
+
+        return view('alerts.show', [
+            'alert' => $alert,
+            'activities' => $alert->activities,
+        ]);
     }
 
     /**

@@ -9,6 +9,7 @@ use App\Repositories\AlertRepository;
 use App\Services\MailConfigService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Schema::defaultStringLength(191);
+
+        // Keep generated routes under the real public subdirectory (WAMP/local path installs).
+        if (! $this->app->runningInConsole()) {
+            $basePath = request()->getBasePath();
+            if ($basePath !== '') {
+                URL::forceRootUrl(rtrim(request()->getSchemeAndHttpHost().$basePath, '/'));
+            }
+        }
 
         MailConfigService::apply();
 

@@ -46,6 +46,7 @@
                     @endif
                     <button class="btn-action edit-btn editAlertBtn"
                         data-id="{{ $alert->id }}"
+                        data-update-url="{{ route('alerts.update', $alert) }}"
                         data-device-id="{{ $alert->device_id }}"
                         data-service-point-id="{{ $alert->service_point_id }}"
                         data-severity="{{ $alert->severity }}"
@@ -128,7 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openModal(edit = false, data = {}) {
         document.getElementById('alertModalTitle').textContent = edit ? 'Edit Alert' : 'Add Alert';
         methodField.innerHTML = edit ? '<input type="hidden" name="_method" value="PUT">' : '';
-        form.action = edit ? `/alerts/${data.id}` : '{{ route('alerts.store') }}';
+        form.action = edit ? (data.updateUrl || '') : '{{ route('alerts.store') }}';
         document.getElementById('alert_device_id').value = data.deviceId || '';
         document.getElementById('alert_service_point_id').value = data.servicePointId || '';
         document.getElementById('alert_severity').value = data.severity || 'warning';
@@ -144,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.editAlertBtn').forEach(btn => {
         btn.addEventListener('click', () => openModal(true, {
             id: btn.dataset.id,
+            updateUrl: btn.dataset.updateUrl,
             deviceId: btn.dataset.deviceId,
             servicePointId: btn.dataset.servicePointId,
             severity: btn.dataset.severity,

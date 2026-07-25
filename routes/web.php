@@ -41,8 +41,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/alarms/{alarm}/ack', [AlarmController::class, 'acknowledge'])->name('alarms.ack');
 
     Route::get('/alerts', [AlertController::class, 'userIndex'])->name('alerts.index');
-    Route::post('/alerts/{alert}/ack', [AlertController::class, 'acknowledge'])->name('alerts.ack');
-    Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->name('alerts.close');
+    Route::get('/alerts/{alert}', [AlertController::class, 'show'])->whereNumber('alert')->name('alerts.show');
+    Route::post('/alerts/{alert}/ack', [AlertController::class, 'acknowledge'])->whereNumber('alert')->name('alerts.ack');
+    Route::post('/alerts/{alert}/close', [AlertController::class, 'close'])->whereNumber('alert')->name('alerts.close');
 
     // Maps
     Route::get('/maps', [MapController::class, 'index'])->name('maps.index');
