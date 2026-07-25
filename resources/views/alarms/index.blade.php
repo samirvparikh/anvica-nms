@@ -54,6 +54,7 @@
                 <th style="width: 80px;">Severity</th>
                 <th>Device</th>
                 <th>Description</th>
+                <th>Remarks</th>
                 <th>Status</th>
                 <th>Timestamp</th>
                 <th class="col-actions" style="text-align: right; width: {{ $isAdmin ? '260px' : '180px' }};">Actions</th>
@@ -80,6 +81,9 @@
                             <a href="{{ route('tickets.index') }}" style="color:var(--primary);font-weight:600;">{{ $alarm->ticket->ticket_number }}</a>
                         </div>
                     @endif
+                </td>
+                <td style="color: var(--text-muted); max-width: 220px;">
+                    {{ $alarm->remarks ? \Illuminate\Support\Str::limit($alarm->remarks, 100) : '—' }}
                 </td>
                 <td>
                     @php
@@ -130,7 +134,7 @@
             </tr>
             @empty
             <tr class="no-sort-row">
-                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No alarms recorded.</td>
+                <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No alarms recorded.</td>
             </tr>
             @endforelse
         </tbody>

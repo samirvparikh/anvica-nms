@@ -8,6 +8,7 @@ use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class AlarmActionService
@@ -58,8 +59,9 @@ class AlarmActionService
             $ticket = new Ticket([
                 'ticket_number' => 'INC-'.mt_rand(1000, 9999),
                 'type' => 'incident',
-                'title' => 'Alarm: '.$alarm->device_name,
+                'title' => 'Alarm: '.$alarm->device_name.' — '.Str::limit($alarm->message, 80),
                 'description' => $description,
+                'remarks' => $remarks,
                 'status' => 'new',
                 'priority' => strcasecmp($alarm->severity, 'Critical') === 0 ? 'critical' : 'high',
                 'impact' => strcasecmp($alarm->severity, 'Critical') === 0 ? 'high' : 'medium',
@@ -78,11 +80,11 @@ class AlarmActionService
             $ticket->calculateSlaDeadlines();
             $ticket->save();
 
-            $alarm->update([
+            $alarm->forceFill([
                 'status' => 'Acknowledged',
                 'remarks' => $remarks,
                 'ticket_id' => $ticket->id,
-            ]);
+            ])->save();
 
             return 'Alarm converted to ticket '.$ticket->ticket_number.' successfully.';
         });

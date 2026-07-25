@@ -23,6 +23,8 @@
                 <th style="padding: 1rem 0.5rem;">Ticket Number</th>
                 <th style="padding: 1rem 0.5rem;">Type</th>
                 <th style="padding: 1rem 0.5rem;">Title</th>
+                <th style="padding: 1rem 0.5rem;">Remarks</th>
+                <th style="padding: 1rem 0.5rem;">Source</th>
                 <th style="padding: 1rem 0.5rem;">Priority</th>
                 <th style="padding: 1rem 0.5rem;">Status</th>
                 <th style="padding: 1rem 0.5rem;">Created At</th>
@@ -39,6 +41,10 @@
                     </span>
                 </td>
                 <td style="padding: 1rem 0.5rem; font-weight: 600;">{{ $ticket->title }}</td>
+                <td style="padding: 1rem 0.5rem; color: var(--text-muted); max-width: 240px;">
+                    {{ $ticket->remarks ? \Illuminate\Support\Str::limit($ticket->remarks, 120) : '—' }}
+                </td>
+                <td style="padding: 1rem 0.5rem;">{{ $ticket->source ?? '—' }}</td>
                 <td style="padding: 1rem 0.5rem;">
                     <span class="status-badge {{ $ticket->priority === 'critical' ? 'down' : 'warning' }}" style="font-size: 0.7rem;">
                         {{ ucfirst($ticket->priority) }}
@@ -53,24 +59,8 @@
                 <td style="padding: 1rem 0.5rem;">{{ $ticket->assignedTo->name ?? 'Unassigned' }}</td>
             </tr>
             @empty
-            <!-- Display placeholder rows if empty -->
-            <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 1rem 0.5rem; font-weight: 700; color: var(--primary);">INC-1024</td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge down" style="font-size: 0.7rem;">Incident</span></td>
-                <td style="padding: 1rem 0.5rem; font-weight: 600;">VPN Connectivity Issue - Mumbai DC</td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge down" style="font-size: 0.7rem;">Critical</span></td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge warning" style="font-size: 0.7rem;">In Progress</span></td>
-                <td style="padding: 1rem 0.5rem; color: var(--text-muted);">24 Jun 2026 08:30</td>
-                <td style="padding: 1rem 0.5rem;">Vijay Kumar</td>
-            </tr>
-            <tr style="border-bottom: 1px solid var(--border-color);">
-                <td style="padding: 1rem 0.5rem; font-weight: 700; color: var(--primary);">CHG-2026-0001</td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge active" style="font-size: 0.7rem;">Change</span></td>
-                <td style="padding: 1rem 0.5rem; font-weight: 600;">Core Router-01 Firmware Upgrade</td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge warning" style="font-size: 0.7rem;">High</span></td>
-                <td style="padding: 1rem 0.5rem;"><span class="status-badge warning" style="font-size: 0.7rem;">Scheduled</span></td>
-                <td style="padding: 1rem 0.5rem; color: var(--text-muted);">22 Jun 2026 15:45</td>
-                <td style="padding: 1rem 0.5rem;">Unassigned</td>
+            <tr>
+                <td colspan="9" style="padding: 2rem; text-align: center; color: var(--text-muted);">No tickets found.</td>
             </tr>
             @endforelse
         </tbody>

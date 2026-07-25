@@ -66,6 +66,7 @@
                         Summary {!! $sort === 'title' ? ($dir === 'asc' ? '▲' : '▼') : '' !!}
                     </a>
                 </th>
+                <th style="padding: 1rem 0.5rem;">Remarks</th>
                 <th style="padding: 1rem 0.5rem;">
                     <a href="{{ route('incidents.index', array_merge(request()->query(), ['sort' => 'priority', 'direction' => ($sort === 'priority' && $dir === 'asc') ? 'desc' : 'asc'])) }}" style="text-decoration: none; color: var(--text-dark); font-weight: 700;">
                         Priority {!! $sort === 'priority' ? ($dir === 'asc' ? '▲' : '▼') : '' !!}
@@ -90,6 +91,9 @@
             <tr style="border-bottom: 1px solid var(--border-color);">
                 <td style="padding: 1rem 0.5rem; font-weight: 700; color: var(--primary);">{{ $inc->ticket_number }}</td>
                 <td style="padding: 1rem 0.5rem; font-weight: 600;">{{ $inc->title }}</td>
+                <td style="padding: 1rem 0.5rem; color: var(--text-muted); max-width: 220px;">
+                    {{ !empty($inc->remarks) ? \Illuminate\Support\Str::limit($inc->remarks, 100) : '—' }}
+                </td>
                 <td style="padding: 1rem 0.5rem;">
                     <span class="status-badge {{ $inc->priority === 'critical' ? 'down' : ($inc->priority === 'high' ? 'warning' : 'active') }}" style="font-size: 0.7rem;">
                         {{ ucfirst($inc->priority) }}

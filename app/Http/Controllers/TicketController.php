@@ -13,7 +13,8 @@ class TicketController extends Controller
 {
     public function ticketsIndex(Request $request)
     {
-        $tickets = Ticket::latest()->get();
+        $tickets = Ticket::with('assignedTo')->latest()->get();
+
         return view('service-desk.tickets.index', compact('tickets'));
     }
 
@@ -36,11 +37,7 @@ class TicketController extends Controller
             $query->where('priority', $request->query('priority'));
         }
 
-        $incidents = $query->get();
-
-        if ($incidents->isEmpty()) {
-            $incidents = $this->getMockIncidents();
-        }
+        $incidents = $query->with(['device', 'assignedTo'])->get();
 
         return view('service-desk.incidents.index', compact('incidents', 'sort', 'dir'));
     }

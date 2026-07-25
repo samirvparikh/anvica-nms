@@ -14,6 +14,7 @@ class Ticket extends Model
         'type',
         'title',
         'description',
+        'remarks',
         'status',
         'priority',
         'impact',
